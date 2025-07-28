@@ -43,6 +43,16 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         }
     };
 
+  const handlePriorityChange = (negocioId: string) => {
+    const newBoardData = boardData.map(column => ({
+        ...column,
+        negocios: column.negocios.map(negocio => 
+            negocio.id === negocioId ? { ...negocio, prioridade: !negocio.prioridade } : negocio
+        )
+    }));
+    updateBoardData(newBoardData);
+  }
+
   const onDragEnd: OnDragEndResponder = (result) => {
     const { source, destination } = result;
 
@@ -132,7 +142,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
     <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max overflow-x-auto pb-4">
             {boardData.map((coluna) => (
-                <FunilColumn key={coluna.etapa} etapa={coluna.etapa} negocios={coluna.negocios} />
+                <FunilColumn key={coluna.etapa} etapa={coluna.etapa} negocios={coluna.negocios} onPriorityChange={handlePriorityChange} />
             ))}
         </div>
     </DragDropContext>

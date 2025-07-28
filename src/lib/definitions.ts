@@ -54,6 +54,7 @@ export type Negocio = {
   valorProposta: number;
   recomendadoCliente?: boolean;
   documentos?: Documento[];
+  prioridade?: boolean;
 };
 
 // Simplified version for the AI flow

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Droppable, Draggable } from '@hello-pangea/dnd';
@@ -7,9 +8,10 @@ import { NegocioCard } from './negocio-card';
 interface FunilColumnProps {
   etapa: EtapaFunil;
   negocios: Negocio[];
+  onPriorityChange: (negocioId: string) => void;
 }
 
-export function FunilColumn({ etapa, negocios }: FunilColumnProps) {
+export function FunilColumn({ etapa, negocios, onPriorityChange }: FunilColumnProps) {
   return (
     <div className="flex flex-col rounded-lg bg-muted/50">
         <h3 className="p-4 text-lg font-semibold tracking-tight font-headline text-center border-b">
@@ -31,7 +33,7 @@ export function FunilColumn({ etapa, negocios }: FunilColumnProps) {
                                 {...provided.dragHandleProps}
                                 className={snapshot.isDragging ? 'shadow-lg' : ''}
                                 >
-                                    <NegocioCard negocio={negocio} />
+                                    <NegocioCard negocio={negocio} onPriorityChange={onPriorityChange} />
                                 </div>
                             )}
                         </Draggable>
