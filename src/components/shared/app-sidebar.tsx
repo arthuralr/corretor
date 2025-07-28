@@ -38,7 +38,6 @@ const menuItems = [
   { href: "/funil", label: "Funil de Vendas", icon: DollarSign },
   { href: "/radar", label: "Radar de Oportunidades", icon: Telescope },
   { href: "/relatorios", label: "Relatórios", icon: BarChartHorizontal },
-  { href: "/properties", label: "Propriedades (EN)", icon: Building2 },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/imoveis", label: "Imóveis", icon: Home },
   {
@@ -97,13 +96,14 @@ export function AppSidebar() {
               jane.doe@corretora.com
             </span>
           </div>
-           <Button asChild variant="ghost" size="icon" aria-label="Sair" className="ml-auto group-data-[collapsible=icon]:hidden">
-            <Link href="/login">
+           <Link href="/login" className="ml-auto group-data-[collapsible=icon]:hidden">
+            <Button asChild variant="ghost" size="icon" aria-label="Sair">
                 <LogOut className="w-5 h-5" />
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
       </SidebarFooter>
     </Sidebar>
   );
 }
+
