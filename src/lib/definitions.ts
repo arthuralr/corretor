@@ -30,3 +30,16 @@ export type Imovel = {
   bathrooms: number;
   status: 'Disponível' | 'Vendido' | 'Alugado';
 };
+
+export type EtapaFunil = 'Contato' | 'Atendimento' | 'Visita' | 'Proposta' | 'Reserva' | 'Fechado - Ganho' | 'Fechado - Perdido';
+
+export type Negocio = {
+  id: string;
+  clienteId: string;
+  clienteNome: string;
+  imovelId: string;
+  imovelTitulo: string;
+  etapa: EtapaFunil;
+  dataCriacao: string;
+  valorProposta: number;
+};
