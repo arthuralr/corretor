@@ -1,4 +1,4 @@
-import { Briefcase, User, Home, DollarSign, Calendar, Tag, Info, CalendarCheck } from "lucide-react";
+import { Briefcase, User, Home, DollarSign, Calendar, Tag, Info, CalendarCheck, CheckCircle } from "lucide-react";
 import type { Negocio, Task } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import Link from "next/link";
 // MOCK DATA FETCHING
 async function getNegocio(id: string): Promise<Negocio | undefined> {
   const negocios: Negocio[] = [
-    { id: "NEG-1", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa com Piscina", etapa: "Proposta", dataCriacao: "2024-07-28", valorProposta: 745000 },
+    { id: "NEG-1", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa com Piscina", etapa: "Proposta", dataCriacao: "2024-07-28", valorProposta: 745000, recomendadoCliente: true },
     { id: "NEG-2", clienteId: "CLIENT-2", clienteNome: "Jane Smith", imovelId: "IMOVEL-2", imovelTitulo: "Apartamento Moderno no Centro", etapa: "Visita", dataCriacao: "2024-07-25", valorProposta: 450000 },
   ];
   return negocios.find(n => n.id === id);
@@ -78,6 +78,12 @@ export default async function NegocioDetailPage({ params }: { params: { id: stri
               <Calendar className="w-5 h-5 text-muted-foreground" />
               <span>Criado em: {format(parseISO(negocio.dataCriacao), "dd/MM/yyyy", { locale: ptBR })}</span>
             </div>
+            {negocio.recomendadoCliente && (
+                 <div className="flex items-center gap-3 pt-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold text-green-600">Recomendado ao cliente</span>
+                </div>
+            )}
           </CardContent>
         </Card>
         <Card>

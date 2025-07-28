@@ -23,6 +23,7 @@ async function getNegocios(): Promise<Negocio[]> {
       etapa: "Proposta",
       dataCriacao: "2024-07-28",
       valorProposta: 745000,
+      recomendadoCliente: true,
     },
     {
       id: "NEG-2",
@@ -73,6 +74,17 @@ async function getNegocios(): Promise<Negocio[]> {
       etapa: "Fechado - Ganho",
       dataCriacao: new Date().toISOString(), // Set to today for testing
       valorProposta: 480000,
+    },
+     {
+      id: "NEG-7",
+      clienteId: "CLIENT-1",
+      clienteNome: "John Doe",
+      imovelId: "IMOVEL-5",
+      imovelTitulo: "Casa Charmosa em Bairro Tranquilo",
+      etapa: "Visita",
+      dataCriacao: "2024-07-30",
+      valorProposta: 680000,
+      recomendadoCliente: true,
     },
   ];
 }

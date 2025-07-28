@@ -20,7 +20,7 @@ const getClients = async (): Promise<Client[]> => [
   { id: 'CLIENT-3', name: 'Sam Wilson', email: '', phone: '', searchProfile: '' },
 ];
 const getNegocios = async (): Promise<Negocio[]> => [
-    { id: 'NEG-1', clienteId: 'CLIENT-1', clienteNome: 'John Doe', imovelId: 'IMOVEL-1', imovelTitulo: 'Casa Espaçosa com Piscina', etapa: 'Proposta', dataCriacao: '2024-07-28', valorProposta: 745000 },
+    { id: 'NEG-1', clienteId: 'CLIENT-1', clienteNome: 'John Doe', imovelId: 'IMOVEL-1', imovelTitulo: 'Casa Espaçosa com Piscina', etapa: 'Proposta', dataCriacao: '2024-07-28', valorProposta: 745000, recomendadoCliente: true },
     { id: 'NEG-2', clienteId: 'CLIENT-2', clienteNome: 'Jane Smith', imovelId: 'IMOVEL-2', imovelTitulo: 'Apartamento Moderno no Centro', etapa: 'Visita', dataCriacao: '2024-07-25', valorProposta: 450000 },
 ];
 

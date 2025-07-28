@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Building, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function ClientDashboardPage() {
@@ -23,16 +23,40 @@ export default function ClientDashboardPage() {
                 </Link>
             </div>
         </header>
-        <main className="container mx-auto p-4 md:p-8">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Bem-vindo(a), {clientName}!</CardTitle>
-                    <CardDescription>Esta é a sua área exclusiva para acompanhar informações sobre seus negócios e imóveis de interesse.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                   <p>Em breve, você poderá visualizar aqui os detalhes dos imóveis, o andamento de propostas e muito mais.</p>
-                </CardContent>
-            </Card>
+        <main className="container mx-auto p-4 md:p-8 space-y-6">
+            <div className="space-y-2">
+                <h1 className="text-3xl font-bold font-headline">Bem-vindo(a), {clientName}!</h1>
+                <p className="text-muted-foreground">Esta é a sua área exclusiva para acompanhar informações sobre seus negócios e imóveis de interesse.</p>
+            </div>
+            
+            <div className="grid gap-6 md:grid-cols-2">
+                 <Card className="hover:border-primary/50 transition-colors">
+                     <Link href="/portal/dashboard/imoveis-recomendados">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>Imóveis Recomendados</CardTitle>
+                                <CardDescription>Veja os imóveis que selecionamos para você.</CardDescription>
+                            </div>
+                            <Building className="h-8 w-8 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center gap-2 text-primary font-semibold">
+                                <span>Ver recomendações</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </div>
+                        </CardContent>
+                    </Link>
+                </Card>
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Meus Negócios</CardTitle>
+                        <CardDescription>Acompanhe o andamento de suas propostas.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                       <p className="text-sm text-muted-foreground">Em breve, você poderá visualizar aqui o andamento das suas propostas.</p>
+                    </CardContent>
+                </Card>
+            </div>
         </main>
     </div>
   );

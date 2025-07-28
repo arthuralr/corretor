@@ -42,6 +42,7 @@ export type Negocio = {
   etapa: EtapaFunil;
   dataCriacao: string;
   valorProposta: number;
+  recomendadoCliente?: boolean;
 };
 
 // Simplified version for the AI flow
