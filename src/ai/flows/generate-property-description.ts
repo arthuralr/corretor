@@ -27,7 +27,7 @@ export type GeneratePropertyDescriptionInput =
   z.infer<typeof GeneratePropertyDescriptionInputSchema>;
 
 const GeneratePropertyDescriptionOutputSchema = z.object({
-  description: z.string().describe('The generated property description.'),
+  description: z.string().describe('A descrição do imóvel gerada.'),
 });
 
 export type GeneratePropertyDescriptionOutput =
@@ -43,18 +43,18 @@ const generatePropertyDescriptionPrompt = ai.definePrompt({
   name: 'generatePropertyDescriptionPrompt',
   input: {schema: GeneratePropertyDescriptionInputSchema},
   output: {schema: GeneratePropertyDescriptionOutputSchema},
-  prompt: `You are a real estate copywriter. Generate an engaging and informative property description based on the following details:
+  prompt: `Você é uma redatora imobiliária especialista em criar textos em português do Brasil. Gere uma descrição de imóvel envolvente e informativa com base nos seguintes detalhes:
 
-Address: {{{address}}}
-Property Type: {{{propertyType}}}
-Bedrooms: {{{bedrooms}}}
-Bathrooms: {{{bathrooms}}}
-Square Footage: {{{squareFootage}}}
-Amenities: {{{amenities}}}
+Endereço: {{{address}}}
+Tipo de Imóvel: {{{propertyType}}}
+Quartos: {{{bedrooms}}}
+Banheiros: {{{bathrooms}}}
+Área: {{{squareFootage}}}m²
+Comodidades: {{{amenities}}}
 
-Existing Description: {{{description}}}
+Descrição Existente: {{{description}}}
 
-Write a compelling description that highlights the key features and benefits of the property. Keep it concise and professional, targeting potential buyers. The description should be approximately 150-200 words.`,
+Escreva uma descrição atraente que destaque as principais características e benefícios do imóvel. Mantenha o texto conciso e profissional, visando potenciais compradores. A descrição deve ter aproximadamente 150-200 palavras e ser em português.`,
 });
 
 const generatePropertyDescriptionFlow = ai.defineFlow(
