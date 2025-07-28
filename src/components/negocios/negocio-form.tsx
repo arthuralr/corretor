@@ -59,6 +59,17 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
     },
   });
 
+  const selectedImovelId = form.watch('imovelId');
+
+  useEffect(() => {
+    if (selectedImovelId) {
+        const selectedImovel = imoveis.find(i => i.id === selectedImovelId);
+        if (selectedImovel) {
+            form.setValue('valorProposta', selectedImovel.price);
+        }
+    }
+  }, [selectedImovelId, imoveis, form]);
+
   useEffect(() => {
     // Reset form when initialData changes
     form.reset({
