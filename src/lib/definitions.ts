@@ -24,7 +24,7 @@ export type Imovel = {
   refCode: string;
   title: string;
   description: string;
-  type: 'Casa' | 'Apartamento' | 'Terreno';
+  type: 'Casa' | 'Apartamento' | 'Terreno' | 'Cobertura';
   price: number;
   bedrooms: number;
   bathrooms: number;
@@ -59,7 +59,7 @@ export type ImovelSimplificado = {
   id: string;
   title: string;
   description: string;
-  type: 'Casa' | 'Apartamento' | 'Terreno';
+  type: 'Casa' | 'Apartamento' | 'Terreno' | 'Cobertura';
   price: number;
   bedrooms: number;
   bathrooms: number;

@@ -30,7 +30,7 @@ const formSchema = z.object({
   refCode: z.string().min(1, "O código de referência é obrigatório"),
   title: z.string().min(1, "O título é obrigatório"),
   description: z.string().optional(),
-  type: z.enum(["Casa", "Apartamento", "Terreno"]),
+  type: z.enum(["Casa", "Apartamento", "Terreno", "Cobertura"]),
   price: z.coerce.number().min(1, "O preço é obrigatório"),
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(0),
@@ -146,6 +146,7 @@ export function ImovelForm() {
                       <SelectItem value="Casa">Casa</SelectItem>
                       <SelectItem value="Apartamento">Apartamento</SelectItem>
                       <SelectItem value="Terreno">Terreno</SelectItem>
+                      <SelectItem value="Cobertura">Cobertura</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

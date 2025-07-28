@@ -16,7 +16,7 @@ const PropertySchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string(),
-  type: z.enum(['Casa', 'Apartamento', 'Terreno']),
+  type: z.enum(['Casa', 'Apartamento', 'Terreno', 'Cobertura']),
   price: z.number(),
   bedrooms: z.number(),
   bathrooms: z.number(),
