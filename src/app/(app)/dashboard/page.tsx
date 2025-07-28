@@ -9,13 +9,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Building2, Users, DollarSign, Home, FileText } from "lucide-react"
-import type { Negocio, Task } from "@/lib/definitions";
+import type { Negocio, Task, Imovel } from "@/lib/definitions";
 import { isThisMonth, parseISO } from 'date-fns';
 import { TaskList } from "@/components/agenda/task-list";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-const LOCAL_STORAGE_KEY = 'funilBoardData';
+const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
+const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 // In a real app, you'd fetch this from a database.
 async function getInitialNegocios(): Promise<Negocio[]> {
@@ -95,6 +96,55 @@ async function getInitialNegocios(): Promise<Negocio[]> {
   ];
 }
 
+const getInitialImoveis = (): Imovel[] => {
+  return [
+    {
+      id: "IMOVEL-1",
+      refCode: "CA001",
+      title: "Casa Espaçosa com Piscina",
+      description: "Uma bela casa com 3 quartos, 2 banheiros e uma grande área de lazer com piscina.",
+      type: "Casa",
+      price: 750000,
+      bedrooms: 3,
+      bathrooms: 2,
+      status: "Disponível",
+    },
+    {
+      id: "IMOVEL-2",
+      refCode: "AP002",
+      title: "Apartamento Moderno no Centro",
+      description: "Apartamento de 2 quartos totalmente reformado no coração da cidade.",
+      type: "Apartamento",
+      price: 450000,
+      bedrooms: 2,
+      bathrooms: 1,
+      status: "Vendido",
+    },
+    {
+      id: "IMOVEL-3",
+      refCode: "TE003",
+      title: "Terreno Plano em Condomínio",
+      description: "Excelente terreno para construir a casa dos seus sonhos em condomínio fechado.",
+      type: "Terreno",
+      price: 200000,
+      bedrooms: 0,
+      bathrooms: 0,
+      status: "Disponível",
+    },
+     {
+      id: "IMOVEL-4",
+      refCode: "AP004",
+      title: "Apartamento para Alugar",
+      description: "Apartamento com 1 quarto, mobiliado, pronto para morar.",
+      type: "Apartamento",
+      price: 1500,
+      bedrooms: 1,
+      bathrooms: 1,
+      status: "Alugado",
+    },
+  ];
+};
+
 async function getTasks(): Promise<Task[]> {
   const today = new Date();
   const tomorrow = new Date(today);
@@ -114,13 +164,14 @@ async function getTasks(): Promise<Task[]> {
 export default function Dashboard() {
   const [negocios, setNegocios] = React.useState<Negocio[]>([]);
   const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [imoveis, setImoveis] = React.useState<Imovel[]>([]);
 
-  const loadNegocios = React.useCallback(async () => {
+  const loadData = React.useCallback(async () => {
     try {
-      const savedData = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (savedData) {
-        const boardData = JSON.parse(savedData);
-        // Ensure boardData is an array before calling flatMap
+      // Load Negocios
+      const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+      if (savedNegocios) {
+        const boardData = JSON.parse(savedNegocios);
         if (Array.isArray(boardData)) {
             const allNegocios = boardData.flatMap((column: any) => column.negocios);
             setNegocios(allNegocios);
@@ -132,10 +183,23 @@ export default function Dashboard() {
         const initialNegocios = await getInitialNegocios();
         setNegocios(initialNegocios);
       }
+
+      // Load Imoveis
+      const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+       if (savedImoveis) {
+        setImoveis(JSON.parse(savedImoveis));
+      } else {
+        const initialImoveis = getInitialImoveis();
+        setImoveis(initialImoveis);
+        window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(initialImoveis));
+      }
+
     } catch (error) {
       console.error("Failed to load data, using initial data", error);
       const initialNegocios = await getInitialNegocios();
       setNegocios(initialNegocios);
+      const initialImoveis = getInitialImoveis();
+      setImoveis(initialImoveis);
     }
   }, []);
 
@@ -146,29 +210,29 @@ export default function Dashboard() {
         setTasks(tasksData);
     };
     fetchTasks();
-    loadNegocios();
+    loadData();
 
-    // Listen for changes from other tabs/windows
     const handleStorageChange = (event: StorageEvent) => {
-        if (event.key === LOCAL_STORAGE_KEY) {
-            loadNegocios();
+        if (event.key === NEGOCIOS_STORAGE_KEY || event.key === IMOVEIS_STORAGE_KEY) {
+            loadData();
         }
     };
     
     window.addEventListener('storage', handleStorageChange);
 
-    // Also listen for a custom event when the board is updated in the same tab
-    const handleBoardUpdate = () => {
-        loadNegocios();
+    const handleDataUpdate = () => {
+        loadData();
     }
-    window.addEventListener('funilBoardUpdated', handleBoardUpdate);
+    window.addEventListener('funilBoardUpdated', handleDataUpdate);
+    window.addEventListener('imoveisUpdated', handleDataUpdate);
 
 
     return () => {
         window.removeEventListener('storage', handleStorageChange);
-        window.removeEventListener('funilBoardUpdated', handleBoardUpdate);
+        window.removeEventListener('funilBoardUpdated', handleDataUpdate);
+        window.removeEventListener('imoveisUpdated', handleDataUpdate);
     };
-  }, [loadNegocios]);
+  }, [loadData]);
 
   const salesTotal = negocios
     .filter(n => n.etapa === 'Fechado - Ganho')
@@ -176,7 +240,7 @@ export default function Dashboard() {
   
   const proposalsCount = negocios.filter(n => n.etapa === 'Proposta').length;
   const activeClientsCount = [...new Set(negocios.filter(n => n.etapa !== 'Fechado - Ganho' && n.etapa !== 'Fechado - Perdido').map(n => n.clienteId))].length;
-  const availablePropertiesCount = 5; // Replace with actual property count later
+  const availablePropertiesCount = imoveis.filter(i => i.status === 'Disponível').length;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -266,3 +330,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+    

@@ -71,6 +71,8 @@ export function ImovelForm() {
 
         imoveis.push(newImovel);
         window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(imoveis));
+        window.dispatchEvent(new CustomEvent('imoveisUpdated'));
+
 
         toast({
           title: "Imóvel Salvo!",
@@ -240,3 +242,5 @@ export function ImovelForm() {
     </Card>
   );
 }
+
+    
