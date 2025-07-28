@@ -51,8 +51,7 @@ interface TaskFormProps {
 
 export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imoveis }: TaskFormProps) {
   const { toast } = useToast();
-  const [filteredNegocios, setFilteredNegocios] = useState<Negocio[]>(negocios);
-
+  
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -81,20 +80,22 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
   useEffect(() => {
     if (selectedClientId) {
       const clientNegocios = negocios.filter(n => n.clienteId === selectedClientId);
-      setFilteredNegocios(clientNegocios);
-
+      
       if (clientNegocios.length > 0) {
-        // Auto-select the first proposal if not already set
-        if (!form.getValues('negocioId')) {
+        // Auto-select the first proposal if not already set or if it doesn't belong to the client
+        const currentNegocioId = form.getValues('negocioId');
+        const isCurrentNegocioFromClient = clientNegocios.some(n => n.id === currentNegocioId);
+
+        if (!currentNegocioId || !isCurrentNegocioFromClient) {
             form.setValue('negocioId', clientNegocios[0].id);
         }
       } else {
+        // If client has no proposals, clear the negocioId
         form.setValue('negocioId', undefined);
       }
     } else {
-      setFilteredNegocios(negocios); // Show all proposals if no client is selected
-      // Clear proposal if the pre-selected one doesn't match a new client selection
-      if (!initialData?.negocioId) {
+      // If no client is selected, clear the negocioId unless it was part of initial data
+       if (!initialData?.negocioId) {
           form.setValue('negocioId', undefined);
       }
     }
@@ -165,54 +166,29 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="clientId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Associar ao Cliente</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um cliente (opcional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="null">Nenhum</SelectItem>
-                    {clients.map(client => (
-                      <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="negocioId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-2"><Briefcase className="h-4 w-4" /> Associar à Proposta</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma proposta (opcional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="null">Nenhuma</SelectItem>
-                    {filteredNegocios.map(negocio => (
-                      <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo} ({negocio.clienteNome})</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="clientId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Associar ao Cliente</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um cliente (opcional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="null">Nenhum</SelectItem>
+                  {clients.map(client => (
+                    <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="description"
