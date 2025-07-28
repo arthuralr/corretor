@@ -29,9 +29,9 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const imovelId = params.id;
-
+  
   useEffect(() => {
+    const imovelId = params.id;
     // Fetch data from localStorage
     try {
         const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
@@ -49,7 +49,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
     // In a real app, you would filter tasks by imovelId if it was linked.
     setTasks([]);
 
-  }, [imovelId]);
+  }, [params.id]);
 
 
    const formatPrice = (price: number, status: Imovel['status']) => {
