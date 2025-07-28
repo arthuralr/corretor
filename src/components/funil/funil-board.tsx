@@ -12,16 +12,35 @@ interface FunilBoardProps {
   }[];
 }
 
+const LOCAL_STORAGE_KEY = 'funilBoardData';
+
 export function FunilBoard({ initialData }: FunilBoardProps) {
     const [isClient, setIsClient] = useState(false);
     const [boardData, setBoardData] = useState(initialData);
 
     useEffect(() => {
         setIsClient(true);
+        try {
+            const savedData = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                setBoardData(JSON.parse(savedData));
+            }
+        } catch (error) {
+            console.error("Failed to load data from local storage", error);
+        }
     }, []);
 
+    const updateBoardData = (newData: typeof boardData) => {
+        setBoardData(newData);
+        try {
+            window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
+        } catch (error) {
+            console.error("Failed to save data to local storage", error);
+        }
+    };
+
   const onDragEnd: OnDragEndResponder = (result) => {
-    const { source, destination, draggableId } = result;
+    const { source, destination } = result;
 
     if (!destination) {
       return;
@@ -53,7 +72,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
       };
 
       newBoardData[sourceColumnIndex] = newColumn;
-      setBoardData(newBoardData);
+      updateBoardData(newBoardData);
     } else {
       // Moving to a different column
       const destNegocios = Array.from(destColumn.negocios);
@@ -70,10 +89,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
       
       newBoardData[sourceColumnIndex] = newSourceColumn;
       newBoardData[destColumnIndex] = newDestColumn;
-      setBoardData(newBoardData);
-
-      // Here you would typically make an API call to update the deal's stage in the database.
-      console.log(`Moved deal ${draggableId} to ${destColumn.etapa}`);
+      updateBoardData(newBoardData);
     }
   };
   
