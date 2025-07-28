@@ -33,19 +33,22 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
     try {
         // Fetch Negocio
         const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+        let foundNegocio: Negocio | null = null;
         if (savedNegocios) {
             const boardData = JSON.parse(savedNegocios);
             const allNegocios: Negocio[] = boardData.flatMap((column: any) => column.negocios);
-            const foundNegocio = allNegocios.find(n => n.id === negocioId);
-            setNegocio(foundNegocio || null);
+            foundNegocio = allNegocios.find(n => n.id === negocioId) || null;
+            setNegocio(foundNegocio);
         }
 
-        // Fetch Tasks for Negocio
-        const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
-        if (savedTasks) {
-            const allTasks: Task[] = JSON.parse(savedTasks);
-            const negocioTasks = allTasks.filter(t => t.negocioId === negocioId);
-            setTasks(negocioTasks);
+        // Fetch Tasks for the client associated with the business
+        if (foundNegocio) {
+            const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+            if (savedTasks) {
+                const allTasks: Task[] = JSON.parse(savedTasks);
+                const clientTasks = allTasks.filter(t => t.clientId === foundNegocio.clienteId);
+                setTasks(clientTasks);
+            }
         }
     } catch (error) {
         console.error("Failed to load business data", error);
