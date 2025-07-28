@@ -1,3 +1,6 @@
+"use client";
+
+import * as React from "react";
 import {
   Card,
   CardContent,
@@ -11,8 +14,10 @@ import { TaskList } from "@/components/agenda/task-list";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+const LOCAL_STORAGE_KEY = 'funilBoardData';
+
 // In a real app, you'd fetch this from a database.
-async function getNegocios(): Promise<Negocio[]> {
+async function getInitialNegocios(): Promise<Negocio[]> {
   return [
     {
       id: "NEG-1",
@@ -105,9 +110,49 @@ async function getTasks(): Promise<Task[]> {
 }
 
 
-export default async function Dashboard() {
-  const negocios = await getNegocios();
-  const tasks = await getTasks();
+export default function Dashboard() {
+  const [negocios, setNegocios] = React.useState<Negocio[]>([]);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+
+  React.useEffect(() => {
+    const fetchTasks = async () => {
+        const tasksData = await getTasks();
+        setTasks(tasksData);
+    };
+    fetchTasks();
+
+    const loadNegocios = async () => {
+        try {
+            const savedData = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedData) {
+                const boardData = JSON.parse(savedData);
+                const allNegocios = boardData.flatMap((column: any) => column.negocios);
+                setNegocios(allNegocios);
+            } else {
+                const initialNegocios = await getInitialNegocios();
+                setNegocios(initialNegocios);
+            }
+        } catch (error) {
+            console.error("Failed to load data, using initial data", error);
+            const initialNegocios = await getInitialNegocios();
+            setNegocios(initialNegocios);
+        }
+    };
+
+    loadNegocios();
+
+    // Listen for changes from other tabs/windows
+    const handleStorageChange = (event: StorageEvent) => {
+        if (event.key === LOCAL_STORAGE_KEY) {
+            loadNegocios();
+        }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const salesThisMonth = negocios
     .filter(n => n.etapa === 'Fechado - Ganho' && isThisMonth(parseISO(n.dataCriacao)))
