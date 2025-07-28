@@ -42,7 +42,7 @@ export function LoginForm() {
     // Mock login logic
     console.log(values);
     // On successful login, redirect to dashboard
-    router.push("/");
+    router.push("/dashboard");
   }
 
   return (
