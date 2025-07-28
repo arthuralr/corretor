@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState } from 'react';
-import type { Task } from '@/lib/definitions';
+import type { Task, TaskPriority } from '@/lib/definitions';
 import { format, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -14,12 +15,19 @@ import {
 import { Button } from '../ui/button';
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 const TASKS_STORAGE_KEY = 'tasksData';
 
 interface TaskItemProps {
   task: Task;
   onTaskChange: () => void;
+}
+
+const priorityConfig: Record<TaskPriority, { color: string, label: string }> = {
+    'Baixa': { color: 'bg-gray-400', label: 'Prioridade Baixa' },
+    'Média': { color: 'bg-yellow-500', label: 'Prioridade Média' },
+    'Alta': { color: 'bg-red-500', label: 'Prioridade Alta' },
 }
 
 export function TaskItem({ task, onTaskChange }: TaskItemProps) {
@@ -63,6 +71,8 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
 
   const dueDate = new Date(task.dueDate);
   const isOverdue = !isChecked && isPast(dueDate) && !isToday(dueDate);
+  const priority = task.priority || 'Baixa';
+  const currentPriorityConfig = priorityConfig[priority];
 
   return (
     <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen} asChild>
@@ -86,6 +96,17 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
                     </label>
                 </div>
                 <div className="flex items-center gap-2">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <div className={cn('w-3 h-3 rounded-full', currentPriorityConfig.color)} />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{currentPriorityConfig.label}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
                     <div className="text-sm text-muted-foreground">
                         <span className={cn(isOverdue && 'text-destructive font-semibold')}>
                             {format(dueDate, "dd 'de' MMM", { locale: ptBR })}

@@ -6,14 +6,13 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, User, Briefcase, Home } from 'lucide-react';
+import { CalendarIcon, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -26,7 +25,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { Client, Negocio, Imovel } from '@/lib/definitions';
+import type { Client, Negocio, TaskPriority } from '@/lib/definitions';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 const formSchema = z.object({
   title: z.string().min(1, 'O título é obrigatório'),
@@ -36,6 +36,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().optional(),
   negocioId: z.string().optional(),
+  priority: z.enum(['Baixa', 'Média', 'Alta']).optional(),
 });
 
 type TaskFormValues = z.infer<typeof formSchema>;
@@ -46,10 +47,9 @@ interface TaskFormProps {
   initialData?: Partial<TaskFormValues>;
   clients: Client[];
   negocios: Negocio[];
-  imoveis: Imovel[];
 }
 
-export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imoveis }: TaskFormProps) {
+export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: TaskFormProps) {
   const { toast } = useToast();
   
   const form = useForm<TaskFormValues>({
@@ -60,11 +60,12 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
       clientId: initialData?.clientId || undefined,
       negocioId: initialData?.negocioId || undefined,
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
+      priority: initialData?.priority || 'Baixa',
     },
   });
 
   const selectedClientId = form.watch('clientId');
-
+  
   useEffect(() => {
     // Reset form when initialData changes (e.g., when opening the modal for editing)
     form.reset({
@@ -73,26 +74,15 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
       clientId: initialData?.clientId || undefined,
       negocioId: initialData?.negocioId || undefined,
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
+      priority: initialData?.priority || 'Baixa',
     });
   }, [initialData, form]);
 
-
   useEffect(() => {
     if (selectedClientId) {
-      const clientNegocios = negocios.filter(n => n.clienteId === selectedClientId);
-      
-      if (clientNegocios.length > 0) {
-        // Auto-select the first proposal if not already set or if it doesn't belong to the client
-        const currentNegocioId = form.getValues('negocioId');
-        const isCurrentNegocioFromClient = clientNegocios.some(n => n.id === currentNegocioId);
-
-        if (!currentNegocioId || !isCurrentNegocioFromClient) {
-            form.setValue('negocioId', clientNegocios[0].id);
-        }
-      } else {
-        // If client has no proposals, clear the negocioId
-        form.setValue('negocioId', undefined);
-      }
+      // Find the first proposal for the selected client
+      const clientNegocio = negocios.find(n => n.clienteId === selectedClientId && n.etapa === 'Proposta');
+      form.setValue('negocioId', clientNegocio?.id);
     } else {
       // If no client is selected, clear the negocioId unless it was part of initial data
        if (!initialData?.negocioId) {
@@ -103,11 +93,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
 
 
   function onSubmit(values: TaskFormValues) {
-     const finalValues = {
-      ...values,
-      imovelId: values.negocioId ? negocios.find(n => n.id === values.negocioId)?.imovelId : undefined,
-    };
-    onSave(finalValues);
+    onSave(values);
   }
 
   return (
@@ -201,6 +187,42 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                   className="resize-none"
                   {...field}
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="priority"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Prioridade</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex items-center space-x-4"
+                >
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="Baixa" id="p-baixa"/>
+                    </FormControl>
+                    <FormLabel htmlFor="p-baixa" className="font-normal">Baixa</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="Média" id="p-media"/>
+                    </FormControl>
+                    <FormLabel htmlFor="p-media" className="font-normal">Média</FormLabel>
+                  </FormItem>
+                   <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="Alta" id="p-alta"/>
+                    </FormControl>
+                    <FormLabel htmlFor="p-alta" className="font-normal">Alta</FormLabel>
+                  </FormItem>
+                </RadioGroup>
               </FormControl>
               <FormMessage />
             </FormItem>

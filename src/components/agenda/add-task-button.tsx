@@ -44,7 +44,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
         if (savedNegocios) {
           const boardData = JSON.parse(savedNegocios);
           const allNegocios = boardData.flatMap((column: any) => column.negocios);
-          setNegocios(allNegocios.filter((n: Negocio) => n.etapa === 'Proposta'));
+          setNegocios(allNegocios);
         }
 
         const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
@@ -75,8 +75,9 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
             clientName: selectedClient?.name,
             negocioId: values.negocioId,
             negocioTitle: selectedNegocio?.imovelTitulo,
-            imovelId: values.imovelId,
+            imovelId: selectedNegocio?.imovelId,
             imovelTitle: selectedImovel?.title,
+            priority: values.priority || 'Baixa',
         };
 
         tasks.push(newTask);
@@ -102,7 +103,6 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
   const initialData = {
       clientId: preselectedClientId,
       negocioId: preselectedNegocioId,
-      imovelId: preselectedImovelId,
   }
 
   return (
@@ -123,7 +123,6 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
             onCancel={() => setIsOpen(false)}
             clients={clients}
             negocios={negocios}
-            imoveis={imoveis}
             initialData={initialData}
           />
         </DialogContent>

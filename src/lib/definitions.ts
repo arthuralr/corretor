@@ -70,6 +70,8 @@ export type ImovelSimplificado = {
   status: 'Disponível' | 'Vendido' | 'Alugado';
 };
 
+export type TaskPriority = 'Baixa' | 'Média' | 'Alta';
+
 export type Task = {
   id: string;
   title: string;
@@ -82,6 +84,7 @@ export type Task = {
   negocioTitle?: string;
   imovelId?: string;
   imovelTitle?: string;
+  priority?: TaskPriority;
 };
 
 export type MessageTemplate = {
