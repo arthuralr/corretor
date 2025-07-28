@@ -43,3 +43,15 @@ export type Negocio = {
   dataCriacao: string;
   valorProposta: number;
 };
+
+// Simplified version for the AI flow
+export type ImovelSimplificado = {
+  id: string;
+  title: string;
+  description: string;
+  type: 'Casa' | 'Apartamento' | 'Terreno';
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  status: 'Disponível' | 'Vendido' | 'Alugado';
+};

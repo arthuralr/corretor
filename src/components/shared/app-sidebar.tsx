@@ -21,6 +21,7 @@ import {
   Building,
   Home,
   DollarSign,
+  Telescope,
 } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -29,6 +30,7 @@ import { Button } from "../ui/button";
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/funil", label: "Funil de Vendas", icon: DollarSign },
+  { href: "/radar", label: "Radar de Oportunidades", icon: Telescope },
   { href: "/properties", label: "Properties", icon: Building2 },
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/imoveis", label: "Imóveis", icon: Home },
