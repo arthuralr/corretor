@@ -13,9 +13,11 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Button } from '../ui/button';
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronDown, Trash2, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Badge } from '../ui/badge';
+import Link from 'next/link';
 
 const TASKS_STORAGE_KEY = 'tasksData';
 
@@ -82,18 +84,30 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
             isOverdue && 'border-destructive/50'
         )}>
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <Checkbox
                         id={`task-${task.id}`}
                         checked={isChecked}
                         onCheckedChange={handleCheckedChange}
                     />
-                    <label
-                        htmlFor={`task-${task.id}`}
-                        className={cn('font-medium', isChecked && 'line-through')}
-                    >
-                        {task.title}
-                    </label>
+                    <div>
+                        <label
+                            htmlFor={`task-${task.id}`}
+                            className={cn('font-medium', isChecked && 'line-through')}
+                        >
+                            {task.title}
+                        </label>
+                        {(task.clientName || task.imovelTitle) && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                {task.clientId && task.clientName && (
+                                    <Link href={`/clients/${task.clientId}`} className="flex items-center gap-1 hover:underline">
+                                        <User className="w-3 h-3" />
+                                        {task.clientName}
+                                    </Link>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <TooltipProvider>
@@ -127,6 +141,14 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
             <CollapsibleContent>
                 <div className="pt-4 pl-10 text-sm text-muted-foreground">
                     <p>{task.description || "Nenhuma descrição fornecida."}</p>
+                     {task.imovelId && task.imovelTitle && (
+                        <div className="mt-2">
+                            <span className="font-semibold">Imóvel:</span>{' '}
+                            <Link href={`/imoveis/${task.imovelId}`} className="hover:underline text-primary">
+                                {task.imovelTitle}
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </CollapsibleContent>
         </div>
