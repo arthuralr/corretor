@@ -153,15 +153,15 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
             name="negocioId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center gap-2"><Briefcase className="h-4 w-4" /> Associar ao Negócio</FormLabel>
+                <FormLabel className="flex items-center gap-2"><Briefcase className="h-4 w-4" /> Associar à Proposta</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um negócio (opcional)" />
+                      <SelectValue placeholder="Selecione uma proposta (opcional)" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhuma</SelectItem>
                     {negocios.map(negocio => (
                       <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo} ({negocio.clienteNome})</SelectItem>
                     ))}

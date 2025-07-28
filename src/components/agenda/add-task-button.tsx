@@ -44,7 +44,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
         if (savedNegocios) {
           const boardData = JSON.parse(savedNegocios);
           const allNegocios = boardData.flatMap((column: any) => column.negocios);
-          setNegocios(allNegocios);
+          setNegocios(allNegocios.filter((n: Negocio) => n.etapa === 'Proposta'));
         }
 
         const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
