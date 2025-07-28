@@ -1,6 +1,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Building } from "lucide-react";
 import Link from "next/link";
+import { ThemeToggle } from "./theme-toggle";
 
 export function MobileHeader() {
   return (
@@ -10,6 +11,9 @@ export function MobileHeader() {
         <Building className="h-6 w-6 text-primary" />
         <span className="font-headline">RealConnect</span>
       </Link>
+      <div className="ml-auto">
+        <ThemeToggle />
+      </div>
     </header>
   );
 }

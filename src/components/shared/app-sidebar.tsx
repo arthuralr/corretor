@@ -29,6 +29,7 @@ import {
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
+import { ThemeToggle } from "./theme-toggle";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -80,19 +81,9 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-          <Avatar className="h-9 w-9">
-            <AvatarImage src="https://placehold.co/40x40.png" alt="@corretor" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-            <span className="text-sm font-medium text-sidebar-foreground">
-              Jane Doe
-            </span>
-            <span className="text-xs text-sidebar-foreground/70">
-              jane.doe@corretora.com
-            </span>
-          </div>
+        <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
+          <ThemeToggle />
+          <div className="flex-1" />
            <Link href="/login" className="ml-auto group-data-[collapsible=icon]:hidden">
             <Button asChild variant="ghost" size="icon" aria-label="Sair">
                 <LogOut className="w-5 h-5" />
