@@ -22,7 +22,7 @@ export const columns: ColumnDef<Client>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Name
+          Nome Completo
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -44,15 +44,7 @@ export const columns: ColumnDef<Client>[] = [
   },
   {
     accessorKey: "phone",
-    header: "Phone",
-  },
-  {
-    accessorKey: "preferences",
-    header: "Preferences",
-    cell: ({ row }) => {
-        const preferences = row.getValue("preferences") as string;
-        return <div className="truncate max-w-xs">{preferences}</div>;
-    }
+    header: "Telefone",
   },
   {
     id: "actions",

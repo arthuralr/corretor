@@ -20,9 +20,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(1, "Phone number is required"),
+  name: z.string().min(1, "Nome é obrigatório"),
+  email: z.string().email("Endereço de email inválido"),
+  phone: z.string().min(1, "Número de telefone é obrigatório"),
   preferences: z.string().optional(),
 });
 
@@ -43,8 +43,8 @@ export function ClientForm() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     toast({
-      title: "Client Saved!",
-      description: "The new client has been added to your records.",
+      title: "Cliente Salvo!",
+      description: "O novo cliente foi adicionado aos seus registros.",
     });
     router.push("/clients");
   }
@@ -54,7 +54,7 @@ export function ClientForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardHeader>
-             <CardTitle className="font-headline">Client Information</CardTitle>
+             <CardTitle className="font-headline">Informações do Cliente</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <FormField
@@ -62,7 +62,7 @@ export function ClientForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Nome Completo</FormLabel>
                   <FormControl>
                     <Input placeholder="John Doe" {...field} />
                   </FormControl>
@@ -75,7 +75,7 @@ export function ClientForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email Address</FormLabel>
+                  <FormLabel>Endereço de Email</FormLabel>
                   <FormControl>
                     <Input placeholder="john.doe@example.com" {...field} />
                   </FormControl>
@@ -88,7 +88,7 @@ export function ClientForm() {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>Número de Telefone</FormLabel>
                   <FormControl>
                     <Input placeholder="555-123-4567" {...field} />
                   </FormControl>
@@ -101,10 +101,10 @@ export function ClientForm() {
               name="preferences"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Client Preferences</FormLabel>
+                  <FormLabel>Preferências do Cliente</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., Looking for a 3-bedroom house with a yard, budget of $500k..."
+                      placeholder="Ex: Busca casa de 3 quartos com quintal, orçamento de R$ 500.000..."
                       className="resize-none"
                       {...field}
                     />
@@ -115,8 +115,8 @@ export function ClientForm() {
             />
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">Save Client</Button>
+            <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
+            <Button type="submit">Salvar Cliente</Button>
           </CardFooter>
         </form>
       </Form>
