@@ -33,13 +33,13 @@ import { Loader2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  address: z.string().min(1, "O endereço é obrigatório"),
-  propertyType: z.string().min(1, "O tipo de imóvel é obrigatório"),
-  bedrooms: z.coerce.number().min(0),
-  bathrooms: z.coerce.number().min(1),
-  squareFootage: z.coerce.number().min(1, "A área é obrigatória"),
-  amenities: z.string().min(1, "Pelo menos uma comodidade é obrigatória"),
-  description: z.string().optional(),
+  endereco: z.string().min(1, "O endereço é obrigatório"),
+  tipoImovel: z.string().min(1, "O tipo de imóvel é obrigatório"),
+  quartos: z.coerce.number().min(0),
+  banheiros: z.coerce.number().min(1),
+  area: z.coerce.number().min(1, "A área é obrigatória"),
+  comodidades: z.string().min(1, "Pelo menos uma comodidade é obrigatória"),
+  descricaoExistente: z.string().optional(),
 });
 
 export function GeneratorForm() {
@@ -50,13 +50,13 @@ export function GeneratorForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      address: "Rua das Flores, 123, São Paulo, SP",
-      propertyType: "Apartamento",
-      bedrooms: 3,
-      bathrooms: 2,
-      squareFootage: 120,
-      amenities: "piscina, garagem, piso de madeira, cozinha planejada",
-      description: "",
+      endereco: "Rua das Flores, 123, São Paulo, SP",
+      tipoImovel: "Apartamento",
+      quartos: 3,
+      banheiros: 2,
+      area: 120,
+      comodidades: "piscina, garagem, piso de madeira, cozinha planejada",
+      descricaoExistente: "",
     },
   });
 
@@ -97,7 +97,7 @@ export function GeneratorForm() {
             <CardContent className="space-y-4">
               <FormField
                 control={form.control}
-                name="address"
+                name="endereco"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Endereço</FormLabel>
@@ -110,7 +110,7 @@ export function GeneratorForm() {
               />
               <FormField
                 control={form.control}
-                name="propertyType"
+                name="tipoImovel"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de Imóvel</FormLabel>
@@ -124,7 +124,7 @@ export function GeneratorForm() {
                           <SelectItem value="Casa">Casa</SelectItem>
                           <SelectItem value="Apartamento">Apartamento</SelectItem>
                           <SelectItem value="Condomínio">Condomínio</SelectItem>
-                          <SelectItem value="Townhouse">Sobrado</SelectItem>
+                          <SelectItem value="Sobrado">Sobrado</SelectItem>
                         </SelectContent>
                       </Select>
                     <FormMessage />
@@ -134,7 +134,7 @@ export function GeneratorForm() {
               <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="bedrooms"
+                  name="quartos"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Quartos</FormLabel>
@@ -146,7 +146,7 @@ export function GeneratorForm() {
                 />
                 <FormField
                   control={form.control}
-                  name="bathrooms"
+                  name="banheiros"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Banheiros</FormLabel>
@@ -158,7 +158,7 @@ export function GeneratorForm() {
                 />
                  <FormField
                   control={form.control}
-                  name="squareFootage"
+                  name="area"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Área (m²)</FormLabel>
@@ -171,7 +171,7 @@ export function GeneratorForm() {
               </div>
               <FormField
                 control={form.control}
-                name="amenities"
+                name="comodidades"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Comodidades e Características</FormLabel>
@@ -186,7 +186,7 @@ export function GeneratorForm() {
               />
                <FormField
                 control={form.control}
-                name="description"
+                name="descricaoExistente"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Opcional: Suas Notas / Descrição Existente</FormLabel>

@@ -3,24 +3,24 @@
 'use server';
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const GeneratePropertyDescriptionInputSchema = z.object({
-  address: z.string().describe('The full address of the property.'),
-  propertyType: z
+  endereco: z.string().describe('O endereço completo do imóvel.'),
+  tipoImovel: z
     .string()
     .describe(
-      'The type of property, e.g., house, apartment, condominium, townhouse.'
+      'O tipo de imóvel. Ex: Casa, Apartamento, Condomínio, Sobrado.'
     ),
-  bedrooms: z.number().describe('The number of bedrooms in the property.'),
-  bathrooms: z.number().describe('The number of bathrooms in the property.'),
-  squareFootage: z.number().describe('The square footage of the property.'),
-  amenities: z
+  quartos: z.number().describe('O número de quartos no imóvel.'),
+  banheiros: z.number().describe('O número de banheiros no imóvel.'),
+  area: z.number().describe('A área do imóvel em metros quadrados.'),
+  comodidades: z
     .string()
     .describe(
-      'A comma-separated list of amenities, e.g., swimming pool, garage, hardwood floors.'
+      'Uma lista de comodidades separadas por vírgula. Ex: piscina, garagem, piso de madeira.'
     ),
-  description: z.string().optional().describe('Any existing description of the property.'),
+  descricaoExistente: z.string().optional().describe('Qualquer descrição ou anotação existente sobre o imóvel.'),
 });
 
 export type GeneratePropertyDescriptionInput =
@@ -45,14 +45,14 @@ const generatePropertyDescriptionPrompt = ai.definePrompt({
   output: {schema: GeneratePropertyDescriptionOutputSchema},
   prompt: `Você é uma redatora imobiliária especialista em criar textos em português do Brasil. Gere uma descrição de imóvel envolvente e informativa com base nos seguintes detalhes:
 
-Endereço: {{{address}}}
-Tipo de Imóvel: {{{propertyType}}}
-Quartos: {{{bedrooms}}}
-Banheiros: {{{bathrooms}}}
-Área: {{{squareFootage}}}m²
-Comodidades: {{{amenities}}}
+Endereço: {{{endereco}}}
+Tipo de Imóvel: {{{tipoImovel}}}
+Quartos: {{{quartos}}}
+Banheiros: {{{banheiros}}}
+Área: {{{area}}}m²
+Comodidades: {{{comodidades}}}
 
-Descrição Existente: {{{description}}}
+Descrição Existente: {{{descricaoExistente}}}
 
 Escreva uma descrição atraente que destaque as principais características e benefícios do imóvel. Mantenha o texto conciso e profissional, visando potenciais compradores. A descrição deve ter aproximadamente 150-200 palavras e ser em português.`,
 });
