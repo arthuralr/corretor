@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Negocio } from "@/lib/definitions";
-import { User, Calendar, DollarSign, Star, Clock, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { User, Calendar, DollarSign, Star, Clock, MoreHorizontal, Edit, Trash2, Percent } from 'lucide-react';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from "next/link";
@@ -72,9 +72,17 @@ export function NegocioCard({ negocio, onPriorityChange, onEdit, onDelete }: Neg
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-2 text-sm text-muted-foreground space-y-2">
-              <div className="flex items-center gap-2 font-semibold text-primary/90">
-                  <DollarSign className="w-4 h-4" />
-                  <span>{formatPrice(negocio.valorProposta)}</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-semibold text-primary/90">
+                    <DollarSign className="w-4 h-4" />
+                    <span>{formatPrice(negocio.valorProposta)}</span>
+                </div>
+                 {negocio.taxaComissao && (
+                    <div className="flex items-center gap-1 text-xs text-green-600 font-semibold">
+                       <span>{negocio.taxaComissao}%</span>
+                       <Percent className="w-3 h-3"/>
+                    </div>
+                )}
               </div>
               <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-2">

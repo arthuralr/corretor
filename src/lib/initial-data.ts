@@ -12,6 +12,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Proposta",
       dataCriacao: today,
       valorProposta: 745000,
+      taxaComissao: 6,
       recomendadoCliente: true,
       prioridade: true,
     },
@@ -24,6 +25,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Visita",
       dataCriacao: "2024-07-25",
       valorProposta: 450000,
+      taxaComissao: 5,
       prioridade: false,
     },
     {
@@ -35,6 +37,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Contato",
       dataCriacao: "2024-07-29",
       valorProposta: 200000,
+      taxaComissao: 6,
       prioridade: false,
     },
      {
@@ -46,6 +49,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Fechado - Ganho",
       dataCriacao: today,
       valorProposta: 1500,
+      taxaComissao: 10,
       prioridade: false,
     },
      {
@@ -57,6 +61,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Fechado - Perdido",
       dataCriacao: "2024-06-15",
       valorProposta: 750000,
+      taxaComissao: 6,
       prioridade: false,
     },
     {
@@ -68,6 +73,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Fechado - Ganho",
       dataCriacao: today,
       valorProposta: 480000,
+      taxaComissao: 5,
       prioridade: false,
     },
      {

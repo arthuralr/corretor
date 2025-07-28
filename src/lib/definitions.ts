@@ -52,6 +52,7 @@ export type Negocio = {
   etapa: EtapaFunil;
   dataCriacao: string;
   valorProposta: number;
+  taxaComissao?: number;
   recomendadoCliente?: boolean;
   documentos?: Documento[];
   prioridade?: boolean;

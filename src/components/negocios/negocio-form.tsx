@@ -4,7 +4,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { User, Home, DollarSign, Tag } from 'lucide-react';
+import { User, Home, DollarSign, Tag, Percent } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +25,7 @@ const formSchema = z.object({
   clienteId: z.string().min(1, 'É obrigatório selecionar um cliente.'),
   imovelId: z.string().min(1, 'É obrigatório selecionar um imóvel.'),
   valorProposta: z.coerce.number().min(1, 'O valor da proposta é obrigatório.'),
+  taxaComissao: z.coerce.number().min(0).optional(),
   etapa: z.enum(['Contato', 'Atendimento', 'Visita', 'Proposta', 'Reserva', 'Fechado - Ganho', 'Fechado - Perdido']),
 });
 
@@ -55,6 +56,7 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
       clienteId: initialData?.clienteId || '',
       imovelId: initialData?.imovelId || '',
       valorProposta: initialData?.valorProposta || 0,
+      taxaComissao: initialData?.taxaComissao || 0,
       etapa: initialData?.etapa || 'Contato',
     },
   });
@@ -71,11 +73,12 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
   }, [selectedImovelId, imoveis, form]);
 
   useEffect(() => {
-    // Reset form when initialData changes
+    // Reset form when initialData or modal opens
     form.reset({
       clienteId: initialData?.clienteId || '',
       imovelId: initialData?.imovelId || '',
       valorProposta: initialData?.valorProposta || 0,
+      taxaComissao: initialData?.taxaComissao || 0,
       etapa: initialData?.etapa || 'Contato',
     });
   }, [initialData, form]);
@@ -151,19 +154,34 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
               </FormItem>
             )}
           />
-           <FormField
-              control={form.control}
-              name="valorProposta"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor da Proposta</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="750000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+           <div className="grid grid-cols-2 gap-4">
+            <FormField
+                control={form.control}
+                name="valorProposta"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor da Proposta</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="750000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+            <FormField
+                control={form.control}
+                name="taxaComissao"
+                render={({ field }) => (
+                    <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Percent className="h-4 w-4" /> Comissão (%)</FormLabel>
+                    <FormControl>
+                        <Input type="number" placeholder="6" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+           </div>
           <FormField
             control={form.control}
             name="etapa"
