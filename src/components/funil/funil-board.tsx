@@ -9,6 +9,7 @@ import { addActivityLog } from '@/lib/activity-log';
 import { NegocioModal } from '../negocios/negocio-modal';
 import { getInitialClients, getInitialImoveis } from '@/lib/initial-data';
 import { Input } from '../ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 const LOCAL_STORAGE_KEY = 'funilBoardData';
 const CLIENTS_STORAGE_KEY = 'clientsData';
@@ -26,6 +27,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
     const [isClient, setIsClient] = useState(false);
     const [boardData, setBoardData] = useState(initialData);
     const [searchQuery, setSearchQuery] = useState('');
+    const { toast } = useToast();
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingNegocio, setEditingNegocio] = useState<Negocio | null>(null);
@@ -128,6 +130,35 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         updateBoardData(newBoardData);
         setIsModalOpen(false);
         setEditingNegocio(null);
+    };
+
+    const handleDeleteNegocio = (negocioId: string, etapa: EtapaFunil) => {
+        try {
+            const newBoardData = [...boardData];
+            const columnIndex = newBoardData.findIndex(col => col.etapa === etapa);
+            
+            if (columnIndex === -1) {
+                throw new Error("Column not found for business deletion.");
+            }
+
+            const negocioTitle = newBoardData[columnIndex].negocios.find(n => n.id === negocioId)?.imovelTitulo || 'Negócio';
+            
+            newBoardData[columnIndex].negocios = newBoardData[columnIndex].negocios.filter(n => n.id !== negocioId);
+            updateBoardData(newBoardData);
+            
+            toast({
+                title: "Negócio Excluído!",
+                description: `O negócio "${negocioTitle}" foi removido do funil.`,
+            });
+
+        } catch (error) {
+             toast({
+                title: "Erro",
+                description: "Não foi possível excluir o negócio.",
+                variant: "destructive",
+            });
+            console.error(error);
+        }
     };
 
 
@@ -233,6 +264,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
                       onPriorityChange={handlePriorityChange}
                       onAddNegocio={handleOpenAddModal}
                       onEditNegocio={handleOpenEditModal}
+                      onDeleteNegocio={handleDeleteNegocio}
                   />
               ))}
           </div>

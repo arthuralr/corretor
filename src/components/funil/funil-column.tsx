@@ -13,6 +13,7 @@ interface FunilColumnProps {
   onPriorityChange: (negocioId: string) => void;
   onAddNegocio: (etapa: EtapaFunil) => void;
   onEditNegocio: (negocio: Negocio) => void;
+  onDeleteNegocio: (negocioId: string, etapa: EtapaFunil) => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -24,7 +25,7 @@ const formatCurrency = (value: number) => {
     }).format(value);
   }
 
-export function FunilColumn({ etapa, negocios, onPriorityChange, onAddNegocio, onEditNegocio }: FunilColumnProps) {
+export function FunilColumn({ etapa, negocios, onPriorityChange, onAddNegocio, onEditNegocio, onDeleteNegocio }: FunilColumnProps) {
   const totalValor = negocios.reduce((sum, negocio) => sum + negocio.valorProposta, 0);
 
   return (
@@ -62,6 +63,7 @@ export function FunilColumn({ etapa, negocios, onPriorityChange, onAddNegocio, o
                                       negocio={negocio} 
                                       onPriorityChange={onPriorityChange}
                                       onEdit={() => onEditNegocio(negocio)} 
+                                      onDelete={() => onDeleteNegocio(negocio.id, etapa)}
                                     />
                                 </div>
                             )}
