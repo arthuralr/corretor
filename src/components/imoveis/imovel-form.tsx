@@ -41,13 +41,20 @@ const formSchema = z.object({
   imageUrl: z.string().url("Por favor, insira uma URL válida.").optional().or(z.literal("")),
 });
 
-export function ImovelForm() {
+type ImovelFormValues = z.infer<typeof formSchema>;
+
+interface ImovelFormProps {
+    initialData?: Imovel;
+}
+
+export function ImovelForm({ initialData }: ImovelFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const isEditing = !!initialData;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<ImovelFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       refCode: "",
       title: "",
       description: "",
@@ -60,28 +67,40 @@ export function ImovelForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: ImovelFormValues) {
     try {
         const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
         const imoveis: Imovel[] = savedData ? JSON.parse(savedData) : [];
         
-        const newImovel: Imovel = {
-            id: `IMOVEL-${Date.now()}`,
-            description: values.description || '',
-            ...values,
-        };
-
-        imoveis.push(newImovel);
-        window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(imoveis));
+        if (isEditing) {
+            // Update existing imovel
+            const updatedImoveis = imoveis.map(imovel => 
+                imovel.id === initialData.id ? { ...initialData, ...values } : imovel
+            );
+            window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(updatedImoveis));
+            toast({
+              title: "Imóvel Atualizado!",
+              description: "As informações do imóvel foram salvas.",
+            });
+        } else {
+            // Create new imovel
+            const newImovel: Imovel = {
+                id: `IMOVEL-${Date.now()}`,
+                ...values,
+                description: values.description || '',
+            };
+            imoveis.push(newImovel);
+            window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(imoveis));
+            toast({
+              title: "Imóvel Salvo!",
+              description: "O novo imóvel foi adicionado aos seus registros.",
+            });
+        }
+        
         window.dispatchEvent(new CustomEvent('imoveisUpdated'));
-
-
-        toast({
-          title: "Imóvel Salvo!",
-          description: "O novo imóvel foi adicionado aos seus registros.",
-        });
         router.push("/imoveis");
-        router.refresh(); // Forces a refresh on the redirected page to show the new item
+        router.refresh(); 
+
     } catch (error) {
         console.error("Falha ao salvar imóvel no localStorage", error);
         toast({
@@ -97,7 +116,7 @@ export function ImovelForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardHeader>
-             <CardTitle className="font-headline">Detalhes do Imóvel</CardTitle>
+             <CardTitle className="font-headline">{isEditing ? 'Editar Imóvel' : 'Detalhes do Novo Imóvel'}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
@@ -250,7 +269,7 @@ export function ImovelForm() {
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
-            <Button type="submit">Salvar Imóvel</Button>
+            <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Salvar Imóvel'}</Button>
           </CardFooter>
         </form>
       </Form>

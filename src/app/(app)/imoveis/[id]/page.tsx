@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon } from "lucide-react";
+import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit } from "lucide-react";
 import type { Imovel, Task } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -7,9 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { TaskList } from "@/components/agenda/task-list";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
 import Image from "next/image";
+import Link from "next/link";
 
 // MOCK DATA FETCHING
 async function getImovel(id: string): Promise<Imovel | undefined> {
+  // In a real app, you would fetch from a database, but for now we read from localStorage
+   if (typeof window !== 'undefined') {
+    const savedImoveis = window.localStorage.getItem('imoveisData');
+    if (savedImoveis) {
+      const imoveis: Imovel[] = JSON.parse(savedImoveis);
+      return imoveis.find(i => i.id === id);
+    }
+  }
+  // Fallback to initial data if localStorage is not available or empty
   const imoveis: Imovel[] = [
     { id: "IMOVEL-1", refCode: "CA001", title: "Casa Espaçosa com Piscina", description: "Uma bela casa com 3 quartos, 2 banheiros e uma grande área de lazer com piscina.", type: "Casa", price: 750000, bedrooms: 3, bathrooms: 2, status: "Disponível", imageUrl: "https://placehold.co/600x400.png" },
     { id: "IMOVEL-2", refCode: "AP002", title: "Apartamento Moderno no Centro", description: "Apartamento de 2 quartos totalmente reformado no coração da cidade.", type: "Apartamento", price: 450000, bedrooms: 2, bathrooms: 1, status: "Vendido", imageUrl: "https://placehold.co/600x400.png" },
@@ -17,7 +27,6 @@ async function getImovel(id: string): Promise<Imovel | undefined> {
     { id: "IMOVEL-4", refCode: "AP004", title: "Apartamento para Alugar", description: "Apartamento com 1 quarto, mobiliado, pronto para morar.", type: "Apartamento", price: 1500, bedrooms: 1, bathrooms: 1, status: "Alugado" },
     { id: "IMOVEL-5", refCode: "CA005", title: "Casa Charmosa em Bairro Tranquilo", description: "Casa com 3 quartos, jardim de inverno e edícula. Perfeita para famílias que buscam sossego.", type: "Casa", price: 680000, bedrooms: 3, bathrooms: 2, status: "Disponível", imageUrl: "https://placehold.co/600x400.png"}
   ];
-  // In a real app, you would also check localStorage
   return imoveis.find(i => i.id === id);
 }
 
@@ -65,7 +74,11 @@ export default async function ImovelDetailPage({ params }: { params: { id: strin
                 <p className="text-muted-foreground">Ref: {imovel.refCode}</p>
             </div>
         </div>
-        <Button>Editar Imóvel</Button>
+        <Link href={`/imoveis/${imovel.id}/edit`}>
+          <Button>
+            <Edit className="mr-2 h-4 w-4" /> Editar Imóvel
+          </Button>
+        </Link>
       </div>
       
       {imovel.imageUrl && (
