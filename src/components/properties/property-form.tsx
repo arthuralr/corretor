@@ -28,13 +28,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 const formSchema = z.object({
-  address: z.string().min(1, "Address is required"),
-  price: z.coerce.number().min(1, "Price is required"),
-  type: z.enum(["House", "Apartment", "Condo", "Townhouse"]),
-  status: z.enum(["For Sale", "For Rent", "Sold", "Rented"]),
+  address: z.string().min(1, "Endereço é obrigatório"),
+  price: z.coerce.number().min(1, "Preço é obrigatório"),
+  type: z.enum(["Casa", "Apartamento", "Condomínio", "Sobrado"]),
+  status: z.enum(["À Venda", "Para Alugar", "Vendido", "Alugado"]),
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(1),
-  squareFootage: z.coerce.number().min(1, "Square footage is required"),
+  squareFootage: z.coerce.number().min(1, "Área é obrigatória"),
   amenities: z.string().optional(),
   imageUrl: z.string().url().optional().or(z.literal("")),
 });
@@ -48,11 +48,11 @@ export function PropertyForm() {
     defaultValues: {
       address: "",
       price: 0,
-      type: "House",
-      status: "For Sale",
+      type: "Casa",
+      status: "À Venda",
       bedrooms: 3,
       bathrooms: 2,
-      squareFootage: 1500,
+      squareFootage: 150,
       amenities: "",
       imageUrl: "",
     },
@@ -61,8 +61,8 @@ export function PropertyForm() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     toast({
-      title: "Property Saved!",
-      description: "The new property has been added to your listings.",
+      title: "Imóvel Salvo!",
+      description: "O novo imóvel foi adicionado aos seus anúncios.",
     });
     router.push("/properties");
   }
@@ -72,7 +72,7 @@ export function PropertyForm() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardHeader>
-             <CardTitle className="font-headline">Property Details</CardTitle>
+             <CardTitle className="font-headline">Detalhes do Imóvel</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
@@ -80,9 +80,9 @@ export function PropertyForm() {
               name="address"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>Endereço</FormLabel>
                   <FormControl>
-                    <Input placeholder="123 Main St, Anytown, USA" {...field} />
+                    <Input placeholder="Rua das Flores, 123, São Paulo, SP" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -94,7 +94,7 @@ export function PropertyForm() {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price (USD)</FormLabel>
+                  <FormLabel>Preço (BRL)</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="500000" {...field} />
                   </FormControl>
@@ -107,9 +107,9 @@ export function PropertyForm() {
               name="squareFootage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Square Footage</FormLabel>
+                  <FormLabel>Área (m²)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="1800" {...field} />
+                    <Input type="number" placeholder="180" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -121,18 +121,18 @@ export function PropertyForm() {
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Property Type</FormLabel>
+                  <FormLabel>Tipo de Imóvel</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a property type" />
+                        <SelectValue placeholder="Selecione um tipo de imóvel" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="House">House</SelectItem>
-                      <SelectItem value="Apartment">Apartment</SelectItem>
-                      <SelectItem value="Condo">Condo</SelectItem>
-                      <SelectItem value="Townhouse">Townhouse</SelectItem>
+                      <SelectItem value="Casa">Casa</SelectItem>
+                      <SelectItem value="Apartamento">Apartamento</SelectItem>
+                      <SelectItem value="Condomínio">Condomínio</SelectItem>
+                      <SelectItem value="Sobrado">Sobrado</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -149,14 +149,14 @@ export function PropertyForm() {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a status" />
+                        <SelectValue placeholder="Selecione um status" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="For Sale">For Sale</SelectItem>
-                      <SelectItem value="For Rent">For Rent</SelectItem>
-                      <SelectItem value="Sold">Sold</SelectItem>
-                      <SelectItem value="Rented">Rented</SelectItem>
+                      <SelectItem value="À Venda">À Venda</SelectItem>
+                      <SelectItem value="Para Alugar">Para Alugar</SelectItem>
+                      <SelectItem value="Vendido">Vendido</SelectItem>
+                      <SelectItem value="Alugado">Alugado</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -170,7 +170,7 @@ export function PropertyForm() {
                 name="bedrooms"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bedrooms</FormLabel>
+                    <FormLabel>Quartos</FormLabel>
                     <FormControl>
                       <Input type="number" {...field} />
                     </FormControl>
@@ -183,7 +183,7 @@ export function PropertyForm() {
                 name="bathrooms"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bathrooms</FormLabel>
+                    <FormLabel>Banheiros</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.5" {...field} />
                     </FormControl>
@@ -198,12 +198,12 @@ export function PropertyForm() {
               name="amenities"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amenities</FormLabel>
+                  <FormLabel>Comodidades</FormLabel>
                   <FormControl>
-                    <Input placeholder="Pool, Garage, Fireplace" {...field} />
+                    <Input placeholder="Piscina, Garagem, Lareira" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Comma-separated list of amenities.
+                    Lista de comodidades separadas por vírgula.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -215,9 +215,9 @@ export function PropertyForm() {
               name="imageUrl"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>Image URL</FormLabel>
+                  <FormLabel>URL da Imagem</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://example.com/image.png" {...field} />
+                    <Input placeholder="https://exemplo.com/imagem.png" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -225,8 +225,8 @@ export function PropertyForm() {
             />
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">Save Property</Button>
+            <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
+            <Button type="submit">Salvar Imóvel</Button>
           </CardFooter>
         </form>
       </Form>

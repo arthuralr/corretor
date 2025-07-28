@@ -2,8 +2,8 @@ export type Property = {
   id: string;
   address: string;
   price: number;
-  type: 'House' | 'Apartment' | 'Condo' | 'Townhouse';
-  status: 'For Sale' | 'For Rent' | 'Sold' | 'Rented';
+  type: 'Casa' | 'Apartamento' | 'Condomínio' | 'Sobrado';
+  status: 'À Venda' | 'Para Alugar' | 'Vendido' | 'Alugado';
   bedrooms: number;
   bathrooms: number;
   squareFootage: number;

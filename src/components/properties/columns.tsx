@@ -15,12 +15,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 const formatPrice = (price: number, status: Property['status']) => {
-  const formattedPrice = new Intl.NumberFormat("en-US", {
+  const formattedPrice = new Intl.NumberFormat("pt-BR", {
     style: "currency",
-    currency: "USD",
+    currency: "BRL",
   }).format(price);
   
-  return status === 'For Rent' ? `${formattedPrice}/mo` : formattedPrice;
+  return status === 'Para Alugar' ? `${formattedPrice}/mês` : formattedPrice;
 }
 
 export const columns: ColumnDef<Property>[] = [
@@ -32,7 +32,7 @@ export const columns: ColumnDef<Property>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Address
+          Endereço
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -47,7 +47,7 @@ export const columns: ColumnDef<Property>[] = [
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-              Price
+              Preço
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -65,9 +65,9 @@ export const columns: ColumnDef<Property>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const variant =
-        status === "For Sale" || status === "For Rent"
+        status === "À Venda" || status === "Para Alugar"
           ? "secondary"
-          : status === "Sold" || status === "Rented"
+          : status === "Vendido" || status === "Alugado"
           ? "default"
           : "outline";
       return <Badge variant={variant}>{status}</Badge>;
@@ -75,17 +75,17 @@ export const columns: ColumnDef<Property>[] = [
   },
   {
     accessorKey: "type",
-    header: "Type",
+    header: "Tipo",
   },
   {
     accessorKey: "bedrooms",
-    header: "Beds",
-    cell: ({ row }) => `${row.getValue("bedrooms")} beds`,
+    header: "Quartos",
+    cell: ({ row }) => `${row.getValue("bedrooms")} quartos`,
   },
   {
     accessorKey: "bathrooms",
-    header: "Baths",
-    cell: ({ row }) => `${row.getValue("bathrooms")} baths`,
+    header: "Banheiros",
+    cell: ({ row }) => `${row.getValue("bathrooms")} banheiros`,
   },
   {
     id: "actions",
@@ -96,20 +96,20 @@ export const columns: ColumnDef<Property>[] = [
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">Abrir menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(property.id)}
             >
-              Copy Property ID
+              Copiar ID do Imóvel
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Edit Property</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">Delete Property</DropdownMenuItem>
+            <DropdownMenuItem>Editar Imóvel</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">Excluir Imóvel</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );

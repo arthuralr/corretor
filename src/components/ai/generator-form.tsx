@@ -33,12 +33,12 @@ import { Loader2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  address: z.string().min(1, "Address is required"),
-  propertyType: z.string().min(1, "Property type is required"),
+  address: z.string().min(1, "O endereço é obrigatório"),
+  propertyType: z.string().min(1, "O tipo de imóvel é obrigatório"),
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(1),
-  squareFootage: z.coerce.number().min(1, "Square footage is required"),
-  amenities: z.string().min(1, "At least one amenity is required"),
+  squareFootage: z.coerce.number().min(1, "A área é obrigatória"),
+  amenities: z.string().min(1, "Pelo menos uma comodidade é obrigatória"),
   description: z.string().optional(),
 });
 
@@ -50,12 +50,12 @@ export function GeneratorForm() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      address: "123 Sunny Lane, San Diego, CA",
-      propertyType: "House",
-      bedrooms: 4,
-      bathrooms: 3,
-      squareFootage: 2200,
-      amenities: "swimming pool, garage, hardwood floors, updated kitchen",
+      address: "Rua das Flores, 123, São Paulo, SP",
+      propertyType: "Apartamento",
+      bedrooms: 3,
+      bathrooms: 2,
+      squareFootage: 120,
+      amenities: "piscina, garagem, piso de madeira, cozinha planejada",
       description: "",
     },
   });
@@ -69,8 +69,8 @@ export function GeneratorForm() {
     } catch (error) {
       console.error(error);
       toast({
-        title: "Error",
-        description: "Failed to generate description. Please try again.",
+        title: "Erro",
+        description: "Falha ao gerar a descrição. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -81,8 +81,8 @@ export function GeneratorForm() {
   const handleCopy = () => {
     navigator.clipboard.writeText(generatedDescription);
     toast({
-      title: "Copied!",
-      description: "The description has been copied to your clipboard.",
+      title: "Copiado!",
+      description: "A descrição foi copiada para sua área de transferência.",
     });
   };
 
@@ -92,7 +92,7 @@ export function GeneratorForm() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardHeader>
-              <CardTitle className="font-headline">Property Details</CardTitle>
+              <CardTitle className="font-headline">Detalhes do Imóvel</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
@@ -100,9 +100,9 @@ export function GeneratorForm() {
                 name="address"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Endereço</FormLabel>
                     <FormControl>
-                      <Input placeholder="123 Main St, Anytown, USA" {...field} />
+                      <Input placeholder="Rua das Flores, 123, São Paulo, SP" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -113,18 +113,18 @@ export function GeneratorForm() {
                 name="propertyType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Property Type</FormLabel>
+                    <FormLabel>Tipo de Imóvel</FormLabel>
                      <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a property type" />
+                            <SelectValue placeholder="Selecione um tipo de imóvel" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="House">House</SelectItem>
-                          <SelectItem value="Apartment">Apartment</SelectItem>
-                          <SelectItem value="Condo">Condo</SelectItem>
-                          <SelectItem value="Townhouse">Townhouse</SelectItem>
+                          <SelectItem value="Casa">Casa</SelectItem>
+                          <SelectItem value="Apartamento">Apartamento</SelectItem>
+                          <SelectItem value="Condomínio">Condomínio</SelectItem>
+                          <SelectItem value="Townhouse">Sobrado</SelectItem>
                         </SelectContent>
                       </Select>
                     <FormMessage />
@@ -137,7 +137,7 @@ export function GeneratorForm() {
                   name="bedrooms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Beds</FormLabel>
+                      <FormLabel>Quartos</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -149,7 +149,7 @@ export function GeneratorForm() {
                   name="bathrooms"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Baths</FormLabel>
+                      <FormLabel>Banheiros</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -161,7 +161,7 @@ export function GeneratorForm() {
                   name="squareFootage"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sq. Ft.</FormLabel>
+                      <FormLabel>Área (m²)</FormLabel>
                       <FormControl>
                         <Input type="number" {...field} />
                       </FormControl>
@@ -174,12 +174,12 @@ export function GeneratorForm() {
                 name="amenities"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Key Amenities & Features</FormLabel>
+                    <FormLabel>Comodidades e Características</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="e.g., swimming pool, garage, hardwood floors..." {...field} />
+                      <Textarea placeholder="ex: piscina, garagem, piso de madeira..." {...field} />
                     </FormControl>
                     <FormDescription>
-                      Comma-separated list of features.
+                      Lista de características separadas por vírgula.
                     </FormDescription>
                   </FormItem>
                 )}
@@ -189,9 +189,9 @@ export function GeneratorForm() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Optional: Your Notes / Existing Description</FormLabel>
+                    <FormLabel>Opcional: Suas Notas / Descrição Existente</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Any additional details to include..." {...field} />
+                      <Textarea placeholder="Qualquer detalhe adicional para incluir..." {...field} />
                     </FormControl>
                   </FormItem>
                 )}
@@ -202,10 +202,10 @@ export function GeneratorForm() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating...
+                    Gerando...
                   </>
                 ) : (
-                  "Generate Description"
+                  "Gerar Descrição"
                 )}
               </Button>
             </CardFooter>
@@ -214,7 +214,7 @@ export function GeneratorForm() {
       </Card>
       <Card className="flex flex-col">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="font-headline">Generated Description</CardTitle>
+          <CardTitle className="font-headline">Descrição Gerada</CardTitle>
           {generatedDescription && (
             <Button variant="ghost" size="icon" onClick={handleCopy}>
                 <Copy className="h-4 w-4" />
@@ -232,7 +232,7 @@ export function GeneratorForm() {
           )}
           {!isLoading && !generatedDescription && (
             <div className="flex items-center justify-center h-full rounded-lg border border-dashed text-muted-foreground text-center p-4">
-                Your generated property description will appear here.
+                A descrição do seu imóvel gerada por IA aparecerá aqui.
             </div>
           )}
         </CardContent>

@@ -20,10 +20,10 @@ import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
   email: z.string().email({
-    message: "Please enter a valid email address.",
+    message: "Por favor, insira um endereço de e-mail válido.",
   }),
   password: z.string().min(6, {
-    message: "Password must be at least 6 characters.",
+    message: "A senha deve ter pelo menos 6 caracteres.",
   }),
 });
 
@@ -57,7 +57,7 @@ export function LoginForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="name@example.com" {...field} />
+                    <Input placeholder="nome@exemplo.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -69,9 +69,9 @@ export function LoginForm() {
               render={({ field }) => (
                 <FormItem>
                     <div className="flex items-center">
-                        <Label htmlFor="password">Password</Label>
+                        <Label htmlFor="password">Senha</Label>
                         <a href="#" className="ml-auto inline-block text-sm underline">
-                            Forgot your password?
+                            Esqueceu sua senha?
                         </a>
                     </div>
                   <FormControl>
@@ -84,7 +84,7 @@ export function LoginForm() {
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full">
-              Login
+              Entrar
             </Button>
           </CardFooter>
         </form>

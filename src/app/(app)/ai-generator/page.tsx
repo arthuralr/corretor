@@ -7,11 +7,11 @@ export default function AIGeneratorPage() {
       <div className="flex items-center justify-between space-y-2">
         <div className="flex items-center gap-2">
             <WandSparkles className="h-8 w-8 text-accent" />
-            <h2 className="text-3xl font-bold tracking-tight font-headline">AI Listing Generator</h2>
+            <h2 className="text-3xl font-bold tracking-tight font-headline">Gerador de Anúncios com IA</h2>
         </div>
       </div>
       <p className="text-muted-foreground">
-        Fill in the property details below and let AI craft a compelling listing description for you.
+        Preencha os detalhes do imóvel abaixo e deixe a IA criar uma descrição incrível para você.
       </p>
       <GeneratorForm />
     </div>

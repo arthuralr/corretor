@@ -38,17 +38,17 @@ const menuItems = [
   { href: "/funil", label: "Funil de Vendas", icon: DollarSign },
   { href: "/radar", label: "Radar de Oportunidades", icon: Telescope },
   { href: "/relatorios", label: "Relatórios", icon: BarChartHorizontal },
-  { href: "/properties", label: "Properties", icon: Building2 },
-  { href: "/clients", label: "Clients", icon: Users },
+  { href: "/properties", label: "Propriedades (EN)", icon: Building2 },
+  { href: "/clients", label: "Clientes", icon: Users },
   { href: "/imoveis", label: "Imóveis", icon: Home },
   {
     href: "/ai-generator",
-    label: "AI Listing Generator",
+    label: "Gerador de Anúncios",
     icon: WandSparkles,
   },
   { href: "/social-media-generator", label: "Gerador de Posts", icon: Instagram },
   { href: "/settings/message-templates", label: "Modelos de Mensagens", icon: MessageSquareText },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -60,7 +60,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-2">
           <SidebarTrigger className="shrink-0 md:hidden" />
           <Building className="w-6 h-6 text-primary" />
-          <h1 className="text-lg font-semibold font-headline text-primary-foreground group-data-[collapsible=icon]:hidden">
+          <h1 className="text-lg font-semibold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             RealConnect
           </h1>
         </div>
@@ -86,7 +86,7 @@ export function AppSidebar() {
       <SidebarFooter>
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
           <Avatar className="h-9 w-9">
-            <AvatarImage src="https://placehold.co/40x40.png" alt="@realtor" />
+            <AvatarImage src="https://placehold.co/40x40.png" alt="@corretor" />
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
@@ -94,12 +94,12 @@ export function AppSidebar() {
               Jane Doe
             </span>
             <span className="text-xs text-sidebar-foreground/70">
-              janedoe@realtor.com
+              jane.doe@corretora.com
             </span>
           </div>
-          <Button asChild variant="ghost" size="icon" aria-label="Log out" className="ml-auto group-data-[collapsible=icon]:hidden">
+           <Button asChild variant="ghost" size="icon" aria-label="Sair" className="ml-auto group-data-[collapsible=icon]:hidden">
             <Link href="/login">
-              <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5" />
             </Link>
           </Button>
         </div>

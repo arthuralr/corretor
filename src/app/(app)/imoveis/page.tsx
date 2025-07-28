@@ -68,7 +68,7 @@ export default async function ImoveisPage() {
           </Button>
         </Link>
       </div>
-      <DataTable columns={columns} data={data} filterColumnId="title" />
+      <DataTable columns={columns} data={data} filterColumnId="title" filterPlaceholder="Filtrar por título..." />
     </div>
   );
 }
