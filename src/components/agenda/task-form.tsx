@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, User, Briefcase, Home } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -51,6 +51,8 @@ interface TaskFormProps {
 
 export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imoveis }: TaskFormProps) {
   const { toast } = useToast();
+  const [filteredNegocios, setFilteredNegocios] = useState<Negocio[]>(negocios);
+
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -78,19 +80,23 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
 
   useEffect(() => {
     if (selectedClientId) {
-      const relatedNegocio = negocios.find(n => n.clienteId === selectedClientId);
-      if (relatedNegocio) {
-        form.setValue('negocioId', relatedNegocio.id);
-      } else {
-        // If no related proposal, clear the field unless it's being pre-filled
-        if (!initialData?.negocioId) {
-            form.setValue('negocioId', undefined);
+      const clientNegocios = negocios.filter(n => n.clienteId === selectedClientId);
+      setFilteredNegocios(clientNegocios);
+
+      if (clientNegocios.length > 0) {
+        // Auto-select the first proposal if not already set
+        if (!form.getValues('negocioId')) {
+            form.setValue('negocioId', clientNegocios[0].id);
         }
+      } else {
+        form.setValue('negocioId', undefined);
       }
     } else {
-         if (!initialData?.negocioId) {
-            form.setValue('negocioId', undefined);
-        }
+      setFilteredNegocios(negocios); // Show all proposals if no client is selected
+      // Clear proposal if the pre-selected one doesn't match a new client selection
+      if (!initialData?.negocioId) {
+          form.setValue('negocioId', undefined);
+      }
     }
   }, [selectedClientId, negocios, form, initialData]);
 
@@ -197,7 +203,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="null">Nenhuma</SelectItem>
-                    {negocios.map(negocio => (
+                    {filteredNegocios.map(negocio => (
                       <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo} ({negocio.clienteNome})</SelectItem>
                     ))}
                   </SelectContent>
