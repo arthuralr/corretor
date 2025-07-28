@@ -4,9 +4,95 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Building2, Users, DollarSign, Home } from "lucide-react"
+import { Building2, Users, DollarSign, Home, FileText } from "lucide-react"
+import type { Negocio } from "@/lib/definitions";
+import { isThisMonth, parseISO } from 'date-fns';
 
-export default function Dashboard() {
+// In a real app, you'd fetch this from a database.
+async function getNegocios(): Promise<Negocio[]> {
+  return [
+    {
+      id: "NEG-1",
+      clienteId: "CLIENT-1",
+      clienteNome: "John Doe",
+      imovelId: "IMOVEL-1",
+      imovelTitulo: "Casa Espaçosa com Piscina",
+      etapa: "Proposta",
+      dataCriacao: "2024-07-28",
+      valorProposta: 745000,
+    },
+    {
+      id: "NEG-2",
+      clienteId: "CLIENT-2",
+      clienteNome: "Jane Smith",
+      imovelId: "IMOVEL-2",
+      imovelTitulo: "Apartamento Moderno no Centro",
+      etapa: "Visita",
+      dataCriacao: "2024-07-25",
+      valorProposta: 450000,
+    },
+    {
+      id: "NEG-3",
+      clienteId: "CLIENT-3",
+      clienteNome: "Sam Wilson",
+      imovelId: "IMOVEL-3",
+      imovelTitulo: "Terreno Plano em Condomínio",
+      etapa: "Contato",
+      dataCriacao: "2024-07-29",
+      valorProposta: 200000,
+    },
+     {
+      id: "NEG-4",
+      clienteId: "CLIENT-1",
+      clienteNome: "John Doe",
+      imovelId: "IMOVEL-4",
+      imovelTitulo: "Apartamento para Alugar",
+      etapa: "Fechado - Ganho",
+      dataCriacao: new Date().toISOString(), // Set to today for testing
+      valorProposta: 1500,
+    },
+     {
+      id: "NEG-5",
+      clienteId: "CLIENT-2",
+      clienteNome: "Jane Smith",
+      imovelId: "IMOVEL-1",
+      imovelTitulo: "Casa Espaçosa com Piscina",
+      etapa: "Fechado - Perdido",
+      dataCriacao: "2024-06-15",
+      valorProposta: 750000,
+    },
+    {
+      id: "NEG-6",
+      clienteId: "CLIENT-3",
+      clienteNome: "Sam Wilson",
+      imovelId: "IMOVEL-2",
+      imovelTitulo: "Apartamento Moderno no Centro",
+      etapa: "Fechado - Ganho",
+      dataCriacao: new Date().toISOString(), // Set to today for testing
+      valorProposta: 480000,
+    },
+  ];
+}
+
+
+export default async function Dashboard() {
+  const negocios = await getNegocios();
+
+  const salesThisMonth = negocios
+    .filter(n => n.etapa === 'Fechado - Ganho' && isThisMonth(parseISO(n.dataCriacao)))
+    .reduce((sum, n) => sum + n.valorProposta, 0);
+  
+  const proposalsCount = negocios.filter(n => n.etapa === 'Proposta').length;
+  const activeClientsCount = [...new Set(negocios.filter(n => n.etapa !== 'Fechado - Ganho' && n.etapa !== 'Fechado - Perdido').map(n => n.clienteId))].length;
+  const availablePropertiesCount = 5; // Replace with actual property count later
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -15,53 +101,51 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Properties
-            </CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Vendas no Mês</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1,234</div>
+            <div className="text-2xl font-bold">{formatCurrency(salesThisMonth)}</div>
             <p className="text-xs text-muted-foreground">
-              +20.1% from last month
+              Soma de negócios ganhos este mês
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Active Clients
+              Clientes Ativos
             </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+235</div>
+            <div className="text-2xl font-bold">+{activeClientsCount}</div>
             <p className="text-xs text-muted-foreground">
-              +180.1% from last month
+              Clientes com negócios em aberto
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sales This Month</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Negócios em Proposta</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,234.56</div>
+            <div className="text-2xl font-bold">{proposalsCount}</div>
             <p className="text-xs text-muted-foreground">
-              +19% from last month
+              Total de propostas aguardando
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">New Listings</CardTitle>
+            <CardTitle className="text-sm font-medium">Imóveis Disponíveis</CardTitle>
             <Home className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+57</div>
+            <div className="text-2xl font-bold">{availablePropertiesCount}</div>
             <p className="text-xs text-muted-foreground">
-              +10 since last week
+              Total de imóveis para negócio
             </p>
           </CardContent>
         </Card>
@@ -69,18 +153,18 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle className="font-headline">Recent Activity</CardTitle>
+            <CardTitle className="font-headline">Atividade Recente</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
-            <p>Activity feed coming soon...</p>
+            <p>Feed de atividades em breve...</p>
           </CardContent>
         </Card>
         <Card className="col-span-4 md:col-span-3">
           <CardHeader>
-            <CardTitle className="font-headline">Upcoming Appointments</CardTitle>
+            <CardTitle className="font-headline">Compromissos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Appointments feature coming soon...</p>
+            <p>Funcionalidade de agenda em breve...</p>
           </CardContent>
         </Card>
       </div>
