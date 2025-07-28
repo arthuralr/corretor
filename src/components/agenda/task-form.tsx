@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, User, Briefcase } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -20,8 +20,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import type { Client, Negocio } from '@/lib/definitions';
 
 const formSchema = z.object({
   title: z.string().min(1, 'O título é obrigatório'),
@@ -29,6 +31,8 @@ const formSchema = z.object({
     required_error: 'A data de vencimento é obrigatória.',
   }),
   description: z.string().optional(),
+  clientId: z.string().optional(),
+  negocioId: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof formSchema>;
@@ -36,16 +40,20 @@ type TaskFormValues = z.infer<typeof formSchema>;
 interface TaskFormProps {
   onSave: (values: TaskFormValues) => void;
   onCancel: () => void;
-  initialData?: TaskFormValues;
+  initialData?: Partial<TaskFormValues>;
+  clients: Client[];
+  negocios: Negocio[];
 }
 
-export function TaskForm({ onSave, onCancel, initialData }: TaskFormProps) {
+export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: TaskFormProps) {
   const { toast } = useToast();
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData || {
       title: '',
       description: '',
+      clientId: '',
+      negocioId: '',
     },
   });
 
@@ -59,7 +67,7 @@ export function TaskForm({ onSave, onCancel, initialData }: TaskFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 py-4">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
         <FormField
           control={form.control}
           name="title"
@@ -112,6 +120,54 @@ export function TaskForm({ onSave, onCancel, initialData }: TaskFormProps) {
             </FormItem>
           )}
         />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="clientId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2"><User className="h-4 w-4" /> Associar ao Cliente</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um cliente (opcional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {clients.map(client => (
+                      <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="negocioId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2"><Briefcase className="h-4 w-4" /> Associar ao Negócio</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um negócio (opcional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {negocios.map(negocio => (
+                      <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         <FormField
           control={form.control}
           name="description"
@@ -129,7 +185,7 @@ export function TaskForm({ onSave, onCancel, initialData }: TaskFormProps) {
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onCancel}>
                 Cancelar
             </Button>

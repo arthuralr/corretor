@@ -62,4 +62,8 @@ export type Task = {
   description: string;
   dueDate: string; // ISO String
   completed: boolean;
+  clientId?: string;
+  negocioId?: string;
+  clientName?: string;
+  negocioTitle?: string;
 };

@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Imovel } from "@/lib/definitions";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const formatPrice = (price: number, status: Imovel['status']) => {
   const formattedPrice = new Intl.NumberFormat("pt-BR", {
@@ -43,7 +44,10 @@ export const columns: ColumnDef<Imovel>[] = [
     },
      cell: ({ row }) => {
         const title = row.getValue("title") as string;
-        return <div className="truncate max-w-xs">{title}</div>;
+        const imovel = row.original;
+        // In a real app, you would have a detail page for properties.
+        // We link to a non-existent page for demonstration.
+        return <Link href={`/imoveis/${imovel.id}`} className="truncate max-w-xs hover:underline">{title}</Link>;
     }
   },
   {
@@ -96,14 +100,20 @@ export const columns: ColumnDef<Imovel>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
+            <DropdownMenuItem>
+                <Link href={`/imoveis/${imovel.id}`} className="flex items-center w-full">
+                    <Edit className="mr-2 h-4 w-4" /> Ver/Editar Imóvel
+                </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => navigator.clipboard.writeText(imovel.id)}
             >
               Copiar ID do Imóvel
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Editar Imóvel</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">Excluir Imóvel</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                <Trash2 className="mr-2 h-4 w-4" /> Excluir Imóvel
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
