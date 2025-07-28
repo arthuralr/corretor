@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -26,7 +27,7 @@ async function getInitialNegocios(): Promise<Negocio[]> {
       imovelId: "IMOVEL-1",
       imovelTitulo: "Casa Espaçosa com Piscina",
       etapa: "Proposta",
-      dataCriacao: "2024-07-28",
+      dataCriacao: new Date().toISOString(),
       valorProposta: 745000,
       recomendadoCliente: true,
     },
@@ -114,31 +115,37 @@ export default function Dashboard() {
   const [negocios, setNegocios] = React.useState<Negocio[]>([]);
   const [tasks, setTasks] = React.useState<Task[]>([]);
 
+  const loadNegocios = React.useCallback(async () => {
+    try {
+      const savedData = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (savedData) {
+        const boardData = JSON.parse(savedData);
+        // Ensure boardData is an array before calling flatMap
+        if (Array.isArray(boardData)) {
+            const allNegocios = boardData.flatMap((column: any) => column.negocios);
+            setNegocios(allNegocios);
+        } else {
+             const initialNegocios = await getInitialNegocios();
+             setNegocios(initialNegocios);
+        }
+      } else {
+        const initialNegocios = await getInitialNegocios();
+        setNegocios(initialNegocios);
+      }
+    } catch (error) {
+      console.error("Failed to load data, using initial data", error);
+      const initialNegocios = await getInitialNegocios();
+      setNegocios(initialNegocios);
+    }
+  }, []);
+
+
   React.useEffect(() => {
     const fetchTasks = async () => {
         const tasksData = await getTasks();
         setTasks(tasksData);
     };
     fetchTasks();
-
-    const loadNegocios = async () => {
-        try {
-            const savedData = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (savedData) {
-                const boardData = JSON.parse(savedData);
-                const allNegocios = boardData.flatMap((column: any) => column.negocios);
-                setNegocios(allNegocios);
-            } else {
-                const initialNegocios = await getInitialNegocios();
-                setNegocios(initialNegocios);
-            }
-        } catch (error) {
-            console.error("Failed to load data, using initial data", error);
-            const initialNegocios = await getInitialNegocios();
-            setNegocios(initialNegocios);
-        }
-    };
-
     loadNegocios();
 
     // Listen for changes from other tabs/windows
@@ -147,12 +154,21 @@ export default function Dashboard() {
             loadNegocios();
         }
     };
+    
     window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for a custom event when the board is updated in the same tab
+    const handleBoardUpdate = () => {
+        loadNegocios();
+    }
+    window.addEventListener('funilBoardUpdated', handleBoardUpdate);
+
 
     return () => {
         window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('funilBoardUpdated', handleBoardUpdate);
     };
-  }, []);
+  }, [loadNegocios]);
 
   const salesThisMonth = negocios
     .filter(n => n.etapa === 'Fechado - Ganho' && isThisMonth(parseISO(n.dataCriacao)))
@@ -250,3 +266,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+    

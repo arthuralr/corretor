@@ -1,3 +1,4 @@
+
 import { FunilBoard } from "@/components/funil/funil-board";
 import type { Negocio, EtapaFunil } from "@/lib/definitions";
 import { DollarSign } from "lucide-react";
@@ -14,6 +15,8 @@ const etapas: EtapaFunil[] = [
 
 async function getNegocios(): Promise<Negocio[]> {
   // In a real app, you'd fetch this from a database.
+  // Make sure creation dates are recent for dashboard sales calculation
+  const today = new Date().toISOString();
   return [
     {
       id: "NEG-1",
@@ -22,7 +25,7 @@ async function getNegocios(): Promise<Negocio[]> {
       imovelId: "IMOVEL-1",
       imovelTitulo: "Casa Espaçosa com Piscina",
       etapa: "Proposta",
-      dataCriacao: "2024-07-28",
+      dataCriacao: today,
       valorProposta: 745000,
       recomendadoCliente: true,
     },
@@ -53,7 +56,7 @@ async function getNegocios(): Promise<Negocio[]> {
       imovelId: "IMOVEL-4",
       imovelTitulo: "Apartamento para Alugar",
       etapa: "Fechado - Ganho",
-      dataCriacao: "2024-07-20",
+      dataCriacao: today,
       valorProposta: 1500,
     },
      {
@@ -89,7 +92,7 @@ export default async function FunilPage() {
   }));
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+    <div className="flex flex-col flex-1 space-y-4 p-4 md:p-8 pt-6 h-full">
       <div className="flex items-center justify-between space-y-2">
         <div className="flex items-center gap-2">
             <DollarSign className="h-8 w-8 text-accent" />
@@ -105,3 +108,5 @@ export default async function FunilPage() {
     </div>
   );
 }
+
+    
