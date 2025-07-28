@@ -36,7 +36,6 @@ const formSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().optional(),
   negocioId: z.string().optional(),
-  imovelId: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof formSchema>;
@@ -59,7 +58,6 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
       description: initialData?.description || '',
       clientId: initialData?.clientId || '',
       negocioId: initialData?.negocioId || '',
-      imovelId: initialData?.imovelId || '',
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
     },
   });
@@ -67,23 +65,42 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
   const selectedClientId = form.watch('clientId');
 
   useEffect(() => {
+    // Reset form when initialData changes (e.g., when opening the modal for editing)
+    form.reset({
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      clientId: initialData?.clientId || '',
+      negocioId: initialData?.negocioId || '',
+      dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
+    });
+  }, [initialData, form]);
+
+
+  useEffect(() => {
     if (selectedClientId) {
       const relatedNegocio = negocios.find(n => n.clienteId === selectedClientId);
       if (relatedNegocio) {
         form.setValue('negocioId', relatedNegocio.id);
-        form.setValue('imovelId', relatedNegocio.imovelId);
       } else {
-        // If no related proposal, clear the fields
-        form.setValue('negocioId', '');
-        form.setValue('imovelId', '');
+        // If no related proposal, clear the field unless it's being pre-filled
+        if (!initialData?.negocioId) {
+            form.setValue('negocioId', '');
+        }
       }
+    } else {
+         if (!initialData?.negocioId) {
+            form.setValue('negocioId', '');
+        }
     }
-  }, [selectedClientId, negocios, form]);
+  }, [selectedClientId, negocios, form, initialData]);
 
 
   function onSubmit(values: TaskFormValues) {
-    onSave(values);
-    // Toast is handled in the parent component now
+     const finalValues = {
+      ...values,
+      imovelId: values.negocioId ? negocios.find(n => n.id === values.negocioId)?.imovelId : undefined,
+    };
+    onSave(finalValues);
   }
 
   return (
@@ -156,7 +173,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
+                    <SelectItem value="">Nenhum</SelectItem>
                     {clients.map(client => (
                       <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                     ))}
@@ -179,7 +196,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">Nenhuma</SelectItem>
+                    <SelectItem value="">Nenhuma</SelectItem>
                     {negocios.map(negocio => (
                       <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo} ({negocio.clienteNome})</SelectItem>
                     ))}

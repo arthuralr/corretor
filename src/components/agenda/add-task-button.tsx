@@ -115,7 +115,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
           <DialogHeader>
             <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
             <DialogDescription>
-              Preencha os detalhes da sua nova tarefa. Você pode associá-la a um cliente, imóvel ou a um negócio.
+              Preencha os detalhes da sua nova tarefa. Você pode associá-la a um cliente ou a um negócio.
             </DialogDescription>
           </DialogHeader>
           <TaskForm 
