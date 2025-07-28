@@ -55,6 +55,8 @@ export function NegocioCard({ negocio, onPriorityChange, onEdit, onDelete }: Neg
         return 'Data inválida';
     }
   }
+  
+  const estimatedCommission = negocio.taxaComissao ? (negocio.valorProposta * negocio.taxaComissao) / 100 : 0;
 
   return (
     <AlertDialog>
@@ -84,6 +86,12 @@ export function NegocioCard({ negocio, onPriorityChange, onEdit, onDelete }: Neg
                     </div>
                 )}
               </div>
+               {estimatedCommission > 0 && (
+                <div className="flex items-center justify-between text-xs border-t pt-2 mt-2">
+                    <span className="font-medium text-muted-foreground">Comissão Estimada:</span>
+                    <span className="font-bold text-green-700">{formatPrice(estimatedCommission)}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-xs">
                   <span className="flex items-center gap-2">
                       <Calendar className="w-3 h-3" />
