@@ -31,20 +31,17 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    if (params.id) {
-        const imovelId = params.id;
-        // Fetch data from localStorage
-        try {
-            const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-            const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
-            const foundImovel = imoveis.find((i: Imovel) => i.id === imovelId) || null;
-            setImovel(foundImovel);
-        } catch (error) {
-            console.error("Failed to load property data", error);
-            setImovel(null); // Set to null on error
-        } finally {
-            setLoading(false);
-        }
+    // Fetch data from localStorage
+    try {
+        const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+        const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
+        const foundImovel = imoveis.find((i: Imovel) => i.id === params.id) || null;
+        setImovel(foundImovel);
+    } catch (error) {
+        console.error("Failed to load property data", error);
+        setImovel(null); // Set to null on error
+    } finally {
+        setLoading(false);
     }
     
     // Mock task fetching
@@ -177,3 +174,5 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
+    
