@@ -9,6 +9,7 @@ import { BarChartHorizontal } from "lucide-react";
 import { DateRangePicker } from "@/components/relatorios/date-range-picker";
 import { getInitialNegocios } from "@/lib/initial-data";
 import { BusinessSummaryReport } from "@/components/relatorios/business-summary-report";
+import { FunnelConversionReport } from "@/components/relatorios/funnel-conversion-report";
 
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 
@@ -92,6 +93,7 @@ export default function RelatoriosPage() {
       </p>
       <div className="mt-6 space-y-6">
         <BusinessSummaryReport data={filteredNegocios} />
+        <FunnelConversionReport data={filteredNegocios} />
       </div>
     </div>
   );
