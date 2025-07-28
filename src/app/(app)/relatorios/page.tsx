@@ -7,8 +7,8 @@ import type { DateRange } from "react-day-picker";
 import type { Negocio, EtapaFunil } from "@/lib/definitions";
 import { BarChartHorizontal } from "lucide-react";
 import { DateRangePicker } from "@/components/relatorios/date-range-picker";
-import { FunnelConversionReport } from "@/components/relatorios/funnel-conversion-report";
 import { getInitialNegocios } from "@/lib/initial-data";
+import { BusinessSummaryReport } from "@/components/relatorios/business-summary-report";
 
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 
@@ -83,10 +83,10 @@ export default function RelatoriosPage() {
         <DateRangePicker date={date} onDateChange={setDate} />
       </div>
       <p className="text-muted-foreground">
-        Analise o desempenho de suas vendas e atividades.
+        Analise o desempenho de suas vendas e atividades no período selecionado.
       </p>
       <div className="mt-6 space-y-6">
-        <FunnelConversionReport data={filteredNegocios} />
+        <BusinessSummaryReport data={filteredNegocios} />
       </div>
     </div>
   );
