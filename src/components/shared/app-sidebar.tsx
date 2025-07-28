@@ -57,9 +57,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="shrink-0 md:hidden">
-            <SidebarTrigger />
-          </Button>
+          <SidebarTrigger className="shrink-0 md:hidden" />
           <Building className="w-6 h-6 text-primary" />
           <h1 className="text-lg font-semibold font-headline text-primary-foreground group-data-[collapsible=icon]:hidden">
             RealConnect
