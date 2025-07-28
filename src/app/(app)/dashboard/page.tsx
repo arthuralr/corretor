@@ -8,20 +8,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Building2, Users, DollarSign, Home, FileText, Activity, Clock } from "lucide-react"
+import { Building2, Users, DollarSign, Home, FileText, Activity, Clock, CheckCircle } from "lucide-react"
 import type { Negocio, Task, Imovel, ActivityLog } from "@/lib/definitions";
 import { TaskList } from "@/components/agenda/task-list";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getInitialNegocios, getInitialImoveis, getInitialClients, getInitialTasks } from "@/lib/initial-data";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const TASKS_STORAGE_KEY = 'tasksData';
-const ACTIVITY_LOG_KEY = 'activityLog';
+
+const getRecentCompletedTasksAsActivityLog = (): ActivityLog[] => {
+    try {
+        const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+        if (!savedTasks) return [];
+        
+        const allTasks: Task[] = JSON.parse(savedTasks);
+        
+        const completedTasks = allTasks
+            .filter(task => task.completed)
+            .sort((a, b) => parseISO(b.dueDate).getTime() - parseISO(a.dueDate).getTime()) // Assuming completion date is similar to due date for sorting
+            .slice(0, 5);
+
+        return completedTasks.map(task => ({
+            id: `activity-task-${task.id}`,
+            type: 'negocio', // Using 'negocio' for icon consistency, can be adapted
+            description: `Tarefa concluída: ${task.title}`,
+            timestamp: task.dueDate, // Ideally we'd store a completion timestamp
+            link: `/agenda`
+        }));
+
+    } catch (error) {
+        console.error("Failed to get recent completed tasks", error);
+        return [];
+    }
+}
 
 
 export default function Dashboard() {
@@ -52,8 +77,7 @@ export default function Dashboard() {
       setTasks(savedTasks ? JSON.parse(savedTasks) : getInitialTasks());
 
       // Load Activity Log
-      const savedLog = window.localStorage.getItem(ACTIVITY_LOG_KEY);
-      setActivityLog(savedLog ? JSON.parse(savedLog) : []);
+      setActivityLog(getRecentCompletedTasksAsActivityLog());
 
     } catch (error) {
       console.error("Failed to load data, using initial data", error);
@@ -160,13 +184,11 @@ export default function Dashboard() {
           <CardContent className="pl-2">
             {activityLog.length > 0 ? (
                 <div className="space-y-4">
-                    {activityLog.slice(0, 5).map(log => (
+                    {activityLog.map(log => (
                         <div key={log.id} className="flex items-start gap-4">
                            <div className="flex-shrink-0 pt-1">
-                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-                                {log.type === 'cliente' && <Users className="h-4 w-4" />}
-                                {log.type === 'imovel' && <Home className="h-4 w-4" />}
-                                {log.type === 'negocio' && <DollarSign className="h-4 w-4" />}
+                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-green-600">
+                                <CheckCircle className="h-5 w-5" />
                             </span>
                            </div>
                            <div className="flex-grow">
@@ -182,7 +204,7 @@ export default function Dashboard() {
                     ))}
                 </div>
             ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma atividade recente registrada.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma tarefa concluída recentemente.</p>
             )}
           </CardContent>
         </Card>
