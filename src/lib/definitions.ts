@@ -75,9 +75,11 @@ export type Task = {
   dueDate: string; // ISO String
   completed: boolean;
   clientId?: string;
-  negocioId?: string;
   clientName?: string;
+  negocioId?: string;
   negocioTitle?: string;
+  imovelId?: string;
+  imovelTitle?: string;
 };
 
 export type MessageTemplate = {

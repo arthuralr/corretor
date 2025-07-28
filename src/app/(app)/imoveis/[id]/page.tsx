@@ -15,6 +15,7 @@ import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
+const TASKS_STORAGE_KEY = 'tasksData';
 
 // MOCK DATA FETCHING (Fallback)
 const getInitialImoveis = (): Imovel[] => [
@@ -31,24 +32,39 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   
-  useEffect(() => {
-    // Fetch data from localStorage
-    try {
-        const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-        const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
-        const foundImovel = imoveis.find((i: Imovel) => i.id === params.id) || null;
-        setImovel(foundImovel);
-    } catch (error) {
-        console.error("Failed to load property data", error);
-        setImovel(null); // Set to null on error
-    } finally {
-        setLoading(false);
-    }
-    
-    // Mock task fetching
-    // In a real app, you would filter tasks by imovelId if it was linked.
-    setTasks([]);
+  const loadData = () => {
+     if (params.id) {
+        setLoading(true);
+        try {
+            // Fetch Imovel
+            const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+            const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
+            const foundImovel = imoveis.find((i: Imovel) => i.id === params.id) || null;
+            setImovel(foundImovel);
 
+            // Fetch Tasks
+            const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+            if (savedTasks) {
+                const allTasks: Task[] = JSON.parse(savedTasks);
+                // Filter tasks associated directly with the imovel or through a negocio
+                const imovelTasks = allTasks.filter(t => t.imovelId === params.id || t.negocioTitle === foundImovel?.title);
+                setTasks(imovelTasks);
+            }
+        } catch (error) {
+            console.error("Failed to load property data", error);
+            setImovel(null);
+        } finally {
+            setLoading(false);
+        }
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('dataUpdated', loadData);
+    return () => {
+        window.removeEventListener('dataUpdated', loadData);
+    }
   }, [params.id]);
 
 
@@ -150,16 +166,15 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
             <div>
-                <CardTitle className="font-headline text-lg">Tarefas (via Negócios)</CardTitle>
-                <CardDescription>Tarefas associadas a negócios que envolvem este imóvel.</CardDescription>
+                <CardTitle className="font-headline text-lg">Tarefas Associadas</CardTitle>
+                <CardDescription>Tarefas associadas diretamente a este imóvel ou a negócios que o envolvem.</CardDescription>
             </div>
-            <AddTaskButton />
+            <AddTaskButton preselectedImovelId={imovel.id} />
         </CardHeader>
         <CardContent>
-            <TaskList tasks={tasks} />
+            <TaskList tasks={tasks} onTaskChange={loadData} />
         </CardContent>
       </Card>
     </div>
   );
 }
-

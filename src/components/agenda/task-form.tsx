@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, User, Briefcase } from 'lucide-react';
+import { CalendarIcon, User, Briefcase, Home } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { Client, Negocio } from '@/lib/definitions';
+import type { Client, Negocio, Imovel } from '@/lib/definitions';
 
 const formSchema = z.object({
   title: z.string().min(1, 'O título é obrigatório'),
@@ -35,6 +35,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().optional(),
   negocioId: z.string().optional(),
+  imovelId: z.string().optional(),
 });
 
 type TaskFormValues = z.infer<typeof formSchema>;
@@ -45,9 +46,10 @@ interface TaskFormProps {
   initialData?: Partial<TaskFormValues>;
   clients: Client[];
   negocios: Negocio[];
+  imoveis: Imovel[];
 }
 
-export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: TaskFormProps) {
+export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imoveis }: TaskFormProps) {
   const { toast } = useToast();
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
@@ -56,6 +58,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
       description: initialData?.description || '',
       clientId: initialData?.clientId || '',
       negocioId: initialData?.negocioId || '',
+      imovelId: initialData?.imovelId || '',
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
     },
   });
@@ -169,6 +172,32 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
             )}
           />
         </div>
+        <FormField
+            control={form.control}
+            name="imovelId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-2"><Home className="h-4 w-4" /> Associar ao Imóvel</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um imóvel (opcional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {imoveis.map(imovel => (
+                      <SelectItem key={imovel.id} value={imovel.id}>{imovel.title} ({imovel.refCode})</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 <FormDescription>
+                    Use para tarefas que não estão ligadas a um negócio específico.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         <FormField
           control={form.control}
           name="description"

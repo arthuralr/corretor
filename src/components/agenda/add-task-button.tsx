@@ -12,23 +12,26 @@ import {
 } from '@/components/ui/dialog';
 import { TaskForm } from './task-form';
 import { PlusCircle } from 'lucide-react';
-import type { Client, Negocio, Task } from '@/lib/definitions';
+import type { Client, Negocio, Task, Imovel } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
-import { getInitialClients } from '@/lib/initial-data';
+import { getInitialClients, getInitialImoveis } from '@/lib/initial-data';
 
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 const TASKS_STORAGE_KEY = 'tasksData';
+const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 interface AddTaskButtonProps {
     preselectedClientId?: string;
     preselectedNegocioId?: string;
+    preselectedImovelId?: string;
 }
 
-export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: AddTaskButtonProps) {
+export function AddTaskButton({ preselectedClientId, preselectedNegocioId, preselectedImovelId }: AddTaskButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [negocios, setNegocios] = useState<Negocio[]>([]);
+  const [imoveis, setImoveis] = useState<Imovel[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -43,6 +46,10 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: Add
           const allNegocios = boardData.flatMap((column: any) => column.negocios);
           setNegocios(allNegocios);
         }
+
+        const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+        setImoveis(savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis());
+        
       } catch (error) {
         console.error("Failed to load data for task form", error);
       }
@@ -56,6 +63,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: Add
         
         const selectedClient = clients.find(c => c.id === values.clientId);
         const selectedNegocio = negocios.find(n => n.id === values.negocioId);
+        const selectedImovel = imoveis.find(i => i.id === values.imovelId);
 
         const newTask: Task = {
             id: `TASK-${Date.now()}`,
@@ -64,9 +72,11 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: Add
             dueDate: values.dueDate.toISOString(),
             completed: false,
             clientId: values.clientId,
-            negocioId: values.negocioId,
             clientName: selectedClient?.name,
-            negocioTitle: selectedNegocio?.imovelTitulo
+            negocioId: values.negocioId,
+            negocioTitle: selectedNegocio?.imovelTitulo,
+            imovelId: values.imovelId,
+            imovelTitle: selectedImovel?.title,
         };
 
         tasks.push(newTask);
@@ -92,6 +102,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: Add
   const initialData = {
       clientId: preselectedClientId,
       negocioId: preselectedNegocioId,
+      imovelId: preselectedImovelId,
   }
 
   return (
@@ -104,7 +115,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: Add
           <DialogHeader>
             <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
             <DialogDescription>
-              Preencha os detalhes da sua nova tarefa. Você pode associá-la a um cliente ou a um negócio.
+              Preencha os detalhes da sua nova tarefa. Você pode associá-la a um cliente, imóvel ou a um negócio.
             </DialogDescription>
           </DialogHeader>
           <TaskForm 
@@ -112,6 +123,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: Add
             onCancel={() => setIsOpen(false)}
             clients={clients}
             negocios={negocios}
+            imoveis={imoveis}
             initialData={initialData}
           />
         </DialogContent>
