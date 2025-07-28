@@ -13,21 +13,21 @@ async function getClients(): Promise<Client[]> {
       name: "John Doe",
       email: "john.doe@example.com",
       phone: "555-1234",
-      preferences: "Looking for a 3-bedroom house with a yard.",
+      searchProfile: "Looking for a 3-bedroom house with a yard.",
     },
     {
       id: "CLIENT-2",
       name: "Jane Smith",
       email: "jane.smith@example.com",
       phone: "555-5678",
-      preferences: "Wants a modern apartment downtown, 2-bed minimum.",
+      searchProfile: "Wants a modern apartment downtown, 2-bed minimum.",
     },
     {
         id: "CLIENT-3",
         name: "Sam Wilson",
         email: "sam.wilson@example.com",
         phone: "555-9876",
-        preferences: "Interested in condos with a gym and pool.",
+        searchProfile: "Interested in condos with a gym and pool.",
     }
   ];
 }

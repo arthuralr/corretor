@@ -16,7 +16,7 @@ export type Client = {
   name: string;
   email: string;
   phone: string;
-  preferences: string;
+  searchProfile: string;
 };
 
 export type Imovel = {

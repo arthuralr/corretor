@@ -23,7 +23,7 @@ const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
   email: z.string().email("Endereço de email inválido"),
   phone: z.string().min(1, "Número de telefone é obrigatório"),
-  preferences: z.string().optional(),
+  searchProfile: z.string().optional(),
 });
 
 export function ClientForm() {
@@ -36,7 +36,7 @@ export function ClientForm() {
       name: "",
       email: "",
       phone: "",
-      preferences: "",
+      searchProfile: "",
     },
   });
 
@@ -98,13 +98,13 @@ export function ClientForm() {
             />
             <FormField
               control={form.control}
-              name="preferences"
+              name="searchProfile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preferências do Cliente</FormLabel>
+                  <FormLabel>Perfil de Busca</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Ex: Busca casa de 3 quartos com quintal, orçamento de R$ 500.000..."
+                      placeholder="Ex: Apartamento de 3 quartos, com sacada e perto do centro..."
                       className="resize-none"
                       {...field}
                     />
