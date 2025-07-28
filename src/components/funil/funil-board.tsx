@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -255,7 +256,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         />
       </div>
       <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max overflow-x-auto pb-4">
+          <div className="grid grid-flow-col auto-cols-[300px] md:auto-cols-[minmax(300px,1fr)] gap-4">
               {filteredBoardData.map((coluna) => (
                   <FunilColumn 
                       key={coluna.etapa} 
