@@ -30,7 +30,7 @@ export default async function FunilPage() {
   }));
 
   return (
-    <div className="flex flex-col flex-1 space-y-4 p-4 md:p-8 pt-6 h-full">
+    <div className="flex flex-col flex-1 space-y-4 p-4 md:p-8 pt-6 h-[calc(100vh-theme(spacing.16))]">
       <div className="flex items-center justify-between space-y-2">
         <div className="flex items-center gap-2">
             <DollarSign className="h-8 w-8 text-accent" />
