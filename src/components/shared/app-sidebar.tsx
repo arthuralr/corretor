@@ -82,9 +82,9 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <ThemeToggle />
           <div className="flex-1" />
-           <Link href="/login" className="ml-auto group-data-[collapsible=icon]:hidden">
+          <ThemeToggle />
+           <Link href="/login" className="group-data-[collapsible=icon]:hidden">
             <Button asChild variant="ghost" size="icon" aria-label="Sair">
                 <LogOut className="w-5 h-5" />
             </Button>
