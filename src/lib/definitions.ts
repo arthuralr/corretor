@@ -29,6 +29,8 @@ export type Imovel = {
   bedrooms: number;
   bathrooms: number;
   status: 'Disponível' | 'Vendido' | 'Alugado';
+  imageUrl?: string;
+  createdAt?: string;
 };
 
 export type EtapaFunil = 'Contato' | 'Atendimento' | 'Visita' | 'Proposta' | 'Reserva' | 'Fechado - Ganho' | 'Fechado - Perdido';
@@ -83,3 +85,11 @@ export type MessageTemplate = {
     title: string;
     content: string;
 };
+
+export type ActivityLog = {
+    id: string;
+    type: 'negocio' | 'cliente' | 'imovel';
+    description: string;
+    timestamp: string; // ISO String
+    link?: string;
+}

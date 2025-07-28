@@ -15,18 +15,35 @@ import { Button } from '../ui/button';
 import { ChevronDown, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const TASKS_STORAGE_KEY = 'tasksData';
+
 interface TaskItemProps {
   task: Task;
+  onTaskChange: () => void;
 }
 
-export function TaskItem({ task }: TaskItemProps) {
+export function TaskItem({ task, onTaskChange }: TaskItemProps) {
   const [isChecked, setIsChecked] = useState(task.completed);
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
   const { toast } = useToast();
 
+  const updateTasksInStorage = (updatedTasks: Task[]) => {
+     try {
+        window.localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(updatedTasks));
+        onTaskChange();
+     } catch (error) {
+        console.error("Failed to update tasks in storage", error);
+        toast({ title: "Erro", description: "Falha ao atualizar tarefa.", variant: "destructive" });
+     }
+  }
+
   const handleCheckedChange = (checked: boolean) => {
     setIsChecked(checked);
-    // In a real app, you would also update the task's state on the server.
+    const savedTasks = JSON.parse(window.localStorage.getItem(TASKS_STORAGE_KEY) || '[]');
+    const updatedTasks = savedTasks.map((t: Task) => 
+        t.id === task.id ? { ...t, completed: checked } : t
+    );
+    updateTasksInStorage(updatedTasks);
     toast({
       title: checked ? "Tarefa Concluída!" : "Tarefa Reaberta!",
       description: task.title,
@@ -34,18 +51,14 @@ export function TaskItem({ task }: TaskItemProps) {
   };
 
   const handleDelete = () => {
-     // In a real app, you would also delete the task on the server.
+    const savedTasks = JSON.parse(window.localStorage.getItem(TASKS_STORAGE_KEY) || '[]');
+    const updatedTasks = savedTasks.filter((t: Task) => t.id !== task.id);
+    updateTasksInStorage(updatedTasks);
     toast({
         title: "Tarefa Excluída",
         description: task.title,
         variant: "destructive"
     });
-    // This is a mock. In a real app, the component would be removed upon re-fetching data.
-    // For now, we can just visually hide it.
-    const element = document.getElementById(task.id);
-    if (element) {
-        element.style.display = 'none';
-    }
   };
 
   const dueDate = new Date(task.dueDate);
@@ -81,11 +94,13 @@ export function TaskItem({ task }: TaskItemProps) {
                      <Button variant="ghost" size="icon" onClick={handleDelete} className="text-muted-foreground hover:text-destructive">
                         <Trash2 className="h-4 w-4" />
                     </Button>
-                    <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                            <ChevronDown className={cn("h-4 w-4 transition-transform", isCollapsibleOpen && "rotate-180")} />
-                        </Button>
-                    </CollapsibleTrigger>
+                    {task.description && (
+                      <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                              <ChevronDown className={cn("h-4 w-4 transition-transform", isCollapsibleOpen && "rotate-180")} />
+                          </Button>
+                      </CollapsibleTrigger>
+                    )}
                 </div>
             </div>
             <CollapsibleContent>

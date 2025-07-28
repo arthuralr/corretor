@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -11,43 +11,80 @@ import {
 } from '@/components/ui/dialog';
 import { TaskForm } from './task-form';
 import { PlusCircle } from 'lucide-react';
-import type { Client, Negocio } from '@/lib/definitions';
+import type { Client, Negocio, Task } from '@/lib/definitions';
+import { useToast } from '@/hooks/use-toast';
 
-// Mock data fetching, replace with your actual data fetching logic
-const getClients = async (): Promise<Client[]> => [
-  { id: 'CLIENT-1', name: 'John Doe', email: '', phone: '', searchProfile: '' },
-  { id: 'CLIENT-2', name: 'Jane Smith', email: '', phone: '', searchProfile: '' },
-  { id: 'CLIENT-3', name: 'Sam Wilson', email: '', phone: '', searchProfile: '' },
-];
-const getNegocios = async (): Promise<Negocio[]> => [
-    { id: 'NEG-1', clienteId: 'CLIENT-1', clienteNome: 'John Doe', imovelId: 'IMOVEL-1', imovelTitulo: 'Casa Espaçosa com Piscina', etapa: 'Proposta', dataCriacao: '2024-07-28', valorProposta: 745000, recomendadoCliente: true },
-    { id: 'NEG-2', clienteId: 'CLIENT-2', clienteNome: 'Jane Smith', imovelId: 'IMOVEL-2', imovelTitulo: 'Apartamento Moderno no Centro', etapa: 'Visita', dataCriacao: '2024-07-25', valorProposta: 450000 },
-];
-
+const CLIENTS_STORAGE_KEY = 'clientsData';
+const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
+const TASKS_STORAGE_KEY = 'tasksData';
 
 export function AddTaskButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [negocios, setNegocios] = useState<Negocio[]>([]);
+  const { toast } = useToast();
 
-  const handleOpen = async () => {
-    // Fetch data when the dialog is about to open
-    const clientData = await getClients();
-    const negocioData = await getNegocios();
-    setClients(clientData);
-    setNegocios(negocioData);
-    setIsOpen(true);
-  };
+  useEffect(() => {
+    if (isOpen) {
+      try {
+        const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
+        if (savedClients) setClients(JSON.parse(savedClients));
+
+        const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+        if (savedNegocios) {
+          const boardData = JSON.parse(savedNegocios);
+          const allNegocios = boardData.flatMap((column: any) => column.negocios);
+          setNegocios(allNegocios);
+        }
+      } catch (error) {
+        console.error("Failed to load data for task form", error);
+      }
+    }
+  }, [isOpen]);
 
   const handleTaskSave = (values: any) => {
-    console.log("Task saved:", values);
-    setIsOpen(false);
-    // Here you would typically revalidate the data to show the new task
+    try {
+        const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+        const tasks: Task[] = savedTasks ? JSON.parse(savedTasks) : [];
+        
+        const selectedClient = clients.find(c => c.id === values.clientId);
+        const selectedNegocio = negocios.find(n => n.id === values.negocioId);
+
+        const newTask: Task = {
+            id: `TASK-${Date.now()}`,
+            title: values.title,
+            description: values.description || '',
+            dueDate: values.dueDate.toISOString(),
+            completed: false,
+            clientId: values.clientId,
+            negocioId: values.negocioId,
+            clientName: selectedClient?.name,
+            negocioTitle: selectedNegocio?.imovelTitulo
+        };
+
+        tasks.push(newTask);
+        window.localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(tasks));
+
+        toast({
+            title: "Tarefa Salva!",
+            description: "Sua nova tarefa foi adicionada com sucesso.",
+        });
+        
+        window.dispatchEvent(new CustomEvent('dataUpdated'));
+        setIsOpen(false);
+    } catch (error) {
+        console.error("Failed to save task", error);
+        toast({
+            title: "Erro",
+            description: "Não foi possível salvar a tarefa.",
+            variant: "destructive"
+        })
+    }
   };
 
   return (
     <>
-      <Button onClick={handleOpen}>
+      <Button onClick={() => setIsOpen(true)}>
         <PlusCircle className="mr-2 h-4 w-4" /> Adicionar Tarefa
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

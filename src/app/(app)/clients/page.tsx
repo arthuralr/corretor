@@ -1,12 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { columns } from "@/components/clients/columns";
 import { DataTable } from "@/components/data-table";
 import type { Client } from "@/lib/definitions";
+import { useState, useEffect, useCallback } from "react";
 
-async function getClients(): Promise<Client[]> {
-  // In a real app, you'd fetch this from a database.
+const CLIENTS_STORAGE_KEY = 'clientsData';
+
+const getInitialClients = (): Client[] => {
   return [
     {
       id: "CLIENT-1",
@@ -30,10 +34,40 @@ async function getClients(): Promise<Client[]> {
         searchProfile: "Interested in condos with a gym and pool.",
     }
   ];
-}
+};
 
-export default async function ClientsPage() {
-  const data = await getClients();
+export default function ClientsPage() {
+  const [data, setData] = useState<Client[]>([]);
+
+  const loadClients = useCallback(() => {
+    try {
+      const savedData = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
+      if (savedData) {
+        setData(JSON.parse(savedData));
+      } else {
+        const initialData = getInitialClients();
+        setData(initialData);
+        window.localStorage.setItem(CLIENTS_STORAGE_KEY, JSON.stringify(initialData));
+      }
+    } catch (error) {
+        console.error("Falha ao carregar dados de clientes.", error);
+        setData(getInitialClients());
+    }
+  }, []);
+
+  useEffect(() => {
+    loadClients();
+    
+    const handleDataUpdate = () => {
+        loadClients();
+    }
+    
+    window.addEventListener('dataUpdated', handleDataUpdate);
+
+    return () => {
+      window.removeEventListener('dataUpdated', handleDataUpdate);
+    };
+  }, [loadClients]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

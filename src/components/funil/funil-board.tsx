@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import type { Negocio, EtapaFunil } from "@/lib/definitions";
 import { FunilColumn } from './funil-column';
 import { DragDropContext, Droppable, OnDragEndResponder } from '@hello-pangea/dnd';
+import { addActivityLog } from '@/lib/activity-log';
 
 interface FunilBoardProps {
   initialData: {
@@ -36,7 +37,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         try {
             window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
             // Dispatch a custom event to notify other components (like Dashboard) of the change
-            window.dispatchEvent(new CustomEvent('funilBoardUpdated'));
+            window.dispatchEvent(new CustomEvent('dataUpdated'));
         } catch (error) {
             console.error("Failed to save data to local storage", error);
         }
@@ -101,6 +102,12 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
       newBoardData[sourceColumnIndex] = newSourceColumn;
       newBoardData[destColumnIndex] = newDestColumn;
       updateBoardData(newBoardData);
+
+       addActivityLog({
+        type: 'negocio',
+        description: `Negócio "${updatedMovedNegocio.imovelTitulo}" movido para ${destColumn.etapa}.`,
+        link: `/negocios/${updatedMovedNegocio.id}`
+      });
     }
   };
   
@@ -131,5 +138,3 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
     </DragDropContext>
   );
 }
-
-    

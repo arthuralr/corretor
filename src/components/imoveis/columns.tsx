@@ -50,7 +50,7 @@ const ActionsCell = ({ row }: { row: any }) => {
             window.localStorage.setItem('imoveisData', JSON.stringify(imoveis));
             
             // Notify other parts of the app
-            window.dispatchEvent(new CustomEvent('imoveisUpdated'));
+            window.dispatchEvent(new CustomEvent('dataUpdated'));
 
             toast({
                 title: "Imóvel Excluído!",

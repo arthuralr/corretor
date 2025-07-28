@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { addActivityLog } from "@/lib/activity-log";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
@@ -38,6 +39,7 @@ const formSchema = z.object({
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(0),
   status: z.enum(["Disponível", "Vendido", "Alugado"]),
+  imageUrl: z.string().url("URL inválida").optional().or(z.literal('')),
 });
 
 type ImovelFormValues = z.infer<typeof formSchema>;
@@ -62,6 +64,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
       bedrooms: 3,
       bathrooms: 2,
       status: "Disponível",
+      imageUrl: "",
     },
   });
 
@@ -73,9 +76,14 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         if (isEditing) {
             // Update existing imovel
             const updatedImoveis = imoveis.map(imovel => 
-                imovel.id === initialData.id ? { ...initialData, ...values } : imovel
+                imovel.id === initialData.id ? { ...imovel, ...values } : imovel
             );
             window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(updatedImoveis));
+             addActivityLog({
+                type: 'imovel',
+                description: `Imóvel "${values.title}" atualizado.`,
+                link: `/imoveis/${initialData.id}`
+            });
             toast({
               title: "Imóvel Atualizado!",
               description: "As informações do imóvel foram salvas.",
@@ -86,16 +94,22 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                 id: `IMOVEL-${Date.now()}`,
                 ...values,
                 description: values.description || '',
+                createdAt: new Date().toISOString(),
             };
             imoveis.push(newImovel);
             window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(imoveis));
+            addActivityLog({
+                type: 'imovel',
+                description: `Novo imóvel "${values.title}" adicionado.`,
+                link: `/imoveis/${newImovel.id}`
+            });
             toast({
               title: "Imóvel Salvo!",
               description: "O novo imóvel foi adicionado aos seus registros.",
             });
         }
         
-        window.dispatchEvent(new CustomEvent('imoveisUpdated'));
+        window.dispatchEvent(new CustomEvent('dataUpdated'));
         router.push("/imoveis");
         router.refresh(); 
 
@@ -250,6 +264,19 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                 </FormItem>
               )}
             />
+             <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                    <FormLabel>URL da Imagem</FormLabel>
+                    <FormControl>
+                        <Input placeholder="https://exemplo.com/imagem.png" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+             />
 
           </CardContent>
           <CardFooter className="flex justify-end gap-2">

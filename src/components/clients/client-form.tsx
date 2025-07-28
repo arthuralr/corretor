@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { addActivityLog } from "@/lib/activity-log";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -41,12 +42,35 @@ export function ClientForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Cliente Salvo!",
-      description: "O novo cliente foi adicionado aos seus registros.",
-    });
-    router.push("/clients");
+    // In a real app, this would save to a database. Here we use localStorage.
+    const newClient = { id: `CLIENT-${Date.now()}`, ...values };
+    try {
+        const savedClients = window.localStorage.getItem('clientsData');
+        const clients = savedClients ? JSON.parse(savedClients) : [];
+        clients.push(newClient);
+        window.localStorage.setItem('clientsData', JSON.stringify(clients));
+        
+        addActivityLog({
+            type: 'cliente',
+            description: `Novo cliente "${values.name}" adicionado.`,
+            link: `/clients/${newClient.id}`
+        });
+
+        toast({
+          title: "Cliente Salvo!",
+          description: "O novo cliente foi adicionado aos seus registros.",
+        });
+        
+        window.dispatchEvent(new CustomEvent('dataUpdated'));
+        router.push("/clients");
+    } catch(error) {
+        console.error("Failed to save client to localStorage", error);
+        toast({
+            title: "Erro ao Salvar",
+            description: "Não foi possível salvar o cliente.",
+            variant: "destructive"
+        });
+    }
   }
 
   return (

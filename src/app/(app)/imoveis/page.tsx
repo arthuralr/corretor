@@ -22,6 +22,8 @@ const getInitialImoveis = (): Imovel[] => {
       bedrooms: 3,
       bathrooms: 2,
       status: "Disponível",
+      imageUrl: "https://placehold.co/600x400.png",
+      createdAt: new Date().toISOString()
     },
     {
       id: "IMOVEL-2",
@@ -33,6 +35,8 @@ const getInitialImoveis = (): Imovel[] => {
       bedrooms: 2,
       bathrooms: 1,
       status: "Vendido",
+       imageUrl: "https://placehold.co/600x400.png",
+      createdAt: new Date().toISOString()
     },
     {
       id: "IMOVEL-3",
@@ -44,6 +48,7 @@ const getInitialImoveis = (): Imovel[] => {
       bedrooms: 0,
       bathrooms: 0,
       status: "Disponível",
+      createdAt: new Date().toISOString()
     },
      {
       id: "IMOVEL-4",
@@ -55,6 +60,7 @@ const getInitialImoveis = (): Imovel[] => {
       bedrooms: 1,
       bathrooms: 1,
       status: "Alugado",
+      createdAt: new Date().toISOString()
     },
   ];
 };
@@ -82,22 +88,14 @@ export default function ImoveisPage() {
   useEffect(() => {
     loadImoveis();
     
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === IMOVEIS_STORAGE_KEY) {
-        loadImoveis();
-      }
-    };
-    
     const handleDataUpdate = () => {
         loadImoveis();
     }
     
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('imoveisUpdated', handleDataUpdate);
+    window.addEventListener('dataUpdated', handleDataUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('imoveisUpdated', handleDataUpdate);
+      window.removeEventListener('dataUpdated', handleDataUpdate);
     };
   }, [loadImoveis]);
 
