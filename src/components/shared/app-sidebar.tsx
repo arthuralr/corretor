@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -68,15 +69,16 @@ export function AppSidebar() {
         <SidebarMenu>
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} legacyBehavior passHref>
-                <SidebarMenuButton
-                  isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === '/dashboard' : true)}
-                  tooltip={item.label}
-                >
+              <SidebarMenuButton
+                asChild
+                isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === '/dashboard' : true)}
+                tooltip={item.label}
+              >
+                <Link href={item.href}>
                   <item.icon />
                   <span>{item.label}</span>
-                </SidebarMenuButton>
-              </Link>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
@@ -95,11 +97,11 @@ export function AppSidebar() {
               janedoe@realtor.com
             </span>
           </div>
-          <Link href="/login" className="ml-auto group-data-[collapsible=icon]:hidden">
-            <Button variant="ghost" size="icon" aria-label="Log out">
+          <Button asChild variant="ghost" size="icon" aria-label="Log out" className="ml-auto group-data-[collapsible=icon]:hidden">
+            <Link href="/login">
               <LogOut className="w-5 h-5" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>
