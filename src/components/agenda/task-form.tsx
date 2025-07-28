@@ -7,6 +7,7 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, User, Briefcase, Home } from 'lucide-react';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -62,6 +63,23 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
     },
   });
+
+  const selectedClientId = form.watch('clientId');
+
+  useEffect(() => {
+    if (selectedClientId) {
+      const relatedNegocio = negocios.find(n => n.clienteId === selectedClientId);
+      if (relatedNegocio) {
+        form.setValue('negocioId', relatedNegocio.id);
+        form.setValue('imovelId', relatedNegocio.imovelId);
+      } else {
+        // If no related proposal, clear the fields
+        form.setValue('negocioId', '');
+        form.setValue('imovelId', '');
+      }
+    }
+  }, [selectedClientId, negocios, form]);
+
 
   function onSubmit(values: TaskFormValues) {
     onSave(values);
@@ -154,7 +172,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center gap-2"><Briefcase className="h-4 w-4" /> Associar à Proposta</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma proposta (opcional)" />
@@ -178,7 +196,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center gap-2"><Home className="h-4 w-4" /> Associar ao Imóvel</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione um imóvel (opcional)" />
