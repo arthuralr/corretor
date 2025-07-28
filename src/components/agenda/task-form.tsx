@@ -186,9 +186,12 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="none">Nenhum</SelectItem>
-                    {imoveis.map(imovel => (
-                      <SelectItem key={imovel.id} value={imovel.id}>{imovel.title} ({imovel.refCode})</SelectItem>
-                    ))}
+                    {imoveis
+                        .filter(imovel => imovel.status === 'Disponível')
+                        .map(imovel => (
+                            <SelectItem key={imovel.id} value={imovel.id}>{imovel.title} ({imovel.refCode})</SelectItem>
+                        ))
+                    }
                   </SelectContent>
                 </Select>
                  <FormDescription>
