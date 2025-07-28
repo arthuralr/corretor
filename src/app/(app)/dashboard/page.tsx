@@ -5,8 +5,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Building2, Users, DollarSign, Home, FileText } from "lucide-react"
-import type { Negocio } from "@/lib/definitions";
+import type { Negocio, Task } from "@/lib/definitions";
 import { isThisMonth, parseISO } from 'date-fns';
+import { TaskList } from "@/components/agenda/task-list";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 // In a real app, you'd fetch this from a database.
 async function getNegocios(): Promise<Negocio[]> {
@@ -74,9 +77,25 @@ async function getNegocios(): Promise<Negocio[]> {
   ];
 }
 
+async function getTasks(): Promise<Task[]> {
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const nextWeek = new Date(today);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+
+  return [
+    { id: 'TASK-1', title: 'Follow-up com cliente John Doe', description: 'Ligar para discutir a contra-proposta.', dueDate: today.toISOString(), completed: false },
+    { id: 'TASK-2', title: 'Preparar apresentação do imóvel AP002', description: 'Montar slides com fotos e detalhes.', dueDate: tomorrow.toISOString(), completed: false },
+    { id: 'TASK-3', title: 'Agendar visita com Jane Smith', description: 'Entrar em contato para marcar a visita à casa CA001.', dueDate: tomorrow.toISOString(), completed: true },
+    { id: 'TASK-4', title: 'Enviar documentação para o banco', description: 'Pendências do financiamento do cliente Sam Wilson.', dueDate: nextWeek.toISOString(), completed: false },
+  ];
+}
+
 
 export default async function Dashboard() {
   const negocios = await getNegocios();
+  const tasks = await getTasks();
 
   const salesThisMonth = negocios
     .filter(n => n.etapa === 'Fechado - Ganho' && isThisMonth(parseISO(n.dataCriacao)))
@@ -160,11 +179,14 @@ export default async function Dashboard() {
           </CardContent>
         </Card>
         <Card className="col-span-4 md:col-span-3">
-          <CardHeader>
-            <CardTitle className="font-headline">Compromissos</CardTitle>
+           <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="font-headline">Próximas Tarefas</CardTitle>
+            <Link href="/agenda">
+              <Button variant="outline" size="sm">Ver Agenda Completa</Button>
+            </Link>
           </CardHeader>
           <CardContent>
-            <p>Funcionalidade de agenda em breve...</p>
+            <TaskList tasks={tasks.filter(t => !t.completed).slice(0, 5)} />
           </CardContent>
         </Card>
       </div>

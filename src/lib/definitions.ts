@@ -55,3 +55,11 @@ export type ImovelSimplificado = {
   bathrooms: number;
   status: 'Disponível' | 'Vendido' | 'Alugado';
 };
+
+export type Task = {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string; // ISO String
+  completed: boolean;
+};

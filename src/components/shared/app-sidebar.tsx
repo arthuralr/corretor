@@ -22,6 +22,7 @@ import {
   Home,
   DollarSign,
   Telescope,
+  CalendarCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -29,6 +30,7 @@ import { Button } from "../ui/button";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agenda", label: "Minha Agenda", icon: CalendarCheck },
   { href: "/funil", label: "Funil de Vendas", icon: DollarSign },
   { href: "/radar", label: "Radar de Oportunidades", icon: Telescope },
   { href: "/properties", label: "Properties", icon: Building2 },
