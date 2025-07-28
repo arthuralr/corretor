@@ -78,8 +78,8 @@ const ActionsCell = ({ row }: { row: any }) => {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                     <DropdownMenuItem asChild>
-                        <Link href={`/imoveis/${imovel.id}`} className="flex items-center w-full">
-                            <Edit className="mr-2 h-4 w-4" /> Ver/Editar Imóvel
+                        <Link href={`/imoveis/${imovel.id}/edit`} className="flex items-center w-full">
+                           <Edit className="mr-2 h-4 w-4" /> Editar Imóvel
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigator.clipboard.writeText(imovel.id)}>

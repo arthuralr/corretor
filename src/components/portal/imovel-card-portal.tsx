@@ -21,7 +21,7 @@ export function ImovelCardPortal({ imovel }: ImovelCardProps) {
     <Card className="flex flex-col h-full bg-card hover:shadow-lg transition-shadow duration-300">
       <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center relative">
           <Image 
-            src={imovel.imageUrl || `https://placehold.co/600x400.png`} 
+            src={`https://placehold.co/600x400.png`} 
             alt={imovel.title} 
             fill
             className="object-cover rounded-t-lg"

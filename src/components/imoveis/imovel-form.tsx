@@ -38,7 +38,6 @@ const formSchema = z.object({
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(0),
   status: z.enum(["Disponível", "Vendido", "Alugado"]),
-  imageUrl: z.string().url("Por favor, insira uma URL válida.").optional().or(z.literal("")),
 });
 
 type ImovelFormValues = z.infer<typeof formSchema>;
@@ -63,7 +62,6 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
       bedrooms: 3,
       bathrooms: 2,
       status: "Disponível",
-      imageUrl: "",
     },
   });
 
@@ -248,19 +246,6 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                       <SelectItem value="Alugado">Alugado</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>URL da Imagem</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://exemplo.com/imagem.jpg" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
