@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { columns } from "@/components/imoveis/columns";
 import { DataTable } from "@/components/data-table";
 import type { Imovel } from "@/lib/definitions";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
@@ -62,7 +62,7 @@ const getInitialImoveis = (): Imovel[] => {
 export default function ImoveisPage() {
   const [data, setData] = useState<Imovel[]>([]);
 
-  useEffect(() => {
+  const loadImoveis = useCallback(() => {
     try {
       const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
       if (savedData) {
@@ -78,6 +78,28 @@ export default function ImoveisPage() {
         setData(initialData);
     }
   }, []);
+
+  useEffect(() => {
+    loadImoveis();
+    
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === IMOVEIS_STORAGE_KEY) {
+        loadImoveis();
+      }
+    };
+    
+    const handleDataUpdate = () => {
+        loadImoveis();
+    }
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('imoveisUpdated', handleDataUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('imoveisUpdated', handleDataUpdate);
+    };
+  }, [loadImoveis]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

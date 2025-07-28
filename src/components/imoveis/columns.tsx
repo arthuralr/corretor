@@ -12,8 +12,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import React from "react";
 
 const formatPrice = (price: number, status: Imovel['status']) => {
   const formattedPrice = new Intl.NumberFormat("pt-BR", {
@@ -23,6 +36,80 @@ const formatPrice = (price: number, status: Imovel['status']) => {
   
   return status === 'Alugado' ? `${formattedPrice}/mês` : formattedPrice;
 }
+
+const ActionsCell = ({ row }: { row: any }) => {
+    const { toast } = useToast();
+    const imovel = row.original as Imovel;
+
+    const handleDelete = () => {
+        try {
+            const savedData = window.localStorage.getItem('imoveisData');
+            if (!savedData) return;
+            let imoveis: Imovel[] = JSON.parse(savedData);
+            imoveis = imoveis.filter(i => i.id !== imovel.id);
+            window.localStorage.setItem('imoveisData', JSON.stringify(imoveis));
+            
+            // Notify other parts of the app
+            window.dispatchEvent(new CustomEvent('imoveisUpdated'));
+
+            toast({
+                title: "Imóvel Excluído!",
+                description: `O imóvel "${imovel.title}" foi removido.`,
+            });
+        } catch (error) {
+            console.error("Falha ao excluir imóvel:", error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível excluir o imóvel.",
+                variant: "destructive",
+            });
+        }
+    };
+
+    return (
+        <AlertDialog>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                    <DropdownMenuItem asChild>
+                        <Link href={`/imoveis/${imovel.id}`} className="flex items-center w-full">
+                            <Edit className="mr-2 h-4 w-4" /> Ver/Editar Imóvel
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigator.clipboard.writeText(imovel.id)}>
+                        Copiar ID do Imóvel
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Imóvel
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o imóvel
+                        <span className="font-semibold"> {imovel.title}</span> de seus registros.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete}>Excluir</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+};
+
 
 export const columns: ColumnDef<Imovel>[] = [
   {
@@ -45,8 +132,6 @@ export const columns: ColumnDef<Imovel>[] = [
      cell: ({ row }) => {
         const title = row.getValue("title") as string;
         const imovel = row.original;
-        // In a real app, you would have a detail page for properties.
-        // We link to a non-existent page for demonstration.
         return <Link href={`/imoveis/${imovel.id}`} className="truncate max-w-xs hover:underline">{title}</Link>;
     }
   },
@@ -87,36 +172,6 @@ export const columns: ColumnDef<Imovel>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
-      const imovel = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Ações</DropdownMenuLabel>
-            <DropdownMenuItem>
-                <Link href={`/imoveis/${imovel.id}`} className="flex items-center w-full">
-                    <Edit className="mr-2 h-4 w-4" /> Ver/Editar Imóvel
-                </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(imovel.id)}
-            >
-              Copiar ID do Imóvel
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                <Trash2 className="mr-2 h-4 w-4" /> Excluir Imóvel
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
+    cell: ActionsCell,
   },
 ];
