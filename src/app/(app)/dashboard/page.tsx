@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { getInitialNegocios, getInitialImoveis, getInitialClients, getInitialTasks } from "@/lib/initial-data";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DealsChart } from "@/components/dashboard/deals-chart";
 
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
@@ -174,6 +175,14 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+       <Card>
+        <CardHeader>
+            <CardTitle className="font-headline">Performance (Últimos 6 Meses)</CardTitle>
+        </CardHeader>
+        <CardContent>
+            <DealsChart data={negocios} />
+        </CardContent>
+      </Card>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
