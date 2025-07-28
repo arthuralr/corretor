@@ -1,21 +1,31 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Negocio, EtapaFunil, Client, Imovel } from "@/lib/definitions";
 import { FunilColumn } from './funil-column';
 import { DragDropContext, Droppable, OnDragEndResponder } from '@hello-pangea/dnd';
 import { addActivityLog } from '@/lib/activity-log';
 import { NegocioModal } from '../negocios/negocio-modal';
 import { getInitialClients, getInitialImoveis } from '@/lib/initial-data';
+import { Input } from '../ui/input';
 
 const LOCAL_STORAGE_KEY = 'funilBoardData';
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
+interface FunilBoardProps {
+  initialData: {
+      etapa: EtapaFunil;
+      negocios: Negocio[];
+  }[];
+}
+
+
 export function FunilBoard({ initialData }: FunilBoardProps) {
     const [isClient, setIsClient] = useState(false);
     const [boardData, setBoardData] = useState(initialData);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingNegocio, setEditingNegocio] = useState<Negocio | null>(null);
@@ -43,6 +53,20 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
             console.error("Failed to load data from local storage", error);
         }
     }, []);
+
+    const filteredBoardData = useMemo(() => {
+        if (!searchQuery) {
+            return boardData;
+        }
+        const lowercasedQuery = searchQuery.toLowerCase();
+        return boardData.map(column => ({
+            ...column,
+            negocios: column.negocios.filter(negocio => 
+                negocio.clienteNome.toLowerCase().includes(lowercasedQuery) || 
+                negocio.imovelTitulo.toLowerCase().includes(lowercasedQuery)
+            )
+        }));
+    }, [boardData, searchQuery]);
 
     const updateBoardData = (newData: typeof boardData) => {
         setBoardData(newData);
@@ -128,6 +152,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
       return;
     }
 
+    // Find the original column and deal from the unfiltered boardData
     const sourceColumnIndex = boardData.findIndex(col => col.etapa === source.droppableId);
     const destColumnIndex = boardData.findIndex(col => col.etapa === destination.droppableId);
 
@@ -135,51 +160,41 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         console.error("Source or destination column not found");
         return;
     }
+    
+    // Get the actual deal being moved from the filtered data
+    const movedNegocioFiltered = filteredBoardData[sourceColumnIndex].negocios[source.index];
 
-    const sourceColumn = boardData[sourceColumnIndex];
-    const destColumn = boardData[destColumnIndex];
-    
-    const sourceNegocios = Array.from(sourceColumn.negocios);
-    const [movedNegocio] = sourceNegocios.splice(source.index, 1);
-    
-    const updatedMovedNegocio = { ...movedNegocio, etapa: destColumn.etapa };
-    
+    // Find the source column in the original data and remove the deal
     const newBoardData = [...boardData];
+    const sourceColumnOriginal = newBoardData[sourceColumnIndex];
+    const sourceNegociosOriginal = Array.from(sourceColumnOriginal.negocios);
+    const movedNegocioIndexOriginal = sourceNegociosOriginal.findIndex(n => n.id === movedNegocioFiltered.id);
+    
+    if (movedNegocioIndexOriginal === -1) return;
+
+    const [movedNegocio] = sourceNegociosOriginal.splice(movedNegocioIndexOriginal, 1);
+    
+    const updatedMovedNegocio = { ...movedNegocio, etapa: newBoardData[destColumnIndex].etapa };
+    
+    sourceColumnOriginal.negocios = sourceNegociosOriginal;
+    
+    // Find the destination column and add the deal
+    const destColumnOriginal = newBoardData[destColumnIndex];
+    const destNegociosOriginal = Array.from(destColumnOriginal.negocios);
 
     if (source.droppableId === destination.droppableId) {
-      const newNegocios = sourceNegocios;
-      newNegocios.splice(destination.index, 0, movedNegocio); 
-      
-      const newColumn = {
-        ...sourceColumn,
-        negocios: newNegocios
-      };
-
-      newBoardData[sourceColumnIndex] = newColumn;
-      updateBoardData(newBoardData);
+        destNegociosOriginal.splice(destination.index, 0, movedNegocio);
     } else {
-      const destNegocios = Array.from(destColumn.negocios);
-      destNegocios.splice(destination.index, 0, updatedMovedNegocio);
-      
-      const newSourceColumn = {
-        ...sourceColumn,
-        negocios: sourceNegocios
-      };
-      const newDestColumn = {
-        ...destColumn,
-        negocios: destNegocios
-      };
-      
-      newBoardData[sourceColumnIndex] = newSourceColumn;
-      newBoardData[destColumnIndex] = newDestColumn;
-      updateBoardData(newBoardData);
-
-       addActivityLog({
-        type: 'negocio',
-        description: `Negócio "${updatedMovedNegocio.imovelTitulo}" movido para ${destColumn.etapa}.`,
-        link: `/negocios/${updatedMovedNegocio.id}`
-      });
+        destNegociosOriginal.splice(destination.index, 0, updatedMovedNegocio);
+        addActivityLog({
+            type: 'negocio',
+            description: `Negócio "${updatedMovedNegocio.imovelTitulo}" movido para ${destColumnOriginal.etapa}.`,
+            link: `/negocios/${updatedMovedNegocio.id}`
+        });
     }
+    destColumnOriginal.negocios = destNegociosOriginal;
+
+    updateBoardData(newBoardData);
   };
   
   if (!isClient) {
@@ -200,29 +215,37 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
 
   return (
     <>
-    <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max overflow-x-auto pb-4">
-            {boardData.map((coluna) => (
-                <FunilColumn 
-                    key={coluna.etapa} 
-                    etapa={coluna.etapa} 
-                    negocios={coluna.negocios} 
-                    onPriorityChange={handlePriorityChange}
-                    onAddNegocio={handleOpenAddModal}
-                    onEditNegocio={handleOpenEditModal}
-                />
-            ))}
-        </div>
-    </DragDropContext>
-    <NegocioModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onSave={handleSaveNegocio}
-        negocio={editingNegocio}
-        defaultEtapa={defaultEtapa}
-        clients={clients}
-        imoveis={imoveis}
-    />
+      <div className="mb-4">
+        <Input 
+          placeholder="Buscar por cliente ou imóvel..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
+      <DragDropContext onDragEnd={onDragEnd}>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max overflow-x-auto pb-4">
+              {filteredBoardData.map((coluna) => (
+                  <FunilColumn 
+                      key={coluna.etapa} 
+                      etapa={coluna.etapa} 
+                      negocios={coluna.negocios} 
+                      onPriorityChange={handlePriorityChange}
+                      onAddNegocio={handleOpenAddModal}
+                      onEditNegocio={handleOpenEditModal}
+                  />
+              ))}
+          </div>
+      </DragDropContext>
+      <NegocioModal
+          isOpen={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          onSave={handleSaveNegocio}
+          negocio={editingNegocio}
+          defaultEtapa={defaultEtapa}
+          clients={clients}
+          imoveis={imoveis}
+      />
     </>
   );
 }

@@ -13,6 +13,7 @@ export const getInitialNegocios = (): Negocio[] => {
       dataCriacao: today,
       valorProposta: 745000,
       recomendadoCliente: true,
+      prioridade: true,
     },
     {
       id: "NEG-2",
@@ -23,6 +24,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Visita",
       dataCriacao: "2024-07-25",
       valorProposta: 450000,
+      prioridade: false,
     },
     {
       id: "NEG-3",
@@ -33,6 +35,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Contato",
       dataCriacao: "2024-07-29",
       valorProposta: 200000,
+      prioridade: false,
     },
      {
       id: "NEG-4",
@@ -43,6 +46,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Fechado - Ganho",
       dataCriacao: today,
       valorProposta: 1500,
+      prioridade: false,
     },
      {
       id: "NEG-5",
@@ -53,6 +57,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Fechado - Perdido",
       dataCriacao: "2024-06-15",
       valorProposta: 750000,
+      prioridade: false,
     },
     {
       id: "NEG-6",
@@ -63,6 +68,7 @@ export const getInitialNegocios = (): Negocio[] => {
       etapa: "Fechado - Ganho",
       dataCriacao: today,
       valorProposta: 480000,
+      prioridade: false,
     },
      {
       id: "NEG-7",
@@ -74,6 +80,7 @@ export const getInitialNegocios = (): Negocio[] => {
       dataCriacao: "2024-07-30",
       valorProposta: 680000,
       recomendadoCliente: true,
+      prioridade: false,
     },
   ];
 };
@@ -130,6 +137,18 @@ export const getInitialImoveis = (): Imovel[] => {
       status: "Alugado",
       createdAt: new Date().toISOString()
     },
+    { 
+      id: "IMOVEL-5", 
+      refCode: "CA005", 
+      title: "Casa Charmosa em Bairro Tranquilo", 
+      description: "Casa com 3 quartos, jardim de inverno e edícula. Perfeita para famílias que buscam sossego.", 
+      type: "Casa", 
+      price: 680000, 
+      bedrooms: 3, 
+      bathrooms: 2, 
+      status: "Disponível", 
+      imageUrl: "https://placehold.co/600x400.png"
+    }
   ];
 };
 
