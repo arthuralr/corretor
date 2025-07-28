@@ -56,8 +56,8 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
     defaultValues: {
       title: initialData?.title || '',
       description: initialData?.description || '',
-      clientId: initialData?.clientId || '',
-      negocioId: initialData?.negocioId || '',
+      clientId: initialData?.clientId || undefined,
+      negocioId: initialData?.negocioId || undefined,
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
     },
   });
@@ -69,8 +69,8 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
     form.reset({
       title: initialData?.title || '',
       description: initialData?.description || '',
-      clientId: initialData?.clientId || '',
-      negocioId: initialData?.negocioId || '',
+      clientId: initialData?.clientId || undefined,
+      negocioId: initialData?.negocioId || undefined,
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
     });
   }, [initialData, form]);
@@ -84,12 +84,12 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
       } else {
         // If no related proposal, clear the field unless it's being pre-filled
         if (!initialData?.negocioId) {
-            form.setValue('negocioId', '');
+            form.setValue('negocioId', undefined);
         }
       }
     } else {
          if (!initialData?.negocioId) {
-            form.setValue('negocioId', '');
+            form.setValue('negocioId', undefined);
         }
     }
   }, [selectedClientId, negocios, form, initialData]);
@@ -173,7 +173,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="null">Nenhum</SelectItem>
                     {clients.map(client => (
                       <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
                     ))}
@@ -196,7 +196,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Nenhuma</SelectItem>
+                    <SelectItem value="null">Nenhuma</SelectItem>
                     {negocios.map(negocio => (
                       <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo} ({negocio.clienteNome})</SelectItem>
                     ))}
