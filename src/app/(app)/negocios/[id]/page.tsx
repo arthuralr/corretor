@@ -1,5 +1,5 @@
-import { Briefcase, User, Home, DollarSign, Calendar, Tag, Info, CalendarCheck, CheckCircle } from "lucide-react";
-import type { Negocio, Task } from "@/lib/definitions";
+import { Briefcase, User, Home, DollarSign, Calendar, Tag, Info, CalendarCheck, CheckCircle, FolderArchive } from "lucide-react";
+import type { Negocio, Task, Documento } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +8,26 @@ import { AddTaskButton } from "@/components/agenda/add-task-button";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
+import { DocumentManager } from "@/components/negocios/document-manager";
 
 // MOCK DATA FETCHING
 async function getNegocio(id: string): Promise<Negocio | undefined> {
   const negocios: Negocio[] = [
-    { id: "NEG-1", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa com Piscina", etapa: "Proposta", dataCriacao: "2024-07-28", valorProposta: 745000, recomendadoCliente: true },
+    { 
+      id: "NEG-1", 
+      clienteId: "CLIENT-1", 
+      clienteNome: "John Doe", 
+      imovelId: "IMOVEL-1", 
+      imovelTitulo: "Casa Espaçosa com Piscina", 
+      etapa: "Proposta", 
+      dataCriacao: "2024-07-28", 
+      valorProposta: 745000, 
+      recomendadoCliente: true,
+      documentos: [
+        { id: "DOC-1", name: "Contrato Proposta.pdf", url: "#", type: 'pdf', size: 1200000 },
+        { id: "DOC-2", name: "RG Cliente.jpg", url: "#", type: 'image', size: 850000 },
+      ]
+    },
     { id: "NEG-2", clienteId: "CLIENT-2", clienteNome: "Jane Smith", imovelId: "IMOVEL-2", imovelTitulo: "Apartamento Moderno no Centro", etapa: "Visita", dataCriacao: "2024-07-25", valorProposta: 450000 },
   ];
   return negocios.find(n => n.id === id);
@@ -113,6 +128,18 @@ export default async function NegocioDetailPage({ params }: { params: { id: stri
             </CardContent>
         </Card>
       </div>
+       
+       <Card>
+        <CardHeader>
+            <CardTitle className="font-headline text-lg flex items-center gap-2">
+              <FolderArchive className="w-5 h-5"/> Gestão de Documentos
+            </CardTitle>
+            <CardDescription>Faça o upload e gerencie os documentos relacionados a este negócio.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <DocumentManager initialDocuments={negocio.documentos || []} />
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

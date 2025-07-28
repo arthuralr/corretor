@@ -33,6 +33,14 @@ export type Imovel = {
 
 export type EtapaFunil = 'Contato' | 'Atendimento' | 'Visita' | 'Proposta' | 'Reserva' | 'Fechado - Ganho' | 'Fechado - Perdido';
 
+export type Documento = {
+  id: string;
+  name: string;
+  url: string; // In a real app, this would be a URL to cloud storage
+  type: 'pdf' | 'image' | 'word' | 'other';
+  size: number; // in bytes
+};
+
 export type Negocio = {
   id: string;
   clienteId: string;
@@ -43,6 +51,7 @@ export type Negocio = {
   dataCriacao: string;
   valorProposta: number;
   recomendadoCliente?: boolean;
+  documentos?: Documento[];
 };
 
 // Simplified version for the AI flow
