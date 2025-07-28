@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Home, Tag, DollarSign, BedDouble, Bath, RulerSquare, CheckSquare, XSquare, Info, CalendarCheck } from "lucide-react";
 import type { Imovel, Task } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
