@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { TaskList } from "@/components/agenda/task-list";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getInitialClients, getInitialTasks } from "@/lib/initial-data";
 
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const TASKS_STORAGE_KEY = 'tasksData';
@@ -29,19 +30,17 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     try {
       // Fetch Client
       const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-      if (savedClients) {
-        const clients: Client[] = JSON.parse(savedClients);
-        const foundClient = clients.find(c => c.id === clientId);
-        setClient(foundClient || null);
-      }
+      const allClients = savedClients ? JSON.parse(savedClients) : getInitialClients();
+      const foundClient = allClients.find((c: Client) => c.id === clientId);
+      setClient(foundClient || null);
+
 
       // Fetch Tasks for Client
       const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
-      if (savedTasks) {
-        const allTasks: Task[] = JSON.parse(savedTasks);
-        const clientTasks = allTasks.filter(t => t.clientId === clientId);
-        setTasks(clientTasks);
-      }
+      const allTasks: Task[] = savedTasks ? JSON.parse(savedTasks) : getInitialTasks();
+      const clientTasks = allTasks.filter(t => t.clientId === clientId);
+      setTasks(clientTasks);
+      
     } catch (error) {
       console.error("Failed to load client data", error);
       setClient(null);
