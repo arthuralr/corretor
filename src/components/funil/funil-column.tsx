@@ -26,7 +26,10 @@ const formatCurrency = (value: number) => {
   }
 
 export function FunilColumn({ etapa, negocios, onPriorityChange, onAddNegocio, onEditNegocio, onDeleteNegocio }: FunilColumnProps) {
-  const totalValor = negocios.reduce((sum, negocio) => sum + negocio.valorProposta, 0);
+  const totalComissao = negocios.reduce((sum, negocio) => {
+    const comissao = (negocio.valorProposta * (negocio.taxaComissao || 0)) / 100;
+    return sum + comissao;
+  }, 0);
 
   return (
     <div className="flex flex-col rounded-lg bg-muted/50">
@@ -40,7 +43,7 @@ export function FunilColumn({ etapa, negocios, onPriorityChange, onAddNegocio, o
                </Button>
             </div>
             <p className="text-sm font-bold text-primary/80 mt-1">
-                {formatCurrency(totalValor)}
+                {formatCurrency(totalComissao)}
             </p>
         </div>
         <Droppable droppableId={etapa}>
