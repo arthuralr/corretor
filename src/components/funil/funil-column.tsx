@@ -4,11 +4,15 @@
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import type { Negocio, EtapaFunil } from "@/lib/definitions";
 import { NegocioCard } from './negocio-card';
+import { Button } from '../ui/button';
+import { PlusCircle } from 'lucide-react';
 
 interface FunilColumnProps {
   etapa: EtapaFunil;
   negocios: Negocio[];
   onPriorityChange: (negocioId: string) => void;
+  onAddNegocio: (etapa: EtapaFunil) => void;
+  onEditNegocio: (negocio: Negocio) => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -20,15 +24,20 @@ const formatCurrency = (value: number) => {
     }).format(value);
   }
 
-export function FunilColumn({ etapa, negocios, onPriorityChange }: FunilColumnProps) {
+export function FunilColumn({ etapa, negocios, onPriorityChange, onAddNegocio, onEditNegocio }: FunilColumnProps) {
   const totalValor = negocios.reduce((sum, negocio) => sum + negocio.valorProposta, 0);
 
   return (
     <div className="flex flex-col rounded-lg bg-muted/50">
         <div className="p-4 text-center border-b">
-            <h3 className="text-lg font-semibold tracking-tight font-headline">
-                {etapa} ({negocios.length})
-            </h3>
+            <div className='flex items-center justify-center gap-2'>
+              <h3 className="text-lg font-semibold tracking-tight font-headline">
+                  {etapa} ({negocios.length})
+              </h3>
+               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onAddNegocio(etapa)}>
+                 <PlusCircle className="h-4 w-4" />
+               </Button>
+            </div>
             <p className="text-sm font-bold text-primary/80 mt-1">
                 {formatCurrency(totalValor)}
             </p>
@@ -49,7 +58,11 @@ export function FunilColumn({ etapa, negocios, onPriorityChange }: FunilColumnPr
                                 {...provided.dragHandleProps}
                                 className={snapshot.isDragging ? 'shadow-lg' : ''}
                                 >
-                                    <NegocioCard negocio={negocio} onPriorityChange={onPriorityChange} />
+                                    <NegocioCard 
+                                      negocio={negocio} 
+                                      onPriorityChange={onPriorityChange}
+                                      onEdit={() => onEditNegocio(negocio)} 
+                                    />
                                 </div>
                             )}
                         </Draggable>

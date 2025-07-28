@@ -2,23 +2,28 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { Negocio, EtapaFunil } from "@/lib/definitions";
+import type { Negocio, EtapaFunil, Client, Imovel } from "@/lib/definitions";
 import { FunilColumn } from './funil-column';
 import { DragDropContext, Droppable, OnDragEndResponder } from '@hello-pangea/dnd';
 import { addActivityLog } from '@/lib/activity-log';
-
-interface FunilBoardProps {
-  initialData: {
-    etapa: EtapaFunil;
-    negocios: Negocio[];
-  }[];
-}
+import { NegocioModal } from '../negocios/negocio-modal';
+import { getInitialClients, getInitialImoveis } from '@/lib/initial-data';
 
 const LOCAL_STORAGE_KEY = 'funilBoardData';
+const CLIENTS_STORAGE_KEY = 'clientsData';
+const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 export function FunilBoard({ initialData }: FunilBoardProps) {
     const [isClient, setIsClient] = useState(false);
     const [boardData, setBoardData] = useState(initialData);
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingNegocio, setEditingNegocio] = useState<Negocio | null>(null);
+    const [defaultEtapa, setDefaultEtapa] = useState<EtapaFunil | undefined>(undefined);
+    
+    const [clients, setClients] = useState<Client[]>([]);
+    const [imoveis, setImoveis] = useState<Imovel[]>([]);
+
 
     useEffect(() => {
         setIsClient(true);
@@ -27,6 +32,13 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
             if (savedData) {
                 setBoardData(JSON.parse(savedData));
             }
+
+            const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
+            setClients(savedClients ? JSON.parse(savedClients) : getInitialClients());
+
+            const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+            setImoveis(savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis());
+
         } catch (error) {
             console.error("Failed to load data from local storage", error);
         }
@@ -36,12 +48,64 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         setBoardData(newData);
         try {
             window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-            // Dispatch a custom event to notify other components (like Dashboard) of the change
             window.dispatchEvent(new CustomEvent('dataUpdated'));
         } catch (error) {
             console.error("Failed to save data to local storage", error);
         }
     };
+    
+    const handleOpenAddModal = (etapa: EtapaFunil) => {
+        setEditingNegocio(null);
+        setDefaultEtapa(etapa);
+        setIsModalOpen(true);
+    };
+
+    const handleOpenEditModal = (negocio: Negocio) => {
+        setEditingNegocio(negocio);
+        setDefaultEtapa(undefined);
+        setIsModalOpen(true);
+    };
+
+    const handleSaveNegocio = (savedNegocio: Negocio) => {
+        let newBoardData = [...boardData];
+        const isEditing = !!editingNegocio;
+
+        if (isEditing) {
+            // Find and update the deal across all columns
+            newBoardData = newBoardData.map(column => ({
+                ...column,
+                negocios: column.negocios.map(n => n.id === savedNegocio.id ? savedNegocio : n)
+            }));
+        } else {
+            // Add new deal to the correct column
+            const columnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
+            if (columnIndex !== -1) {
+                newBoardData[columnIndex].negocios.push(savedNegocio);
+            }
+        }
+        
+        // If the etapa was changed during edit, we might need to move it
+        if (isEditing && editingNegocio.etapa !== savedNegocio.etapa) {
+             const sourceColumnIndex = newBoardData.findIndex(col => col.etapa === editingNegocio.etapa);
+             const destColumnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
+
+             if (sourceColumnIndex !== -1) {
+                // Remove from old column
+                newBoardData[sourceColumnIndex].negocios = newBoardData[sourceColumnIndex].negocios.filter(n => n.id !== savedNegocio.id);
+             }
+             if (destColumnIndex !== -1) {
+                 // Add to new column (if not already there)
+                 if (!newBoardData[destColumnIndex].negocios.some(n => n.id === savedNegocio.id)) {
+                    newBoardData[destColumnIndex].negocios.push(savedNegocio);
+                 }
+             }
+        }
+        
+        updateBoardData(newBoardData);
+        setIsModalOpen(false);
+        setEditingNegocio(null);
+    };
+
 
   const handlePriorityChange = (negocioId: string) => {
     const newBoardData = boardData.map(column => ({
@@ -78,15 +142,13 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
     const sourceNegocios = Array.from(sourceColumn.negocios);
     const [movedNegocio] = sourceNegocios.splice(source.index, 1);
     
-    // Update the etapa of the moved negocio to the destination column's etapa
     const updatedMovedNegocio = { ...movedNegocio, etapa: destColumn.etapa };
     
     const newBoardData = [...boardData];
 
     if (source.droppableId === destination.droppableId) {
-      // Moving within the same column
       const newNegocios = sourceNegocios;
-      newNegocios.splice(destination.index, 0, movedNegocio); // No need to update etapa here
+      newNegocios.splice(destination.index, 0, movedNegocio); 
       
       const newColumn = {
         ...sourceColumn,
@@ -96,7 +158,6 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
       newBoardData[sourceColumnIndex] = newColumn;
       updateBoardData(newBoardData);
     } else {
-      // Moving to a different column
       const destNegocios = Array.from(destColumn.negocios);
       destNegocios.splice(destination.index, 0, updatedMovedNegocio);
       
@@ -122,7 +183,6 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
   };
   
   if (!isClient) {
-    // You can return a loading spinner or a skeleton loader here
     return (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max">
             {initialData.map(col => (
@@ -139,12 +199,30 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
   }
 
   return (
+    <>
     <DragDropContext onDragEnd={onDragEnd}>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max overflow-x-auto pb-4">
             {boardData.map((coluna) => (
-                <FunilColumn key={coluna.etapa} etapa={coluna.etapa} negocios={coluna.negocios} onPriorityChange={handlePriorityChange} />
+                <FunilColumn 
+                    key={coluna.etapa} 
+                    etapa={coluna.etapa} 
+                    negocios={coluna.negocios} 
+                    onPriorityChange={handlePriorityChange}
+                    onAddNegocio={handleOpenAddModal}
+                    onEditNegocio={handleOpenEditModal}
+                />
             ))}
         </div>
     </DragDropContext>
+    <NegocioModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSave={handleSaveNegocio}
+        negocio={editingNegocio}
+        defaultEtapa={defaultEtapa}
+        clients={clients}
+        imoveis={imoveis}
+    />
+    </>
   );
 }

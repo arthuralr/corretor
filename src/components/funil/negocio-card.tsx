@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Negocio } from "@/lib/definitions";
-import { User, Home, Calendar, DollarSign, Star, Clock } from 'lucide-react';
+import { User, Home, Calendar, DollarSign, Star, Clock, Edit } from 'lucide-react';
 import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { Button } from "../ui/button";
 interface NegocioCardProps {
   negocio: Negocio;
   onPriorityChange: (negocioId: string) => void;
+  onEdit: () => void;
 }
 
 const formatPrice = (price: number) => {
@@ -20,12 +21,18 @@ const formatPrice = (price: number) => {
     }).format(price);
   }
 
-export function NegocioCard({ negocio, onPriorityChange }: NegocioCardProps) {
+export function NegocioCard({ negocio, onPriorityChange, onEdit }: NegocioCardProps) {
   
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     onPriorityChange(negocio.id);
+  }
+  
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onEdit();
   }
 
   const timeSinceCreation = () => {
@@ -37,7 +44,7 @@ export function NegocioCard({ negocio, onPriorityChange }: NegocioCardProps) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <Link href={`/negocios/${negocio.id}`} className="block">
         <Card className={cn(
           "mb-2 bg-card hover:bg-card/90 cursor-pointer transition-colors",
@@ -68,15 +75,26 @@ export function NegocioCard({ negocio, onPriorityChange }: NegocioCardProps) {
           </CardContent>
         </Card>
       </Link>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="absolute top-2 right-1 h-8 w-8 text-yellow-400 hover:text-yellow-300"
-        onClick={handleStarClick}
-        aria-label="Marcar como prioridade"
-      >
-        <Star className={cn("h-5 w-5", negocio.prioridade && "fill-current")} />
-      </Button>
+      <div className="absolute top-1 right-1 flex flex-col items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+         <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-yellow-400 hover:text-yellow-300"
+            onClick={handleStarClick}
+            aria-label="Marcar como prioridade"
+        >
+            <Star className={cn("h-5 w-5", negocio.prioridade && "fill-current")} />
+        </Button>
+         <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={handleEditClick}
+            aria-label="Editar Negócio"
+        >
+            <Edit className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
