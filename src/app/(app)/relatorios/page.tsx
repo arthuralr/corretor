@@ -31,25 +31,27 @@ export default function RelatoriosPage() {
   });
 
   const loadData = React.useCallback(() => {
-      try {
-          const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-           if (savedNegocios) {
-            const boardData = JSON.parse(savedNegocios);
-            const allNegocios = Array.isArray(boardData) ? boardData.flatMap((column: any) => column.negocios) : getInitialNegocios();
-            setAllNegocios(allNegocios);
-          } else {
-            const negocios = getInitialNegocios();
+    try {
+        const savedData = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+        if (savedData) {
+            const boardData = JSON.parse(savedData);
+            // Ensure we extract from the columns structure { etapa, negocios }
+            const negocios = boardData.flatMap((column: any) => column.negocios || []);
+            setAllNegocios(negocios);
+        } else {
+            // If no data, initialize it
+            const initialNegocios = getInitialNegocios();
             const negociosPorEtapa = etapas.map(etapa => ({
                 etapa,
-                negocios: negocios.filter(n => n.etapa === etapa)
+                negocios: initialNegocios.filter(n => n.etapa === etapa)
             }));
             window.localStorage.setItem(NEGOCIOS_STORAGE_KEY, JSON.stringify(negociosPorEtapa));
-            setAllNegocios(negocios);
-          }
-      } catch (error) {
-          console.error("Failed to load business data for reports", error);
-          setAllNegocios(getInitialNegocios());
-      }
+            setAllNegocios(initialNegocios);
+        }
+    } catch (error) {
+        console.error("Failed to load business data for reports", error);
+        setAllNegocios(getInitialNegocios());
+    }
   }, []);
 
   React.useEffect(() => {
@@ -63,13 +65,16 @@ export default function RelatoriosPage() {
 
   const filteredNegocios = React.useMemo(() => {
     if (!date?.from) return [];
+    const fromDate = date.from;
     const toDate = date.to ?? new Date();
+    
     // Set hours to the end of the day for 'to' date to include all deals on that day
     toDate.setHours(23, 59, 59, 999);
+    fromDate.setHours(0,0,0,0);
 
     return allNegocios.filter(negocio => {
         const dealDate = parseISO(negocio.dataCriacao);
-        return dealDate >= date.from! && dealDate <= toDate;
+        return dealDate >= fromDate && dealDate <= toDate;
     })
   }, [date, allNegocios]);
 
@@ -91,4 +96,3 @@ export default function RelatoriosPage() {
     </div>
   );
 }
-
