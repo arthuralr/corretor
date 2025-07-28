@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react";
@@ -7,39 +8,53 @@ import type { Negocio } from "@/lib/definitions";
 import { BarChartHorizontal } from "lucide-react";
 import { DateRangePicker } from "@/components/relatorios/date-range-picker";
 import { FunnelConversionReport } from "@/components/relatorios/funnel-conversion-report";
+import { getInitialNegocios } from "@/lib/initial-data";
 
-// MOCK DATA: In a real app, this would be fetched from your database
-const allNegocios: Negocio[] = [
-    { id: "NEG-1", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa com Piscina", etapa: "Proposta", dataCriacao: "2024-07-28", valorProposta: 745000 },
-    { id: "NEG-2", clienteId: "CLIENT-2", clienteNome: "Jane Smith", imovelId: "IMOVEL-2", imovelTitulo: "Apartamento Moderno no Centro", etapa: "Visita", dataCriacao: "2024-07-25", valorProposta: 450000 },
-    { id: "NEG-3", clienteId: "CLIENT-3", clienteNome: "Sam Wilson", imovelId: "IMOVEL-3", imovelTitulo: "Terreno Plano em Condomínio", etapa: "Contato", dataCriacao: "2024-07-29", valorProposta: 200000 },
-    { id: "NEG-4", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-4", imovelTitulo: "Apartamento para Alugar", etapa: "Fechado - Ganho", dataCriacao: "2024-07-20", valorProposta: 1500 },
-    { id: "NEG-5", clienteId: "CLIENT-2", clienteNome: "Jane Smith", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa com Piscina", etapa: "Fechado - Perdido", dataCriacao: "2024-06-15", valorProposta: 750000 },
-    { id: "NEG-6", clienteId: "CLIENT-3", clienteNome: "Sam Wilson", imovelId: "IMOVEL-2", imovelTitulo: "Apartamento Moderno no Centro", etapa: "Fechado - Ganho", dataCriacao: "2024-07-22", valorProposta: 480000 },
-    { id: "NEG-7", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-5", imovelTitulo: "Casa Charmosa em Bairro Tranquilo", etapa: "Visita", dataCriacao: "2024-07-30", valorProposta: 680000 },
-    { id: "NEG-8", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa", etapa: "Atendimento", dataCriacao: "2024-07-26", valorProposta: 745000 },
-    { id: "NEG-9", clienteId: "CLIENT-2", clienteNome: "Jane Smith", imovelId: "IMOVEL-2", imovelTitulo: "Apto Centro", etapa: "Atendimento", dataCriacao: "2024-07-24", valorProposta: 450000 },
-    { id: "NEG-10", clienteId: "CLIENT-3", clienteNome: "Sam Wilson", imovelId: "IMOVEL-3", imovelTitulo: "Terreno", etapa: "Contato", dataCriacao: "2024-07-28", valorProposta: 200000 },
-     { id: "NEG-11", clienteId: "CLIENT-1", clienteNome: "John Doe", imovelId: "IMOVEL-1", imovelTitulo: "Casa Espaçosa", etapa: "Reserva", dataCriacao: "2024-07-29", valorProposta: 745000 },
-];
+const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 
 export default function RelatoriosPage() {
+  const [allNegocios, setAllNegocios] = React.useState<Negocio[]>([]);
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
     to: new Date(),
   });
 
+  const loadData = React.useCallback(() => {
+      try {
+          const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+          if (savedNegocios) {
+            const boardData = JSON.parse(savedNegocios);
+            const allNegocios = Array.isArray(boardData) ? boardData.flatMap((column: any) => column.negocios) : getInitialNegocios();
+            setAllNegocios(allNegocios);
+          } else {
+            setAllNegocios(getInitialNegocios());
+          }
+      } catch (error) {
+          console.error("Failed to load business data for reports", error);
+          setAllNegocios(getInitialNegocios());
+      }
+  }, []);
+
+  React.useEffect(() => {
+    loadData();
+    window.addEventListener('dataUpdated', loadData);
+    return () => {
+        window.removeEventListener('dataUpdated', loadData);
+    };
+  }, [loadData]);
+
+
   const filteredNegocios = React.useMemo(() => {
     if (!date?.from) return [];
-    // If only 'from' is selected, filter from that date to now.
-    // If 'to' is also selected, filter within the range.
     const toDate = date.to ?? new Date();
+    // Set hours to the end of the day for 'to' date to include all deals on that day
+    toDate.setHours(23, 59, 59, 999);
 
     return allNegocios.filter(negocio => {
         const dealDate = parseISO(negocio.dataCriacao);
         return dealDate >= date.from! && dealDate <= toDate;
     })
-  }, [date]);
+  }, [date, allNegocios]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -55,7 +70,6 @@ export default function RelatoriosPage() {
       </p>
       <div className="mt-6 space-y-6">
         <FunnelConversionReport data={filteredNegocios} />
-        {/* Outros relatórios podem ser adicionados aqui */}
       </div>
     </div>
   );

@@ -1,9 +1,11 @@
+
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { CalendarIcon, User, Briefcase } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -49,20 +51,18 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
   const { toast } = useToast();
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      title: '',
-      description: '',
-      clientId: '',
-      negocioId: '',
+    defaultValues: {
+      title: initialData?.title || '',
+      description: initialData?.description || '',
+      clientId: initialData?.clientId || '',
+      negocioId: initialData?.negocioId || '',
+      dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
     },
   });
 
   function onSubmit(values: TaskFormValues) {
     onSave(values);
-    toast({
-      title: "Tarefa Salva!",
-      description: "Sua tarefa foi adicionada à agenda.",
-    });
+    // Toast is handled in the parent component now
   }
 
   return (
@@ -98,7 +98,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
                       )}
                     >
                       {field.value ? (
-                        format(field.value, 'PPP')
+                        format(field.value, 'PPP', { locale: ptBR })
                       ) : (
                         <span>Escolha uma data</span>
                       )}
@@ -108,6 +108,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
+                    locale={ptBR}
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
@@ -159,7 +160,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
                   <SelectContent>
                     <SelectItem value="none">Nenhum</SelectItem>
                     {negocios.map(negocio => (
-                      <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo}</SelectItem>
+                      <SelectItem key={negocio.id} value={negocio.id}>{negocio.imovelTitulo} ({negocio.clienteNome})</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

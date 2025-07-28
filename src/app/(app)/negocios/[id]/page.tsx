@@ -1,4 +1,8 @@
-import { Briefcase, User, Home, DollarSign, Calendar, Tag, Info, CalendarCheck, CheckCircle, FolderArchive } from "lucide-react";
+
+'use client'
+
+import React, { useState, useEffect, useCallback } from "react";
+import { Briefcase, User, Home, DollarSign, Calendar, Tag, Info, CheckCircle, FolderArchive, Edit } from "lucide-react";
 import type { Negocio, Task, Documento } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -9,48 +13,79 @@ import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import { DocumentManager } from "@/components/negocios/document-manager";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// MOCK DATA FETCHING
-async function getNegocio(id: string): Promise<Negocio | undefined> {
-  const negocios: Negocio[] = [
-    { 
-      id: "NEG-1", 
-      clienteId: "CLIENT-1", 
-      clienteNome: "John Doe", 
-      imovelId: "IMOVEL-1", 
-      imovelTitulo: "Casa Espaçosa com Piscina", 
-      etapa: "Proposta", 
-      dataCriacao: "2024-07-28", 
-      valorProposta: 745000, 
-      recomendadoCliente: true,
-      documentos: [
-        { id: "DOC-1", name: "Contrato Proposta.pdf", url: "#", type: 'pdf', size: 1200000 },
-        { id: "DOC-2", name: "RG Cliente.jpg", url: "#", type: 'image', size: 850000 },
-      ]
-    },
-    { id: "NEG-2", clienteId: "CLIENT-2", clienteNome: "Jane Smith", imovelId: "IMOVEL-2", imovelTitulo: "Apartamento Moderno no Centro", etapa: "Visita", dataCriacao: "2024-07-25", valorProposta: 450000 },
-  ];
-  return negocios.find(n => n.id === id);
-}
+const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
+const TASKS_STORAGE_KEY = 'tasksData';
 
-async function getTasksForNegocio(negocioId: string): Promise<Task[]> {
-  const allTasks: Task[] = [
-    { id: 'TASK-1', title: 'Follow-up com cliente John Doe', description: 'Ligar para discutir a contra-proposta.', dueDate: new Date().toISOString(), completed: false, negocioId: 'NEG-1' },
-    { id: 'TASK-2', title: 'Preparar apresentação do imóvel AP002', description: 'Montar slides com fotos e detalhes.', dueDate: new Date().toISOString(), completed: false, negocioId: 'NEG-2' },
-  ];
-  return allTasks.filter(t => t.negocioId === negocioId);
-}
+export default function NegocioDetailPage({ params }: { params: { id: string } }) {
+  const [negocio, setNegocio] = useState<Negocio | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const loadData = useCallback(() => {
+    const negocioId = params.id;
+    if (!negocioId) {
+        setLoading(false);
+        return;
+    }
+    setLoading(true);
+    try {
+        // Fetch Negocio
+        const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+        if (savedNegocios) {
+            const boardData = JSON.parse(savedNegocios);
+            const allNegocios: Negocio[] = boardData.flatMap((column: any) => column.negocios);
+            const foundNegocio = allNegocios.find(n => n.id === negocioId);
+            setNegocio(foundNegocio || null);
+        }
 
-export default async function NegocioDetailPage({ params }: { params: { id: string } }) {
-  const negocio = await getNegocio(params.id);
-  const tasks = await getTasksForNegocio(params.id);
+        // Fetch Tasks for Negocio
+        const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+        if (savedTasks) {
+            const allTasks: Task[] = JSON.parse(savedTasks);
+            const negocioTasks = allTasks.filter(t => t.negocioId === negocioId);
+            setTasks(negocioTasks);
+        }
+    } catch (error) {
+        console.error("Failed to load business data", error);
+        setNegocio(null);
+    } finally {
+        setLoading(false);
+    }
+  }, [params.id]);
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('dataUpdated', loadData);
+    return () => {
+      window.removeEventListener('dataUpdated', loadData);
+    };
+  }, [loadData]);
+
 
    const formatPrice = (price: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(price);
+  }
+
+  if (loading) {
+    return (
+        <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+            <div className="flex items-center justify-between space-y-2">
+                 <Skeleton className="h-10 w-1/2" />
+                 <Skeleton className="h-10 w-24" />
+            </div>
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader></Card>
+                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader></Card>
+                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader></Card>
+             </div>
+             <Card><CardHeader><Skeleton className="h-32 w-full" /></CardHeader></Card>
+        </div>
+    )
   }
 
   if (!negocio) {
@@ -72,7 +107,7 @@ export default async function NegocioDetailPage({ params }: { params: { id: stri
                 <p className="text-muted-foreground">Oportunidade com {negocio.clienteNome}</p>
             </div>
         </div>
-        <Button>Editar Negócio</Button>
+        <Button disabled><Edit className="h-4 w-4 mr-2"/> Editar Negócio</Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -147,10 +182,10 @@ export default async function NegocioDetailPage({ params }: { params: { id: stri
                 <CardTitle className="font-headline text-lg">Tarefas Associadas</CardTitle>
                 <CardDescription>Todas as tarefas relacionadas a este negócio.</CardDescription>
             </div>
-            <AddTaskButton />
+            <AddTaskButton preselectedNegocioId={negocio.id} preselectedClientId={negocio.clienteId} />
         </CardHeader>
         <CardContent>
-            <TaskList tasks={tasks} />
+            <TaskList tasks={tasks} onTaskChange={loadData}/>
         </CardContent>
       </Card>
     </div>

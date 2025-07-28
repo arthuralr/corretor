@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -13,12 +14,18 @@ import { TaskForm } from './task-form';
 import { PlusCircle } from 'lucide-react';
 import type { Client, Negocio, Task } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
+import { getInitialClients } from '@/lib/initial-data';
 
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 const TASKS_STORAGE_KEY = 'tasksData';
 
-export function AddTaskButton() {
+interface AddTaskButtonProps {
+    preselectedClientId?: string;
+    preselectedNegocioId?: string;
+}
+
+export function AddTaskButton({ preselectedClientId, preselectedNegocioId }: AddTaskButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [negocios, setNegocios] = useState<Negocio[]>([]);
@@ -28,7 +35,7 @@ export function AddTaskButton() {
     if (isOpen) {
       try {
         const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-        if (savedClients) setClients(JSON.parse(savedClients));
+        setClients(savedClients ? JSON.parse(savedClients) : getInitialClients());
 
         const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
         if (savedNegocios) {
@@ -81,6 +88,11 @@ export function AddTaskButton() {
         })
     }
   };
+  
+  const initialData = {
+      clientId: preselectedClientId,
+      negocioId: preselectedNegocioId,
+  }
 
   return (
     <>
@@ -100,6 +112,7 @@ export function AddTaskButton() {
             onCancel={() => setIsOpen(false)}
             clients={clients}
             negocios={negocios}
+            initialData={initialData}
           />
         </DialogContent>
       </Dialog>

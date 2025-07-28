@@ -1,32 +1,78 @@
-import { User, Mail, Phone, Search, CalendarCheck, PlusCircle } from "lucide-react";
+
+'use client'
+
+import React, { useState, useEffect, useCallback } from "react";
+import { User, Mail, Phone, Search, Edit } from "lucide-react";
 import type { Client, Task } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { TaskList } from "@/components/agenda/task-list";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// MOCK DATA FETCHING
-async function getClient(id: string): Promise<Client | undefined> {
-  const clients: Client[] = [
-    { id: "CLIENT-1", name: "John Doe", email: "john.doe@example.com", phone: "555-1234", searchProfile: "Procura casa com 3 quartos e quintal." },
-    { id: "CLIENT-2", name: "Jane Smith", email: "jane.smith@example.com", phone: "555-5678", searchProfile: "Quer apartamento moderno no centro, 2 quartos." },
-    { id: "CLIENT-3", name: "Sam Wilson", email: "sam.wilson@example.com", phone: "555-9876", searchProfile: "Interessado em condomínios com academia e piscina." },
-  ];
-  return clients.find(c => c.id === id);
-}
+const CLIENTS_STORAGE_KEY = 'clientsData';
+const TASKS_STORAGE_KEY = 'tasksData';
 
-async function getTasksForClient(clientId: string): Promise<Task[]> {
-  const allTasks: Task[] = [
-    { id: 'TASK-1', title: 'Follow-up com cliente John Doe', description: 'Ligar para discutir a contra-proposta.', dueDate: new Date().toISOString(), completed: false, clientId: 'CLIENT-1' },
-    { id: 'TASK-3', title: 'Agendar visita com Jane Smith', description: 'Entrar em contato para marcar a visita à casa CA001.', dueDate: new Date().toISOString(), completed: true, clientId: 'CLIENT-2' },
-  ];
-  return allTasks.filter(t => t.clientId === clientId);
-}
+export default function ClientDetailPage({ params }: { params: { id: string } }) {
+  const [client, setClient] = useState<Client | null>(null);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  const loadData = useCallback(() => {
+    const clientId = params.id;
+    if (!clientId) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      // Fetch Client
+      const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
+      if (savedClients) {
+        const clients: Client[] = JSON.parse(savedClients);
+        const foundClient = clients.find(c => c.id === clientId);
+        setClient(foundClient || null);
+      }
 
-export default async function ClientDetailPage({ params }: { params: { id: string } }) {
-  const client = await getClient(params.id);
-  const tasks = await getTasksForClient(params.id);
+      // Fetch Tasks for Client
+      const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+      if (savedTasks) {
+        const allTasks: Task[] = JSON.parse(savedTasks);
+        const clientTasks = allTasks.filter(t => t.clientId === clientId);
+        setTasks(clientTasks);
+      }
+    } catch (error) {
+      console.error("Failed to load client data", error);
+      setClient(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [params.id]);
+
+  useEffect(() => {
+    loadData();
+    window.addEventListener('dataUpdated', loadData);
+    return () => {
+        window.removeEventListener('dataUpdated', loadData);
+    };
+  }, [loadData]);
+  
+  if (loading) {
+    return (
+        <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+            <div className="flex items-center justify-between space-y-2">
+                 <Skeleton className="h-10 w-1/2" />
+                 <Skeleton className="h-10 w-24" />
+            </div>
+             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Card><CardHeader><Skeleton className="h-24 w-full" /></CardHeader></Card>
+                <Card className="lg:col-span-2"><CardHeader><Skeleton className="h-24 w-full" /></CardHeader></Card>
+             </div>
+             <Card><CardHeader><Skeleton className="h-32 w-full" /></CardHeader></Card>
+        </div>
+    )
+  }
 
   if (!client) {
     return (
@@ -44,7 +90,10 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
             <User className="h-8 w-8 text-accent" />
             <h2 className="text-3xl font-bold tracking-tight font-headline">{client.name}</h2>
         </div>
-        <Button>Editar Cliente</Button>
+        <Button disabled>
+            <Edit className="h-4 w-4 mr-2"/>
+            Editar Cliente
+        </Button>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -82,10 +131,10 @@ export default async function ClientDetailPage({ params }: { params: { id: strin
                 <CardTitle className="font-headline text-lg">Tarefas Associadas</CardTitle>
                 <CardDescription>Todas as tarefas relacionadas a {client.name}.</CardDescription>
             </div>
-            <AddTaskButton />
+            <AddTaskButton preselectedClientId={client.id} />
         </CardHeader>
         <CardContent>
-            <TaskList tasks={tasks} />
+            <TaskList tasks={tasks} onTaskChange={loadData} />
         </CardContent>
       </Card>
     </div>
