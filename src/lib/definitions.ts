@@ -18,3 +18,15 @@ export type Client = {
   phone: string;
   preferences: string;
 };
+
+export type Imovel = {
+  id: string;
+  refCode: string;
+  title: string;
+  description: string;
+  type: 'Casa' | 'Apartamento' | 'Terreno';
+  price: number;
+  bedrooms: number;
+  bathrooms: number;
+  status: 'Disponível' | 'Vendido' | 'Alugado';
+};

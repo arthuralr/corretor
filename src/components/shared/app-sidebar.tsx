@@ -19,6 +19,7 @@ import {
   Settings,
   LogOut,
   Building,
+  Home,
 } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -28,6 +29,7 @@ const menuItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/properties", label: "Properties", icon: Building2 },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/imoveis", label: "Imóveis", icon: Home },
   {
     href: "/ai-generator",
     label: "AI Listing Generator",
@@ -58,7 +60,7 @@ export function AppSidebar() {
             <SidebarMenuItem key={item.href}>
               <Link href={item.href} legacyBehavior passHref>
                 <SidebarMenuButton
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href) && (item.href === '/' ? pathname === '/' : true)}
                   tooltip={item.label}
                 >
                   <item.icon />
