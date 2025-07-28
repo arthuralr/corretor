@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import type { Imovel } from "@/lib/definitions";
 import { BedDouble, Bath, RulerSquare } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImovelCardProps {
   imovel: Imovel;
@@ -18,9 +19,13 @@ const formatPrice = (price: number) => {
 export function ImovelCardPortal({ imovel }: ImovelCardProps) {
   return (
     <Card className="flex flex-col h-full bg-card hover:shadow-lg transition-shadow duration-300">
-      {/* In a real app, you would use next/image here */}
-      <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
-          <img src={`https://placehold.co/600x400.png`} alt={imovel.title} className="object-cover w-full h-full rounded-t-lg" data-ai-hint="house exterior" />
+      <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center relative">
+          <Image 
+            src={imovel.imageUrl || `https://placehold.co/600x400.png`} 
+            alt={imovel.title} 
+            fill
+            className="object-cover rounded-t-lg"
+            data-ai-hint="house exterior" />
       </div>
       <CardHeader className="p-4">
         <div className="flex justify-between items-start gap-2">

@@ -22,6 +22,7 @@ const getInitialImoveis = (): Imovel[] => {
       bedrooms: 3,
       bathrooms: 2,
       status: "Disponível",
+      imageUrl: "https://placehold.co/600x400.png",
     },
     {
       id: "IMOVEL-2",
@@ -33,6 +34,7 @@ const getInitialImoveis = (): Imovel[] => {
       bedrooms: 2,
       bathrooms: 1,
       status: "Vendido",
+      imageUrl: "https://placehold.co/600x400.png",
     },
     {
       id: "IMOVEL-3",

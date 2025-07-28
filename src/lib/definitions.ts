@@ -29,6 +29,7 @@ export type Imovel = {
   bedrooms: number;
   bathrooms: number;
   status: 'Disponível' | 'Vendido' | 'Alugado';
+  imageUrl?: string;
 };
 
 export type EtapaFunil = 'Contato' | 'Atendimento' | 'Visita' | 'Proposta' | 'Reserva' | 'Fechado - Ganho' | 'Fechado - Perdido';
