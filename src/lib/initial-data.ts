@@ -1,3 +1,4 @@
+
 import type { Negocio, Imovel, Client, Task } from './definitions';
 
 export const getInitialNegocios = (): Negocio[] => {
@@ -104,6 +105,7 @@ export const getInitialImoveis = (): Imovel[] => {
       bathrooms: 2,
       status: "Disponível",
       imageUrl: "https://placehold.co/600x400.png",
+      imageUrls: ["https://placehold.co/600x400.png?text=Frente", "https://placehold.co/600x400.png?text=Sala", "https://placehold.co/600x400.png?text=Piscina"],
       createdAt: new Date().toISOString()
     },
     {
@@ -153,7 +155,8 @@ export const getInitialImoveis = (): Imovel[] => {
       bedrooms: 3, 
       bathrooms: 2, 
       status: "Disponível", 
-      imageUrl: "https://placehold.co/600x400.png"
+      imageUrl: "https://placehold.co/600x400.png",
+      imageUrls: ["https://placehold.co/600x400.png"]
     }
   ];
 };

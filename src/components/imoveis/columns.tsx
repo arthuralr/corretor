@@ -1,7 +1,8 @@
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Imovel } from "@/lib/definitions";
+import type { Imovel, Negocio, Task } from "@/lib/definitions";
 import { ArrowUpDown, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,12 +22,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
-import React from "react";
+import React, { useMemo } from "react";
+import { addActivityLog } from "@/lib/activity-log";
+
 
 const formatPrice = (price: number, status: Imovel['status']) => {
   const formattedPrice = new Intl.NumberFormat("pt-BR", {
@@ -40,6 +42,21 @@ const formatPrice = (price: number, status: Imovel['status']) => {
 const ActionsCell = ({ row }: { row: any }) => {
     const { toast } = useToast();
     const imovel = row.original as Imovel;
+    const [isAlertOpen, setIsAlertOpen] = React.useState(false);
+
+    const dependencies = useMemo(() => {
+      if (typeof window === 'undefined') return { associatedDeals: 0, associatedTasks: 0 };
+      
+      const savedDeals = window.localStorage.getItem('funilBoardData');
+      const allDeals: Negocio[] = savedDeals ? JSON.parse(savedDeals).flatMap((c: any) => c.negocios) : [];
+      const associatedDeals = allDeals.filter(d => d.imovelId === imovel.id).length;
+
+      const savedTasks = window.localStorage.getItem('tasksData');
+      const allTasks: Task[] = savedTasks ? JSON.parse(savedTasks) : [];
+      const associatedTasks = allTasks.filter(t => t.imovelId === imovel.id).length;
+
+      return { associatedDeals, associatedTasks };
+    }, [imovel.id]);
 
     const handleDelete = () => {
         try {
@@ -49,13 +66,14 @@ const ActionsCell = ({ row }: { row: any }) => {
             imoveis = imoveis.filter(i => i.id !== imovel.id);
             window.localStorage.setItem('imoveisData', JSON.stringify(imoveis));
             
-            // Notify other parts of the app
+            addActivityLog({ type: 'imovel', description: `Imóvel "${imovel.title}" foi excluído.`});
             window.dispatchEvent(new CustomEvent('dataUpdated'));
 
             toast({
                 title: "Imóvel Excluído!",
                 description: `O imóvel "${imovel.title}" foi removido.`,
             });
+            setIsAlertOpen(false);
         } catch (error) {
             console.error("Falha ao excluir imóvel:", error);
             toast({
@@ -67,7 +85,7 @@ const ActionsCell = ({ row }: { row: any }) => {
     };
 
     return (
-        <AlertDialog>
+        <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
@@ -78,7 +96,7 @@ const ActionsCell = ({ row }: { row: any }) => {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                     <DropdownMenuItem asChild>
-                        <Link href={`/imoveis/${imovel.id}/edit`} className="flex items-center w-full">
+                        <Link href={`/imoveis/${imovel.id}/edit`} className="flex items-center w-full cursor-pointer">
                            <Edit className="mr-2 h-4 w-4" /> Editar Imóvel
                         </Link>
                     </DropdownMenuItem>
@@ -86,11 +104,12 @@ const ActionsCell = ({ row }: { row: any }) => {
                         Copiar ID do Imóvel
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <AlertDialogTrigger asChild>
-                        <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                            <Trash2 className="mr-2 h-4 w-4" /> Excluir Imóvel
-                        </DropdownMenuItem>
-                    </AlertDialogTrigger>
+                     <DropdownMenuItem 
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                        onSelect={() => setIsAlertOpen(true)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" /> Excluir Imóvel
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
             <AlertDialogContent>
@@ -99,6 +118,16 @@ const ActionsCell = ({ row }: { row: any }) => {
                     <AlertDialogDescription>
                         Esta ação não pode ser desfeita. Isso excluirá permanentemente o imóvel
                         <span className="font-semibold"> {imovel.title}</span> de seus registros.
+                         {(dependencies.associatedDeals > 0 || dependencies.associatedTasks > 0) && (
+                            <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-300 dark:border-yellow-700 rounded-md text-yellow-800 dark:text-yellow-200 text-sm">
+                                <p className="font-bold">Atenção!</p>
+                                <ul className="list-disc pl-5">
+                                    {dependencies.associatedDeals > 0 && <li>Este imóvel está em {dependencies.associatedDeals} negócio(s).</li>}
+                                    {dependencies.associatedTasks > 0 && <li>Este imóvel tem {dependencies.associatedTasks} tarefa(s) associada(s).</li>}
+                                </ul>
+                                <p className="mt-1">A exclusão não removerá os negócios ou tarefas, mas eles perderão a referência a este imóvel.</p>
+                            </div>
+                        )}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

@@ -10,6 +10,7 @@ import { TaskList } from "@/components/agenda/task-list";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getInitialClients, getInitialTasks } from "@/lib/initial-data";
+import { ClientEditModal } from "@/components/clients/client-edit-modal";
 
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const TASKS_STORAGE_KEY = 'tasksData';
@@ -18,6 +19,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
   const [client, setClient] = useState<Client | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const loadData = useCallback(() => {
     const clientId = params.id;
@@ -83,13 +85,14 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
   }
 
   return (
+    <>
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div className="flex items-center gap-3">
             <User className="h-8 w-8 text-accent" />
             <h2 className="text-3xl font-bold tracking-tight font-headline">{client.name}</h2>
         </div>
-        <Button disabled>
+        <Button onClick={() => setIsEditModalOpen(true)}>
             <Edit className="h-4 w-4 mr-2"/>
             Editar Cliente
         </Button>
@@ -137,5 +140,11 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
         </CardContent>
       </Card>
     </div>
+    <ClientEditModal 
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        client={client}
+    />
+    </>
   );
 }

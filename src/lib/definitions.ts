@@ -1,3 +1,4 @@
+
 export type Property = {
   id: string;
   address: string;
@@ -30,6 +31,7 @@ export type Imovel = {
   bathrooms: number;
   status: 'Disponível' | 'Vendido' | 'Alugado';
   imageUrl?: string;
+  imageUrls?: string[];
   createdAt?: string;
 };
 

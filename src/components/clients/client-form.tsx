@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -5,6 +6,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import type { Client } from "@/lib/definitions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { addActivityLog } from "@/lib/activity-log";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -27,11 +30,20 @@ const formSchema = z.object({
   searchProfile: z.string().optional(),
 });
 
-export function ClientForm() {
+type FormValues = z.infer<typeof formSchema>;
+
+interface ClientFormProps {
+    initialData?: Client;
+    onSave?: (values: FormValues) => void;
+    onCancel?: () => void;
+}
+
+export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
   const router = useRouter();
   const { toast } = useToast();
+  const isEditing = !!initialData;
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -41,8 +53,19 @@ export function ClientForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // In a real app, this would save to a database. Here we use localStorage.
+  useEffect(() => {
+    if (initialData) {
+        form.reset(initialData);
+    }
+  }, [initialData, form]);
+
+  function onSubmit(values: FormValues) {
+    if (isEditing && onSave) {
+        onSave(values);
+        return;
+    }
+
+    // Create new client logic
     const newClient = { id: `CLIENT-${Date.now()}`, ...values };
     try {
         const savedClients = window.localStorage.getItem('clientsData');
@@ -73,12 +96,14 @@ export function ClientForm() {
     }
   }
 
+  const handleCancel = onCancel || (() => router.back());
+
   return (
     <Card>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardHeader>
-             <CardTitle className="font-headline">Informações do Cliente</CardTitle>
+             <CardTitle className="font-headline">{isEditing ? "Editar Informações" : "Informações do Cliente"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <FormField
@@ -139,8 +164,8 @@ export function ClientForm() {
             />
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
-            <Button type="submit">Salvar Cliente</Button>
+            <Button type="button" variant="outline" onClick={handleCancel}>Cancelar</Button>
+            <Button type="submit">Salvar {isEditing ? "Alterações" : "Cliente"}</Button>
           </CardFooter>
         </form>
       </Form>

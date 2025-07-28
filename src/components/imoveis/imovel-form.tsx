@@ -1,7 +1,8 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -25,8 +27,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { addActivityLog } from "@/lib/activity-log";
+import { Trash2, PlusCircle } from "lucide-react";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
@@ -39,7 +42,7 @@ const formSchema = z.object({
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(0),
   status: z.enum(["Disponível", "Vendido", "Alugado"]),
-  imageUrl: z.string().url("URL inválida").optional().or(z.literal('')),
+  imageUrls: z.array(z.object({ value: z.string().url("URL inválida") })),
 });
 
 type ImovelFormValues = z.infer<typeof formSchema>;
@@ -55,17 +58,24 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
 
   const form = useForm<ImovelFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData || {
-      refCode: "",
-      title: "",
-      description: "",
-      type: "Casa",
-      price: 0,
-      bedrooms: 3,
-      bathrooms: 2,
-      status: "Disponível",
-      imageUrl: "",
-    },
+    defaultValues: initialData 
+        ? { ...initialData, imageUrls: initialData.imageUrls?.map(url => ({ value: url })) || (initialData.imageUrl ? [{ value: initialData.imageUrl }] : []) }
+        : {
+            refCode: "",
+            title: "",
+            description: "",
+            type: "Casa",
+            price: 0,
+            bedrooms: 3,
+            bathrooms: 2,
+            status: "Disponível",
+            imageUrls: [{ value: "" }],
+        },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "imageUrls",
   });
 
   function onSubmit(values: ImovelFormValues) {
@@ -73,10 +83,13 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
         const imoveis: Imovel[] = savedData ? JSON.parse(savedData) : [];
         
+        const finalImageUrls = values.imageUrls.map(urlObj => urlObj.value).filter(Boolean);
+        const submissionData = { ...values, imageUrls: finalImageUrls, imageUrl: finalImageUrls[0] || '' };
+
         if (isEditing) {
             // Update existing imovel
             const updatedImoveis = imoveis.map(imovel => 
-                imovel.id === initialData.id ? { ...imovel, ...values } : imovel
+                imovel.id === initialData.id ? { ...imovel, ...submissionData } : imovel
             );
             window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(updatedImoveis));
              addActivityLog({
@@ -92,7 +105,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             // Create new imovel
             const newImovel: Imovel = {
                 id: `IMOVEL-${Date.now()}`,
-                ...values,
+                ...submissionData,
                 description: values.description || '',
                 createdAt: new Date().toISOString(),
             };
@@ -264,20 +277,48 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                 </FormItem>
               )}
             />
-             <FormField
-                control={form.control}
-                name="imageUrl"
-                render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                    <FormLabel>URL da Imagem</FormLabel>
-                    <FormControl>
-                        <Input placeholder="https://exemplo.com/imagem.png" {...field} />
-                    </FormControl>
-                    <FormMessage />
+            <div className="md:col-span-2 space-y-4">
+              <FormLabel>URLs das Imagens</FormLabel>
+               <CardDescription>
+                Adicione as URLs das imagens do imóvel. A primeira URL será usada como imagem de capa.
+               </CardDescription>
+              {fields.map((field, index) => (
+                <FormField
+                  key={field.id}
+                  control={form.control}
+                  name={`imageUrls.${index}.value`}
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Input placeholder="https://exemplo.com/imagem.png" {...field} />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          disabled={fields.length <= 1}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <FormMessage />
                     </FormItem>
-                )}
-             />
-
+                  )}
+                />
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => append({ value: "" })}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Adicionar mais URLs
+              </Button>
+            </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>

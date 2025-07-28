@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Building2, Users, DollarSign, Home, FileText, Activity, Clock, CheckCircle } from "lucide-react"
+import { Building2, Users, DollarSign, Home, FileText, Activity, Clock, CheckCircle, UserPlus, HomeIcon } from "lucide-react"
 import type { Negocio, Task, Imovel, ActivityLog } from "@/lib/definitions";
 import { TaskList } from "@/components/agenda/task-list";
 import Link from "next/link";
@@ -22,30 +22,27 @@ const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const TASKS_STORAGE_KEY = 'tasksData';
+const ACTIVITY_LOG_KEY = 'activityLog';
 
-const getRecentCompletedTasksAsActivityLog = (): ActivityLog[] => {
-    try {
-        const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
-        if (!savedTasks) return [];
-        
-        const allTasks: Task[] = JSON.parse(savedTasks);
-        
-        const completedTasks = allTasks
-            .filter(task => task.completed)
-            .sort((a, b) => parseISO(b.dueDate).getTime() - parseISO(a.dueDate).getTime()) // Assuming completion date is similar to due date for sorting
-            .slice(0, 5);
+const getActivityIcon = (type: ActivityLog['type']) => {
+    switch (type) {
+        case 'negocio':
+            return <CheckCircle className="h-5 w-5" />;
+        case 'cliente':
+            return <UserPlus className="h-5 w-5" />;
+        case 'imovel':
+            return <HomeIcon className="h-5 w-5" />;
+        default:
+            return <Activity className="h-5 w-5" />;
+    }
+};
 
-        return completedTasks.map(task => ({
-            id: `activity-task-${task.id}`,
-            type: 'negocio', // Using 'negocio' for icon consistency, can be adapted
-            description: `Tarefa concluída: ${task.title}`,
-            timestamp: task.dueDate, // Ideally we'd store a completion timestamp
-            link: `/agenda`
-        }));
-
-    } catch (error) {
-        console.error("Failed to get recent completed tasks", error);
-        return [];
+const getActivityColor = (type: ActivityLog['type']) => {
+    switch(type) {
+        case 'negocio': return 'text-green-600';
+        case 'cliente': return 'text-blue-600';
+        case 'imovel': return 'text-purple-600';
+        default: return 'text-gray-600';
     }
 }
 
@@ -78,7 +75,8 @@ export default function Dashboard() {
       setTasks(savedTasks ? JSON.parse(savedTasks) : getInitialTasks());
 
       // Load Activity Log
-      setActivityLog(getRecentCompletedTasksAsActivityLog());
+      const savedActivityLog = window.localStorage.getItem(ACTIVITY_LOG_KEY);
+      setActivityLog(savedActivityLog ? JSON.parse(savedActivityLog) : []);
 
     } catch (error) {
       console.error("Failed to load data, using initial data", error);
@@ -193,11 +191,11 @@ export default function Dashboard() {
           <CardContent className="pl-2">
             {activityLog.length > 0 ? (
                 <div className="space-y-4">
-                    {activityLog.map(log => (
+                    {activityLog.slice(0, 7).map(log => (
                         <div key={log.id} className="flex items-start gap-4">
                            <div className="flex-shrink-0 pt-1">
-                             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-green-600">
-                                <CheckCircle className="h-5 w-5" />
+                             <span className={`flex h-8 w-8 items-center justify-center rounded-full bg-secondary ${getActivityColor(log.type)}`}>
+                                {getActivityIcon(log.type)}
                             </span>
                            </div>
                            <div className="flex-grow">
@@ -213,7 +211,7 @@ export default function Dashboard() {
                     ))}
                 </div>
             ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma tarefa concluída recentemente.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhuma atividade registrada recentemente.</p>
             )}
           </CardContent>
         </Card>

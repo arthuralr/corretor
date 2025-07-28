@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Imovel } from "@/lib/definitions";
@@ -17,11 +18,13 @@ const formatPrice = (price: number) => {
 }
 
 export function ImovelCardPortal({ imovel }: ImovelCardProps) {
+  const imageUrl = (imovel.imageUrls && imovel.imageUrls.length > 0 ? imovel.imageUrls[0] : imovel.imageUrl) || 'https://placehold.co/600x400.png';
+
   return (
     <Card className="flex flex-col h-full bg-card hover:shadow-lg transition-shadow duration-300">
       <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center relative">
           <Image 
-            src={`https://placehold.co/600x400.png`} 
+            src={imageUrl} 
             alt={imovel.title} 
             fill
             className="object-cover rounded-t-lg"
