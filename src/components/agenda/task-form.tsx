@@ -191,35 +191,6 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios, imo
           />
         </div>
         <FormField
-            control={form.control}
-            name="imovelId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="flex items-center gap-2"><Home className="h-4 w-4" /> Associar ao Imóvel</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um imóvel (opcional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {imoveis
-                        .filter(imovel => imovel.status === 'Disponível')
-                        .map(imovel => (
-                            <SelectItem key={imovel.id} value={imovel.id}>{imovel.title} ({imovel.refCode})</SelectItem>
-                        ))
-                    }
-                  </SelectContent>
-                </Select>
-                 <FormDescription>
-                    Use para tarefas que não estão ligadas a um negócio específico.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        <FormField
           control={form.control}
           name="description"
           render={({ field }) => (
