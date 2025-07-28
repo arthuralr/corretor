@@ -1,12 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { columns } from "@/components/imoveis/columns";
 import { DataTable } from "@/components/data-table";
 import type { Imovel } from "@/lib/definitions";
+import { useState, useEffect } from "react";
 
-async function getImoveis(): Promise<Imovel[]> {
-  // In a real app, you'd fetch this from a database.
+const IMOVEIS_STORAGE_KEY = 'imoveisData';
+
+const getInitialImoveis = (): Imovel[] => {
   return [
     {
       id: "IMOVEL-1",
@@ -53,10 +57,27 @@ async function getImoveis(): Promise<Imovel[]> {
       status: "Alugado",
     },
   ];
-}
+};
 
-export default async function ImoveisPage() {
-  const data = await getImoveis();
+export default function ImoveisPage() {
+  const [data, setData] = useState<Imovel[]>([]);
+
+  useEffect(() => {
+    try {
+      const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+      if (savedData) {
+        setData(JSON.parse(savedData));
+      } else {
+        const initialData = getInitialImoveis();
+        setData(initialData);
+        window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(initialData));
+      }
+    } catch (error) {
+        console.error("Falha ao carregar dados de imóveis, usando dados iniciais.", error);
+        const initialData = getInitialImoveis();
+        setData(initialData);
+    }
+  }, []);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

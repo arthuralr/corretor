@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import type { Imovel } from "@/lib/definitions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 const formSchema = z.object({
   refCode: z.string().min(1, "O código de referência é obrigatório"),
@@ -56,12 +59,33 @@ export function ImovelForm() {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Imóvel Salvo!",
-      description: "O novo imóvel foi adicionado aos seus registros.",
-    });
-    router.push("/imoveis");
+    try {
+        const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+        const imoveis: Imovel[] = savedData ? JSON.parse(savedData) : [];
+        
+        const newImovel: Imovel = {
+            id: `IMOVEL-${Date.now()}`,
+            description: values.description || '',
+            ...values,
+        };
+
+        imoveis.push(newImovel);
+        window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(imoveis));
+
+        toast({
+          title: "Imóvel Salvo!",
+          description: "O novo imóvel foi adicionado aos seus registros.",
+        });
+        router.push("/imoveis");
+        router.refresh(); // Forces a refresh on the redirected page to show the new item
+    } catch (error) {
+        console.error("Falha ao salvar imóvel no localStorage", error);
+        toast({
+            title: "Erro ao Salvar",
+            description: "Não foi possível salvar o imóvel. Tente novamente.",
+            variant: "destructive",
+        });
+    }
   }
 
   return (
