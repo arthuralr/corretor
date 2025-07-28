@@ -23,6 +23,7 @@ import {
   DollarSign,
   Telescope,
   CalendarCheck,
+  MessageSquareText,
 } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -41,6 +42,7 @@ const menuItems = [
     label: "AI Listing Generator",
     icon: WandSparkles,
   },
+  { href: "/settings/message-templates", label: "Modelos de Mensagens", icon: MessageSquareText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

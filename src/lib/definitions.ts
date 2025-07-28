@@ -67,3 +67,9 @@ export type Task = {
   clientName?: string;
   negocioTitle?: string;
 };
+
+export type MessageTemplate = {
+    id: string;
+    title: string;
+    content: string;
+};
