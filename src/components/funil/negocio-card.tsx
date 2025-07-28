@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Negocio } from "@/lib/definitions";
-import { User, Home, Calendar, DollarSign, Star } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { User, Home, Calendar, DollarSign, Star, Clock } from 'lucide-react';
+import { format, parseISO, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,14 @@ export function NegocioCard({ negocio, onPriorityChange }: NegocioCardProps) {
     onPriorityChange(negocio.id);
   }
 
+  const timeSinceCreation = () => {
+    try {
+        return formatDistanceToNow(parseISO(negocio.dataCriacao), { addSuffix: true, locale: ptBR });
+    } catch (error) {
+        return 'Data inválida';
+    }
+  }
+
   return (
     <div className="relative">
       <Link href={`/negocios/${negocio.id}`} className="block">
@@ -47,9 +55,15 @@ export function NegocioCard({ negocio, onPriorityChange }: NegocioCardProps) {
                 <DollarSign className="w-4 h-4" />
                 <span>{formatPrice(negocio.valorProposta)}</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-                <Calendar className="w-3 h-3" />
-                <span>Criado em: {format(parseISO(negocio.dataCriacao), "dd/MM/yyyy", { locale: ptBR })}</span>
+            <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-2">
+                    <Calendar className="w-3 h-3" />
+                    <span>{format(parseISO(negocio.dataCriacao), "dd/MM/yyyy", { locale: ptBR })}</span>
+                </span>
+                <span className="flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>{timeSinceCreation()}</span>
+                </span>
             </div>
           </CardContent>
         </Card>
