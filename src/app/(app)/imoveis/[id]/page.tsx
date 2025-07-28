@@ -29,13 +29,14 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const imovelId = params.id;
 
   useEffect(() => {
     // Fetch data from localStorage
     try {
         const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
         const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
-        const foundImovel = imoveis.find((i: Imovel) => i.id === params.id) || null;
+        const foundImovel = imoveis.find((i: Imovel) => i.id === imovelId) || null;
         setImovel(foundImovel);
     } catch (error) {
         console.error("Failed to load property data", error);
@@ -48,7 +49,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
     // In a real app, you would filter tasks by imovelId if it was linked.
     setTasks([]);
 
-  }, [params.id]);
+  }, [imovelId]);
 
 
    const formatPrice = (price: number, status: Imovel['status']) => {
