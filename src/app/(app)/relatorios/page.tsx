@@ -4,13 +4,24 @@
 import * as React from "react";
 import { subDays, parseISO } from "date-fns";
 import type { DateRange } from "react-day-picker";
-import type { Negocio } from "@/lib/definitions";
+import type { Negocio, EtapaFunil } from "@/lib/definitions";
 import { BarChartHorizontal } from "lucide-react";
 import { DateRangePicker } from "@/components/relatorios/date-range-picker";
 import { FunnelConversionReport } from "@/components/relatorios/funnel-conversion-report";
 import { getInitialNegocios } from "@/lib/initial-data";
 
 const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
+
+const etapas: EtapaFunil[] = [
+  'Contato', 
+  'Atendimento', 
+  'Visita', 
+  'Proposta', 
+  'Reserva', 
+  'Fechado - Ganho', 
+  'Fechado - Perdido'
+];
+
 
 export default function RelatoriosPage() {
   const [allNegocios, setAllNegocios] = React.useState<Negocio[]>([]);
@@ -22,12 +33,18 @@ export default function RelatoriosPage() {
   const loadData = React.useCallback(() => {
       try {
           const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-          if (savedNegocios) {
+           if (savedNegocios) {
             const boardData = JSON.parse(savedNegocios);
             const allNegocios = Array.isArray(boardData) ? boardData.flatMap((column: any) => column.negocios) : getInitialNegocios();
             setAllNegocios(allNegocios);
           } else {
-            setAllNegocios(getInitialNegocios());
+            const negocios = getInitialNegocios();
+            const negociosPorEtapa = etapas.map(etapa => ({
+                etapa,
+                negocios: negocios.filter(n => n.etapa === etapa)
+            }));
+            window.localStorage.setItem(NEGOCIOS_STORAGE_KEY, JSON.stringify(negociosPorEtapa));
+            setAllNegocios(negocios);
           }
       } catch (error) {
           console.error("Failed to load business data for reports", error);
