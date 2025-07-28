@@ -47,10 +47,6 @@ export const columns: ColumnDef<Imovel>[] = [
     }
   },
   {
-    accessorKey: "type",
-    header: "Tipo",
-  },
-  {
     accessorKey: "price",
     header: ({ column }) => {
         return (
