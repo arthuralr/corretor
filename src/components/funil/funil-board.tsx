@@ -186,11 +186,15 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         if (entradas.some(e => e.id === `ENTRADA-${negocio.id}`)) {
             return;
         }
+        
+        const comissao = (negocio.valorProposta * (negocio.taxaComissao || 0)) / 100;
+
+        if (comissao <= 0) return; // Don't create an entry for 0 value
 
         const newEntrada: Entrada = {
             id: `ENTRADA-${negocio.id}`,
-            origem: `Venda - ${negocio.imovelTitulo}`,
-            valor: negocio.valorProposta,
+            origem: `Comissão Venda - ${negocio.imovelTitulo}`,
+            valor: comissao,
             dataRecebimento: new Date().toISOString(),
         };
 
@@ -199,7 +203,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         
         toast({
           title: "Entrada Registrada!",
-          description: `Uma nova entrada de ${newEntrada.valor} foi registrada.`,
+          description: `Uma nova entrada de comissão de ${newEntrada.valor} foi registrada.`,
         });
 
      } catch(e) {
