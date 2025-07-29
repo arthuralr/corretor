@@ -43,6 +43,8 @@ export default function HomePage() {
         <Carousel 
             opts={{ loop: true }}
             plugins={[autoplayPlugin.current]}
+            onMouseEnter={autoplayPlugin.current.stop}
+            onMouseLeave={autoplayPlugin.current.reset}
             className="absolute inset-0 z-0"
         >
           <CarouselContent>
