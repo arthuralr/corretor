@@ -120,6 +120,15 @@ export default function SiteSettingsPage() {
     }
   };
 
+  const handleSlideImageUpload = (index: number) => {
+    const currentSrc = form.getValues(`heroImages.${index}.src`);
+    const newSrc = prompt('Insira a nova URL da imagem:', currentSrc || 'https://placehold.co/1920x1080.png');
+    if (newSrc) {
+      form.setValue(`heroImages.${index}.src`, newSrc, { shouldDirty: true, shouldValidate: true });
+    }
+  };
+
+
   if (!initialConfig) {
     return <div>Carregando configurações...</div>;
   }
@@ -188,17 +197,24 @@ export default function SiteSettingsPage() {
                     <img src={form.watch(`heroImages.${index}.src`)} alt={form.watch(`heroImages.${index}.alt`)} className="w-full h-full object-cover"/>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
-                  <FormField
-                    control={form.control}
-                    name={`heroImages.${index}.src`}
-                    render={({ field }) => (
-                      <FormItem className="md:col-span-2">
+                   <div className="md:col-span-2">
                         <FormLabel>URL da Imagem</FormLabel>
-                        <FormControl><Input {...field} placeholder="https://..."/></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <div className="flex items-center gap-2 mt-2">
+                             <FormControl>
+                                <Input 
+                                    {...form.register(`heroImages.${index}.src`)} 
+                                    placeholder="https://..." 
+                                    readOnly 
+                                    className="bg-muted/50"
+                                />
+                            </FormControl>
+                            <Button type="button" variant="outline" onClick={() => handleSlideImageUpload(index)}>
+                                <UploadCloud className="mr-2" /> Alterar
+                            </Button>
+                        </div>
+                        <FormDescription className="mt-1">Tamanho ideal: 1920x1080px</FormDescription>
+                        <FormMessage>{form.formState.errors.heroImages?.[index]?.src?.message}</FormMessage>
+                    </div>
                   <FormField
                     control={form.control}
                     name={`heroImages.${index}.alt`}
@@ -230,7 +246,7 @@ export default function SiteSettingsPage() {
              <Button
               type="button"
               variant="outline"
-              onClick={() => append({ src: '', alt: '', hint: '' })}
+              onClick={() => append({ src: 'https://placehold.co/1920x1080.png', alt: 'Nova Imagem', hint: 'descreva a imagem' })}
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               Adicionar Imagem ao Slide
