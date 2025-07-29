@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { Imovel } from '@/lib/definitions';
 import { getInitialImoveis } from '@/lib/initial-data';
 import { PropertySearchForm } from '@/components/public/property-search-form';
@@ -20,6 +20,7 @@ const featuredImages = [
 
 export default function HomePage() {
   const [featuredProperties, setFeaturedProperties] = useState<Imovel[]>([]);
+  const autoplayPlugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
 
   useEffect(() => {
     try {
@@ -41,7 +42,7 @@ export default function HomePage() {
       <section className="relative h-[70vh] md:h-[85vh] flex items-center justify-center text-white">
         <Carousel 
             opts={{ loop: true }}
-            plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+            plugins={[autoplayPlugin.current]}
             className="absolute inset-0 z-0"
         >
           <CarouselContent>
