@@ -49,13 +49,11 @@ const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label:
     if (!file) return;
 
     setIsUploading(true);
-    // Simulate upload
-    setTimeout(() => {
-      // In a real app, this would return a URL from a storage service
-      const mockUrl = `https://placehold.co/200x100.png?text=${label.replace(' ', '+')}`;
-      onImageUpload(mockUrl);
-      setIsUploading(false);
-    }, 1000);
+    // In a real app, this would upload to a service and return a real URL
+    // For now, we use a local blob URL to preview the image
+    const localUrl = URL.createObjectURL(file);
+    onImageUpload(localUrl);
+    setIsUploading(false);
   };
 
   return (
@@ -153,14 +151,11 @@ export default function SiteSettingsPage() {
   };
 
   const handleSlideImageUpload = (index: number, file: File) => {
-    // Simulate upload
     setIsUploading(true);
-    setTimeout(() => {
-        const mockUrl = `https://placehold.co/1920x1080.png?text=Slide+${index + 1}`;
-        form.setValue(`heroImages.${index}.src`, mockUrl, { shouldDirty: true, shouldValidate: true });
-        setIsUploading(false);
-        toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada (simulação).' });
-    }, 1000)
+    const localUrl = URL.createObjectURL(file);
+    form.setValue(`heroImages.${index}.src`, localUrl, { shouldDirty: true, shouldValidate: true });
+    setIsUploading(false);
+    toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada.' });
   };
 
 
@@ -209,7 +204,7 @@ export default function SiteSettingsPage() {
                   <FormLabel>Cor Principal do Site</FormLabel>
                   <div className="flex items-center gap-2">
                      <FormControl>
-                        <Input type="color" {...field} className="w-12 h-10 p-1" />
+                        <Input type="color" {...field} value={field.value || ''} className="w-12 h-10 p-1" />
                      </FormControl>
                      <span className='text-muted-foreground'>{field.value}</span>
                   </div>
@@ -238,9 +233,7 @@ export default function SiteSettingsPage() {
                              <FormControl>
                                 <Input 
                                     {...form.register(`heroImages.${index}.src`)} 
-                                    placeholder="https://..." 
-                                    readOnly 
-                                    className="bg-muted/50"
+                                    placeholder="https://..."
                                 />
                             </FormControl>
                              <label className="relative">
@@ -313,7 +306,7 @@ export default function SiteSettingsPage() {
                 <FormItem>
                   <FormLabel>Título do Site (Meta Title)</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={field.value || ''} />
                   </FormControl>
                 </FormItem>
               )}
@@ -325,7 +318,7 @@ export default function SiteSettingsPage() {
                 <FormItem>
                   <FormLabel>Descrição do Site (Meta Description)</FormLabel>
                   <FormControl>
-                    <Textarea {...field} />
+                    <Textarea {...field} value={field.value || ''} />
                   </FormControl>
                 </FormItem>
               )}
@@ -345,7 +338,7 @@ export default function SiteSettingsPage() {
                 <FormItem>
                   <FormLabel>Título da Seção de Imóveis em Destaque</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} value={field.value || ''} />
                   </FormControl>
                 </FormItem>
               )}
@@ -357,7 +350,7 @@ export default function SiteSettingsPage() {
                 <FormItem>
                   <FormLabel>Chave de API do Google Maps</FormLabel>
                   <FormControl>
-                    <Input {...field} type="password" />
+                    <Input {...field} type="password" value={field.value || ''} />
                   </FormControl>
                 </FormItem>
               )}
@@ -369,7 +362,7 @@ export default function SiteSettingsPage() {
                 <FormItem>
                   <FormLabel>Telefone do WhatsApp</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Ex: 5511999998888" />
+                    <Input {...field} placeholder="Ex: 5511999998888" value={field.value || ''} />
                   </FormControl>
                    <FormDescription>
                     Número com código do país e DDD, sem espaços ou símbolos.
@@ -384,7 +377,7 @@ export default function SiteSettingsPage() {
                 <FormItem>
                   <FormLabel>Scripts do Cabeçalho (Header)</FormLabel>
                   <FormControl>
-                    <Textarea {...field} placeholder="Cole aqui scripts como Google Analytics, Pixel do Facebook, etc." className="font-mono" rows={5}/>
+                    <Textarea {...field} placeholder="Cole aqui scripts como Google Analytics, Pixel do Facebook, etc." className="font-mono" rows={5} value={field.value || ''}/>
                   </FormControl>
                    <FormDescription>
                     O conteúdo deste campo será inserido antes do fechamento da tag `&lt;head&gt;`.
