@@ -11,7 +11,7 @@ const IMOVEIS_STORAGE_KEY = 'imoveisData';
 export default function EditImovelPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [loading, setLoading] = useState(true);
-  const imovelId = params.id;
+  const { id: imovelId } = params;
 
   useEffect(() => {
     try {
