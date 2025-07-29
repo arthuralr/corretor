@@ -1,7 +1,7 @@
 
 'use client'
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import type { Imovel } from '@/lib/definitions';
 import { getInitialImoveis } from '@/lib/initial-data';
 import { PropertySearchForm } from '@/components/public/property-search-form';
