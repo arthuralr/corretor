@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -11,8 +11,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, Image as ImageIcon, Palette, Save } from 'lucide-react';
-import { type SiteConfig, SITE_CONFIG_STORAGE_KEY } from '@/hooks/use-site-config';
+import { UploadCloud, Image as ImageIcon, Palette, Save, Trash2, PlusCircle } from 'lucide-react';
+import { type SiteConfig, SITE_CONFIG_STORAGE_KEY, type HeroImage } from '@/hooks/use-site-config';
+
+const heroImageSchema = z.object({
+  src: z.string().url({ message: "Por favor, insira uma URL válida." }).min(1, "A URL é obrigatória."),
+  alt: z.string().min(1, "O texto alternativo é obrigatório."),
+  hint: z.string().min(1, "A dica para IA é obrigatória."),
+});
 
 const formSchema = z.object({
   logo: z.string().url().optional().or(z.literal('')),
@@ -25,6 +31,7 @@ const formSchema = z.object({
   googleMapsApiKey: z.string().optional(),
   whatsappPhone: z.string().optional(),
   headerScripts: z.string().optional(),
+  heroImages: z.array(heroImageSchema).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,21 +68,32 @@ export default function SiteSettingsPage() {
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
-    if (savedConfig) {
-      setInitialConfig(JSON.parse(savedConfig));
-    } else {
-      setInitialConfig({
+    const defaultConfig = {
         primaryColor: '#22426A',
         metaTitle: 'Bataglin Imóveis',
         metaDescription: 'Encontre o imóvel dos seus sonhos.',
         featuredTitle: 'Imóveis em Destaque',
-      });
+        heroImages: [
+            { src: 'https://placehold.co/1920x1080.png', alt: 'Modern Living Room', hint: 'modern living room' },
+            { src: 'https://placehold.co/1920x1080.png', alt: 'Luxury Kitchen', hint: 'luxury kitchen' },
+            { src: 'https://placehold.co/1920x1080.png', alt: 'House Exterior', hint: 'house exterior' },
+        ],
+    };
+    if (savedConfig) {
+      setInitialConfig({ ...defaultConfig, ...JSON.parse(savedConfig) });
+    } else {
+      setInitialConfig(defaultConfig);
     }
   }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    values: initialConfig || {}, // Use values to re-render when initialConfig loads
+    values: initialConfig || {},
+  });
+  
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "heroImages",
   });
 
   useEffect(() => {
@@ -91,8 +109,8 @@ export default function SiteSettingsPage() {
         title: 'Configurações Salvas!',
         description: 'As configurações do site público foram atualizadas com sucesso.',
       });
-      // Force a hard reload to make CSS variables and other settings apply immediately
-      window.location.reload();
+      // Consider a less disruptive way to apply changes if possible
+      window.dispatchEvent(new CustomEvent('configUpdated'));
     } catch (error) {
       toast({
         title: 'Erro!',
@@ -155,6 +173,68 @@ export default function SiteSettingsPage() {
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-headline text-lg">Imagens do Slide Principal</CardTitle>
+            <CardDescription>Gerencie as imagens que aparecem no topo da sua página inicial.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {fields.map((field, index) => (
+              <div key={field.id} className="flex items-end gap-4 p-4 border rounded-md">
+                <div className="relative w-24 h-24 rounded-md overflow-hidden bg-muted">
+                    <img src={form.watch(`heroImages.${index}.src`)} alt={form.watch(`heroImages.${index}.alt`)} className="w-full h-full object-cover"/>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+                  <FormField
+                    control={form.control}
+                    name={`heroImages.${index}.src`}
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>URL da Imagem</FormLabel>
+                        <FormControl><Input {...field} placeholder="https://..."/></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`heroImages.${index}.alt`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Texto Alternativo (Alt)</FormLabel>
+                        <FormControl><Input {...field} placeholder="Descrição da imagem"/></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name={`heroImages.${index}.hint`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dica para IA (1-2 palavras)</FormLabel>
+                        <FormControl><Input {...field} placeholder="Ex: modern kitchen"/></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+             <Button
+              type="button"
+              variant="outline"
+              onClick={() => append({ src: '', alt: '', hint: '' })}
+            >
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Adicionar Imagem ao Slide
+            </Button>
           </CardContent>
         </Card>
         

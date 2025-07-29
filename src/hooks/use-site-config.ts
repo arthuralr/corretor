@@ -5,6 +5,12 @@ import { useState, useEffect } from 'react';
 
 export const SITE_CONFIG_STORAGE_KEY = 'siteConfig';
 
+export interface HeroImage {
+  src: string;
+  alt: string;
+  hint: string;
+}
+
 export interface SiteConfig {
   logo?: string;
   favicon?: string;
@@ -16,6 +22,7 @@ export interface SiteConfig {
   googleMapsApiKey?: string;
   whatsappPhone?: string;
   headerScripts?: string;
+  heroImages?: HeroImage[];
 }
 
 const defaultConfig: SiteConfig = {
@@ -24,6 +31,11 @@ const defaultConfig: SiteConfig = {
     metaDescription: 'Encontre os melhores imóveis da região.',
     featuredTitle: 'Imóveis em Destaque',
     whatsappPhone: '5511999998888',
+    heroImages: [
+        { src: 'https://placehold.co/1920x1080.png', alt: 'Modern Living Room', hint: 'modern living room' },
+        { src: 'https://placehold.co/1920x1080.png', alt: 'Luxury Kitchen', hint: 'luxury kitchen' },
+        { src: 'https://placehold.co/1920x1080.png', alt: 'House Exterior', hint: 'house exterior' },
+    ],
 };
 
 export function useSiteConfig() {
@@ -34,10 +46,15 @@ export function useSiteConfig() {
     try {
       const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
       if (savedConfig) {
-        setSiteConfig(JSON.parse(savedConfig));
+        // Merge saved config with defaults to ensure all keys are present
+        const parsedConfig = JSON.parse(savedConfig);
+        setSiteConfig({ ...defaultConfig, ...parsedConfig });
+      } else {
+        setSiteConfig(defaultConfig);
       }
     } catch (error) {
       console.error("Failed to load site config from local storage", error);
+      setSiteConfig(defaultConfig);
     } finally {
       setLoading(false);
     }
