@@ -82,10 +82,16 @@ export default function SiteSettingsPage() {
   useEffect(() => {
     const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
     const defaultConfig = {
+        logo: '',
+        favicon: '',
+        socialShareImage: '',
         primaryColor: '#22426A',
         metaTitle: 'Bataglin Imóveis',
         metaDescription: 'Encontre o imóvel dos seus sonhos.',
         featuredTitle: 'Imóveis em Destaque',
+        googleMapsApiKey: '',
+        whatsappPhone: '',
+        headerScripts: '',
         heroImages: [
             { src: 'https://placehold.co/1920x1080.png', alt: 'Modern Living Room', hint: 'modern living room' },
             { src: 'https://placehold.co/1920x1080.png', alt: 'Luxury Kitchen', hint: 'luxury kitchen' },
@@ -101,7 +107,19 @@ export default function SiteSettingsPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    values: initialConfig || {},
+    values: initialConfig || {
+      logo: '',
+      favicon: '',
+      socialShareImage: '',
+      primaryColor: '',
+      metaTitle: '',
+      metaDescription: '',
+      featuredTitle: '',
+      googleMapsApiKey: '',
+      whatsappPhone: '',
+      headerScripts: '',
+      heroImages: [],
+    },
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -135,9 +153,13 @@ export default function SiteSettingsPage() {
 
   const handleSlideImageUpload = (index: number, file: File) => {
     // Simulate upload
-    const mockUrl = `https://placehold.co/1920x1080.png?text=Slide+${index + 1}`;
-    form.setValue(`heroImages.${index}.src`, mockUrl, { shouldDirty: true, shouldValidate: true });
-    toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada (simulação).' });
+    setIsUploading(true);
+    setTimeout(() => {
+        const mockUrl = `https://placehold.co/1920x1080.png?text=Slide+${index + 1}`;
+        form.setValue(`heroImages.${index}.src`, mockUrl, { shouldDirty: true, shouldValidate: true });
+        setIsUploading(false);
+        toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada (simulação).' });
+    }, 1000)
   };
 
 
@@ -221,14 +243,18 @@ export default function SiteSettingsPage() {
                                 />
                             </FormControl>
                              <label className="relative">
-                                <Button type="button" variant="outline" asChild>
-                                  <span><UploadCloud className="mr-2" /> Alterar</span>
+                                <Button type="button" variant="outline" asChild disabled={isUploading}>
+                                  <span>
+                                      {isUploading ? <Loader2 className="mr-2 animate-spin"/> : <UploadCloud className="mr-2" />} 
+                                      Alterar
+                                  </span>
                                 </Button>
                                 <input
                                   type="file"
                                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                   accept="image/*"
                                   onChange={(e) => e.target.files?.[0] && handleSlideImageUpload(index, e.target.files[0])}
+                                  disabled={isUploading}
                                 />
                               </label>
                         </div>
