@@ -78,6 +78,7 @@ const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label:
 export default function SiteSettingsPage() {
   const { toast } = useToast();
   const [initialConfig, setInitialConfig] = useState<SiteConfig | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
