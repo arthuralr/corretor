@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -17,16 +16,23 @@ import {
   subMonths,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CalendarCheck, PlusCircle, Calendar as CalendarIcon } from "lucide-react";
-import type { Task, TaskCategory } from "@/lib/definitions";
+import { ChevronLeft, ChevronRight, CalendarCheck, PlusCircle, Calendar as CalendarIcon, Flag, Car, Users, Phone } from "lucide-react";
+import type { Task, TaskCategory, TaskPriority } from "@/lib/definitions";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { TaskItem, categoryConfig } from "@/components/agenda/task-item";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { getInitialTasks } from "@/lib/initial-data";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const TASKS_STORAGE_KEY = 'tasksData';
+
+const priorityConfig: Record<TaskPriority, { color: string, label: string }> = {
+    'Baixa': { color: 'bg-gray-400', label: 'Prioridade Baixa' },
+    'Média': { color: 'bg-yellow-500', label: 'Prioridade Média' },
+    'Alta': { color: 'bg-red-500', label: 'Prioridade Alta' },
+}
 
 export default function AgendaPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -67,7 +73,7 @@ export default function AgendaPage() {
     tasks.forEach(task => {
         const dateKey = format(new Date(task.dueDate), 'yyyy-MM-dd');
         const existing = map.get(dateKey) || [];
-        map.set(dateKey, [...existing, task]);
+        map.set(dateKey, [...existing, task].sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()));
     });
     return map;
   }, [tasks]);
@@ -81,13 +87,31 @@ export default function AgendaPage() {
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   
-  const getIndicatorColorForDay = (day: Date): string => {
+  const getTasksForDay = (day: Date): Task[] => {
     const dateKey = format(day, 'yyyy-MM-dd');
-    const dayTasks = tasksByDate.get(dateKey);
-    if (!dayTasks || dayTasks.length === 0) return 'bg-accent';
-    const firstTaskCategory = dayTasks[0].category || 'Prazo';
-    // Get the Tailwind border color and convert it to a background color
-    return categoryConfig[firstTaskCategory].color.replace('border-', 'bg-') || 'bg-accent';
+    return tasksByDate.get(dateKey) || [];
+  }
+
+  const renderTaskPreview = (task: Task) => {
+    const CategoryIcon = categoryConfig[task.category || 'Prazo'].icon;
+    const TaskPriority = priorityConfig[task.priority || 'Baixa'];
+
+    return (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1.5 w-full bg-secondary/50 hover:bg-secondary p-1 rounded-sm text-xs truncate">
+                        <CategoryIcon className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate flex-1">{task.title}</span>
+                        <div className={cn('w-2 h-2 rounded-full flex-shrink-0', TaskPriority.color)}></div>
+                    </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                    <p>{task.title}</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+    )
   }
 
   return (
@@ -126,31 +150,39 @@ export default function AgendaPage() {
                     ))}
                 </div>
                 <div className="grid grid-cols-7">
-                    {days.map(day => (
-                        <div
-                            key={day.toString()}
-                            className={cn(
-                                "border-t border-r p-2 h-24 flex flex-col items-start cursor-pointer transition-colors",
-                                isSameMonth(day, currentDate) ? "bg-background" : "bg-muted/50 text-muted-foreground",
-                                !isSameMonth(day, currentDate) && "pointer-events-none",
-                                isSameDay(day, selectedDate) && "bg-primary/10",
-                            )}
-                            onClick={() => setSelectedDate(day)}
-                        >
-                            <span className={cn(
-                                "h-7 w-7 flex items-center justify-center rounded-full text-sm",
-                                isToday(day) && "bg-primary text-primary-foreground",
-                                isSameDay(day, selectedDate) && "bg-accent text-accent-foreground",
-                            )}>
-                                {format(day, 'd')}
-                            </span>
-                            {tasksByDate.has(format(day, 'yyyy-MM-dd')) && (
-                                <div className="flex-grow flex items-center justify-center w-full">
-                                    <div className={cn("w-2 h-2 rounded-full mt-1", getIndicatorColorForDay(day))}></div>
+                    {days.map(day => {
+                        const dayTasks = getTasksForDay(day);
+                        return (
+                            <div
+                                key={day.toString()}
+                                className={cn(
+                                    "border-t border-r p-1 h-28 flex flex-col items-start cursor-pointer transition-colors group",
+                                    isSameMonth(day, currentDate) ? "bg-background hover:bg-muted/50" : "bg-muted/50 text-muted-foreground",
+                                    !isSameMonth(day, currentDate) && "pointer-events-none",
+                                    isSameDay(day, selectedDate) && "bg-primary/10",
+                                )}
+                                onClick={() => setSelectedDate(day)}
+                            >
+                                <span className={cn(
+                                    "h-7 w-7 flex items-center justify-center rounded-full text-sm mb-1",
+                                    isToday(day) && "bg-primary text-primary-foreground",
+                                    isSameDay(day, selectedDate) && "bg-accent text-accent-foreground",
+                                )}>
+                                    {format(day, 'd')}
+                                </span>
+                                <div className="space-y-1 w-full overflow-hidden">
+                                     {dayTasks.slice(0, 2).map(task => (
+                                        <div key={task.id}>
+                                           {renderTaskPreview(task)}
+                                        </div>
+                                    ))}
+                                     {dayTasks.length > 2 && (
+                                        <p className="text-xs text-muted-foreground pl-1">+ {dayTasks.length - 2} mais</p>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                            </div>
+                        )
+                    })}
                 </div>
              </CardContent>
            </Card>
@@ -173,7 +205,7 @@ export default function AgendaPage() {
                 <CardContent className="h-[60vh] overflow-y-auto">
                    {selectedDayTasks.length > 0 ? (
                         <div className="space-y-2">
-                             {selectedDayTasks.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).map(task => (
+                             {selectedDayTasks.map(task => (
                                 <TaskItem key={task.id} task={task} onTaskChange={loadTasks} />
                             ))}
                         </div>
