@@ -20,7 +20,7 @@ const featuredImages = [
 
 export default function HomePage() {
   const [featuredProperties, setFeaturedProperties] = useState<Imovel[]>([]);
-  const autoplayPlugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
+  const autoplayPlugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }));
 
   useEffect(() => {
     try {
