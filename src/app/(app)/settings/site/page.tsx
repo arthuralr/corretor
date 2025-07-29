@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, Image as ImageIcon, Palette, Save, Trash2, PlusCircle } from 'lucide-react';
+import { UploadCloud, Image as ImageIcon, Palette, Save, Trash2, PlusCircle, Loader2 } from 'lucide-react';
 import { type SiteConfig, SITE_CONFIG_STORAGE_KEY, type HeroImage } from '@/hooks/use-site-config';
 
 const heroImageSchema = z.object({
@@ -37,13 +37,25 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label: string; currentImage?: string; onImageUpload: (url: string) => void; }) => {
-  const handleUpload = () => {
-    // In a real app, this would open a file dialog and upload to a server.
-    // For this prototype, we'll just prompt for a URL.
-    const url = prompt(`Enter the new URL for the ${label}:`, currentImage || 'https://placehold.co/200x100.png');
-    if (url) {
-      onImageUpload(url);
-    }
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    // Simulate upload
+    setTimeout(() => {
+      // In a real app, this would return a URL from a storage service
+      const mockUrl = `https://placehold.co/200x100.png?text=${label.replace(' ', '+')}`;
+      onImageUpload(mockUrl);
+      setIsUploading(false);
+    }, 1000);
   };
 
   return (
@@ -53,8 +65,9 @@ const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label:
         <div className="w-32 h-16 rounded-md border flex items-center justify-center bg-muted/50">
           {currentImage ? <img src={currentImage} alt={label} className="h-full w-full object-contain" /> : <ImageIcon className="text-muted-foreground" />}
         </div>
-        <Button type="button" variant="outline" onClick={handleUpload}>
-          <UploadCloud className="mr-2" />
+        <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+        <Button type="button" variant="outline" onClick={handleUploadClick} disabled={isUploading}>
+          {isUploading ? <Loader2 className="mr-2 animate-spin" /> : <UploadCloud className="mr-2" />}
           Alterar
         </Button>
       </div>
@@ -120,12 +133,11 @@ export default function SiteSettingsPage() {
     }
   };
 
-  const handleSlideImageUpload = (index: number) => {
-    const currentSrc = form.getValues(`heroImages.${index}.src`);
-    const newSrc = prompt('Insira a nova URL da imagem:', currentSrc || 'https://placehold.co/1920x1080.png');
-    if (newSrc) {
-      form.setValue(`heroImages.${index}.src`, newSrc, { shouldDirty: true, shouldValidate: true });
-    }
+  const handleSlideImageUpload = (index: number, file: File) => {
+    // Simulate upload
+    const mockUrl = `https://placehold.co/1920x1080.png?text=Slide+${index + 1}`;
+    form.setValue(`heroImages.${index}.src`, mockUrl, { shouldDirty: true, shouldValidate: true });
+    toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada (simulação).' });
   };
 
 
@@ -208,9 +220,17 @@ export default function SiteSettingsPage() {
                                     className="bg-muted/50"
                                 />
                             </FormControl>
-                            <Button type="button" variant="outline" onClick={() => handleSlideImageUpload(index)}>
-                                <UploadCloud className="mr-2" /> Alterar
-                            </Button>
+                             <label className="relative">
+                                <Button type="button" variant="outline" asChild>
+                                  <span><UploadCloud className="mr-2" /> Alterar</span>
+                                </Button>
+                                <input
+                                  type="file"
+                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                  accept="image/*"
+                                  onChange={(e) => e.target.files?.[0] && handleSlideImageUpload(index, e.target.files[0])}
+                                />
+                              </label>
                         </div>
                         <FormDescription className="mt-1">Tamanho ideal: 1920x1080px</FormDescription>
                         <FormMessage>{form.formState.errors.heroImages?.[index]?.src?.message}</FormMessage>
