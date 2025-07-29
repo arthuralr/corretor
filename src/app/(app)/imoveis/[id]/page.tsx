@@ -3,7 +3,7 @@
 'use client'
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight, Building, RulerSquare } from "lucide-react";
 import type { Imovel, Task } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -67,18 +67,19 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   }, [loadData]);
 
 
-   const formatPrice = (price: number, status: Imovel['status']) => {
-    const formattedPrice = new Intl.NumberFormat("pt-BR", {
+   const formatPrice = (price: number | undefined) => {
+    if (price === undefined) return null;
+    return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
     }).format(price);
-    return status === 'Alugado' ? `${formattedPrice}/mês` : formattedPrice;
   }
   
   const statusConfig = {
-    'Disponível': { icon: CheckSquare, color: 'text-green-600' },
+    'Ativo': { icon: CheckSquare, color: 'text-green-600' },
     'Vendido': { icon: XSquare, color: 'text-red-600' },
-    'Alugado': { icon: XSquare, color: 'text-red-600' }
+    'Alugado': { icon: XSquare, color: 'text-red-600' },
+    'Inativo': { icon: XSquare, color: 'text-gray-500' }
   };
 
   const images = imovel?.imageUrls && imovel.imageUrls.length > 0 
@@ -169,18 +170,32 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
              <div className="flex items-center gap-3">
               <Tag className="w-5 h-5 text-muted-foreground" />
               <Badge variant="secondary">{imovel.type}</Badge>
+              {imovel.subType && <Badge variant="outline">{imovel.subType}</Badge>}
             </div>
             <div className="flex items-center gap-3">
               {React.createElement(statusConfig[imovel.status].icon, { className: `w-5 h-5 ${statusConfig[imovel.status].color}` })}
               <span className={statusConfig[imovel.status].color}>{imovel.status}</span>
             </div>
-             <div className="flex items-center gap-3 font-semibold text-lg">
-              <DollarSign className="w-5 h-5 text-muted-foreground" />
-              <span className="text-primary">{formatPrice(imovel.price, imovel.status)}</span>
+            <div className="space-y-2 pt-2">
+                {imovel.sellPrice && <div className="flex items-center gap-3 font-semibold text-lg">
+                    <span className="w-24 text-muted-foreground text-sm">Venda:</span>
+                    <span className="text-primary">{formatPrice(imovel.sellPrice)}</span>
+                </div>}
+                {imovel.rentPrice && <div className="flex items-center gap-3 font-semibold text-lg">
+                    <span className="w-24 text-muted-foreground text-sm">Aluguel:</span>
+                    <span className="text-primary">{formatPrice(imovel.rentPrice)}/mês</span>
+                </div>}
+                 {imovel.condoPrice && <div className="flex items-center gap-3 font-semibold text-lg">
+                    <span className="w-24 text-muted-foreground text-sm">Condomínio:</span>
+                    <span className="text-primary">{formatPrice(imovel.condoPrice)}</span>
+                </div>}
             </div>
-             <div className="flex items-center gap-6 pt-2">
+             <div className="flex items-center gap-6 pt-4 border-t flex-wrap">
+                <span className="flex items-center gap-2"><RulerSquare className="w-5 h-5 text-muted-foreground" /> {imovel.area} m²</span>
                 <span className="flex items-center gap-2"><BedDouble className="w-5 h-5 text-muted-foreground" /> {imovel.bedrooms} quartos</span>
+                {imovel.suites && <span className="flex items-center gap-2"><BedDouble className="w-5 h-5 text-primary/80" /> {imovel.suites} suítes</span>}
                 <span className="flex items-center gap-2"><Bath className="w-5 h-5 text-muted-foreground" /> {imovel.bathrooms} banheiros</span>
+                {imovel.parkingSpaces && <span className="flex items-center gap-2"><Building className="w-5 h-5 text-muted-foreground" /> {imovel.parkingSpaces} vagas</span>}
             </div>
           </CardContent>
         </Card>
@@ -189,7 +204,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
                 <CardTitle className="font-headline text-lg">Descrição</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">{imovel.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{imovel.description}</p>
             </CardContent>
         </Card>
       </div>

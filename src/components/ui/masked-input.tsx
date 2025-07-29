@@ -1,8 +1,9 @@
 
+
 "use client";
 
 import * as React from "react";
-import { IMaskInput, IMaskMixin } from "react-imask";
+import { IMaskMixin } from "react-imask";
 import type { IMaskInputProps } from "react-imask";
 
 import { cn } from "@/lib/utils";
@@ -20,13 +21,12 @@ const MaskedInputComponent = IMaskMixin(({ inputRef, ...props }: any) => (
 
 
 const MaskedInput = React.forwardRef<HTMLInputElement, IMaskInputProps<any>>(
-  ({ unmaskedValue, onAccept, ...props }, ref) => {
+  ({ onAccept, ...props }, ref) => {
     return (
         <MaskedInputComponent
             {...props}
             onAccept={(value: any, mask: any) => onAccept && onAccept(mask.unmaskedValue, mask)}
             inputRef={ref}
-            defaultValue={unmaskedValue} // Use defaultValue to avoid controlled/uncontrolled issues with masking
         />
     );
   }
@@ -34,5 +34,3 @@ const MaskedInput = React.forwardRef<HTMLInputElement, IMaskInputProps<any>>(
 MaskedInput.displayName = "MaskedInput";
 
 export { MaskedInput };
-
-    

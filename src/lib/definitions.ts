@@ -26,13 +26,35 @@ export type Imovel = {
   refCode: string;
   title: string;
   description: string;
-  type: 'Casa' | 'Apartamento' | 'Terreno' | 'Cobertura';
-  price: number;
+  
+  type: 'Apartamento' | 'Casa' | 'Terreno' | 'Sala Comercial';
+  subType?: string; // e.g., Cobertura, Kitnet, Casa de Condomínio
+  
+  cep?: string;
+  state?: string;
+  city?: string;
+  neighborhood?: string;
+  street?: string;
+  number?: string;
+  
+  status: 'Ativo' | 'Inativo' | 'Vendido' | 'Alugado';
+
+  sellPrice?: number;
+  rentPrice?: number;
+  condoPrice?: number;
+
+  area: number;
   bedrooms: number;
+  suites?: number;
   bathrooms: number;
-  status: 'Disponível' | 'Vendido' | 'Alugado';
-  imageUrl?: string;
+  parkingSpaces?: number;
+
   imageUrls?: string[];
+  mainImageUrl?: string;
+  
+  // Deprecated fields, kept for compatibility if needed, but should be migrated
+  price: number; 
+  imageUrl?: string;
   createdAt?: string;
 };
 
@@ -66,11 +88,11 @@ export type ImovelSimplificado = {
   id: string;
   title: string;
   description: string;
-  type: 'Casa' | 'Apartamento' | 'Terreno' | 'Cobertura';
+  type: Imovel['type'];
   price: number;
   bedrooms: number;
   bathrooms: number;
-  status: 'Disponível' | 'Vendido' | 'Alugado';
+  status: Imovel['status'];
 };
 
 export type TaskPriority = 'Baixa' | 'Média' | 'Alta';

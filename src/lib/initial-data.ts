@@ -101,11 +101,13 @@ export const getInitialImoveis = (): Imovel[] => {
       title: "Casa Espaçosa com Piscina",
       description: "Uma bela casa com 3 quartos, 2 banheiros e uma grande área de lazer com piscina.",
       type: "Casa",
+      sellPrice: 750000,
       price: 750000,
       bedrooms: 3,
       bathrooms: 2,
-      status: "Disponível",
-      imageUrl: "https://placehold.co/600x400.png",
+      area: 250,
+      status: "Ativo",
+      mainImageUrl: "https://placehold.co/600x400.png?text=Frente",
       imageUrls: ["https://placehold.co/600x400.png?text=Frente", "https://placehold.co/600x400.png?text=Sala", "https://placehold.co/600x400.png?text=Piscina"],
       createdAt: new Date().toISOString()
     },
@@ -115,11 +117,13 @@ export const getInitialImoveis = (): Imovel[] => {
       title: "Apartamento Moderno no Centro",
       description: "Apartamento de 2 quartos totalmente reformado no coração da cidade.",
       type: "Apartamento",
+      sellPrice: 450000,
       price: 450000,
       bedrooms: 2,
       bathrooms: 1,
+      area: 90,
       status: "Vendido",
-      imageUrl: "https://placehold.co/600x400.png",
+      mainImageUrl: "https://placehold.co/600x400.png",
       createdAt: new Date().toISOString()
     },
     {
@@ -128,10 +132,12 @@ export const getInitialImoveis = (): Imovel[] => {
       title: "Terreno Plano em Condomínio",
       description: "Excelente terreno para construir a casa dos seus sonhos em condomínio fechado.",
       type: "Terreno",
+      sellPrice: 200000,
       price: 200000,
       bedrooms: 0,
       bathrooms: 0,
-      status: "Disponível",
+      area: 1000,
+      status: "Ativo",
       createdAt: new Date().toISOString()
     },
      {
@@ -140,9 +146,11 @@ export const getInitialImoveis = (): Imovel[] => {
       title: "Apartamento para Alugar",
       description: "Apartamento com 1 quarto, mobiliado, pronto para morar.",
       type: "Apartamento",
+      rentPrice: 1500,
       price: 1500,
       bedrooms: 1,
       bathrooms: 1,
+      area: 45,
       status: "Alugado",
       createdAt: new Date().toISOString()
     },
@@ -152,11 +160,13 @@ export const getInitialImoveis = (): Imovel[] => {
       title: "Casa Charmosa em Bairro Tranquilo", 
       description: "Casa com 3 quartos, jardim de inverno e edícula. Perfeita para famílias que buscam sossego.", 
       type: "Casa", 
+      sellPrice: 680000,
       price: 680000, 
       bedrooms: 3, 
       bathrooms: 2, 
-      status: "Disponível", 
-      imageUrl: "https://placehold.co/600x400.png",
+      area: 180,
+      status: "Ativo", 
+      mainImageUrl: "https://placehold.co/600x400.png",
       imageUrls: ["https://placehold.co/600x400.png"]
     }
   ];

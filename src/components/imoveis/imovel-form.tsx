@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +8,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { Imovel } from "@/lib/definitions";
+import React, { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,21 +31,46 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { addActivityLog } from "@/lib/activity-log";
-import { Trash2, PlusCircle } from "lucide-react";
+import { Trash2, PlusCircle, Star, UploadCloud, Loader2 } from "lucide-react";
 import { MaskedInput } from "../ui/masked-input";
+import { cn } from "@/lib/utils";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 const formSchema = z.object({
   refCode: z.string().min(1, "O código de referência é obrigatório"),
-  title: z.string().min(1, "O título é obrigatório"),
+  title: z.string().min(1, "O título do anúncio é obrigatório."),
+  
+  type: z.enum(["Apartamento", "Casa", "Terreno", "Sala Comercial"]),
+  subType: z.string().optional(),
+  
+  cep: z.string().optional(),
+  state: z.string().optional(),
+  city: z.string().optional(),
+  neighborhood: z.string().optional(),
+  street: z.string().optional(),
+  number: z.string().optional(),
+
+  status: z.enum(["Ativo", "Inativo", "Vendido", "Alugado"]),
+  
+  sellPrice: z.coerce.number().optional(),
+  rentPrice: z.coerce.number().optional(),
+  condoPrice: z.coerce.number().optional(),
+
+  area: z.coerce.number().min(1, "A área útil é obrigatória"),
+  bedrooms: z.coerce.number().min(0, "A quantidade de quartos não pode ser negativa"),
+  suites: z.coerce.number().min(0, "A quantidade de suítes não pode ser negativa"),
+  bathrooms: z.coerce.number().min(0, "A quantidade de banheiros não pode ser negativa"),
+  parkingSpaces: z.coerce.number().min(0, "A quantidade de vagas não pode ser negativa"),
+
   description: z.string().optional(),
-  type: z.enum(["Casa", "Apartamento", "Terreno", "Cobertura"]),
-  price: z.coerce.number().min(1, "O preço é obrigatório"),
-  bedrooms: z.coerce.number().min(0),
-  bathrooms: z.coerce.number().min(0),
-  status: z.enum(["Disponível", "Vendido", "Alugado"]),
-  imageUrls: z.array(z.object({ value: z.string().url("URL inválida") })),
+  
+  imageUrls: z.array(z.object({ value: z.string().url("URL da imagem inválida.") })),
+  mainImageUrl: z.string().optional(),
+
+}).refine(data => data.sellPrice || data.rentPrice, {
+  message: "É necessário preencher o 'Valor de Venda' ou o 'Valor de Aluguel'.",
+  path: ["sellPrice"],
 });
 
 type ImovelFormValues = z.infer<typeof formSchema>;
@@ -56,39 +83,92 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const isEditing = !!initialData;
+  const [isUploading, setIsUploading] = useState(false);
 
   const form = useForm<ImovelFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData 
-        ? { ...initialData, imageUrls: initialData.imageUrls?.map(url => ({ value: url })) || (initialData.imageUrl ? [{ value: initialData.imageUrl }] : []) }
+        ? {
+            ...initialData,
+            imageUrls: initialData.imageUrls?.map(url => ({ value: url })) || [],
+            mainImageUrl: initialData.mainImageUrl,
+            area: initialData.area || 0,
+            bedrooms: initialData.bedrooms || 0,
+            bathrooms: initialData.bathrooms || 0,
+            suites: initialData.suites || 0,
+            parkingSpaces: initialData.parkingSpaces || 0,
+            status: initialData.status || 'Ativo',
+            type: initialData.type || 'Apartamento'
+          }
         : {
             refCode: "",
             title: "",
-            description: "",
-            type: "Casa",
-            price: 0,
-            bedrooms: 3,
-            bathrooms: 2,
-            status: "Disponível",
-            imageUrls: [{ value: "" }],
+            status: "Ativo",
+            type: "Apartamento",
+            area: 0,
+            bedrooms: 0,
+            suites: 0,
+            bathrooms: 0,
+            parkingSpaces: 0,
+            imageUrls: [],
         },
   });
 
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, move } = useFieldArray({
     control: form.control,
     name: "imageUrls",
   });
+  
+  const mainImageUrl = form.watch("mainImageUrl");
+
+  const handleSetMainImage = (url: string) => {
+    form.setValue("mainImageUrl", url);
+  };
+  
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    // Mock upload - in a real app, this would upload to cloud storage
+    // and return URLs. Here we'll use placeholder.co
+    setTimeout(() => {
+        const newUrls = Array.from(files).map((file, index) => ({
+            value: `https://placehold.co/600x400.png?text=Imagem+${fields.length + index + 1}`
+        }));
+        
+        append(newUrls);
+
+        // If it's the first image, set it as main
+        if (!mainImageUrl && newUrls.length > 0) {
+            form.setValue('mainImageUrl', newUrls[0].value);
+        }
+
+        setIsUploading(false);
+        toast({
+            title: "Imagens Adicionadas",
+            description: `${files.length} imagem(ns) foram adicionadas à galeria.`
+        })
+    }, 1000);
+  }
 
   function onSubmit(values: ImovelFormValues) {
     try {
         const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
         const imoveis: Imovel[] = savedData ? JSON.parse(savedData) : [];
         
-        const finalImageUrls = values.imageUrls.map(urlObj => urlObj.value).filter(Boolean);
-        const submissionData = { ...values, imageUrls: finalImageUrls, imageUrl: finalImageUrls[0] || '' };
+        const finalImageUrls = values.imageUrls.map(urlObj => urlObj.value);
+        
+        const submissionData = { 
+            ...values, 
+            imageUrls: finalImageUrls, 
+            mainImageUrl: values.mainImageUrl || finalImageUrls[0] || '',
+            // Ensure compatibility with old fields if needed
+            price: values.sellPrice || values.rentPrice || 0,
+            imageUrl: values.mainImageUrl || finalImageUrls[0] || '',
+        };
 
-        if (isEditing) {
-            // Update existing imovel
+        if (isEditing && initialData) {
             const updatedImoveis = imoveis.map(imovel => 
                 imovel.id === initialData.id ? { ...imovel, ...submissionData } : imovel
             );
@@ -103,7 +183,6 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
               description: "As informações do imóvel foram salvas.",
             });
         } else {
-            // Create new imovel
             const newImovel: Imovel = {
                 id: `IMOVEL-${Date.now()}`,
                 ...submissionData,
@@ -138,215 +217,424 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   }
 
   return (
-    <Card>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardHeader>
-             <CardTitle className="font-headline">{isEditing ? 'Editar Imóvel' : 'Detalhes do Novo Imóvel'}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="refCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Código de Referência</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: CA001, AP002" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Título do Anúncio</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Casa com 3 quartos no centro" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-             <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem className="md:col-span-2">
-                  <FormLabel>Descrição</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Descreva os principais detalhes e características do imóvel..."
-                      className="resize-y min-h-[100px]"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Preço (R$)</FormLabel>
-                  <FormControl>
-                     <MaskedInput
-                      mask="R$ num"
-                      blocks={{
-                        num: {
-                          mask: Number,
-                          thousandsSeparator: '.',
-                          radix: ',',
-                          scale: 2,
-                          padFractionalZeros: true,
-                          min: 0,
-                          max: 999999999
-                        }
-                      }}
-                      unmaskedValue={String(field.value)}
-                      onAccept={(value: any) => field.onChange(value)}
-                      placeholder="R$ 500.000,00"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Imóvel</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Casa">Casa</SelectItem>
-                      <SelectItem value="Apartamento">Apartamento</SelectItem>
-                      <SelectItem value="Terreno">Terreno</SelectItem>
-                      <SelectItem value="Cobertura">Cobertura</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="bedrooms"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quartos</FormLabel>
-                    <FormControl>
-                      <Input type="number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="bathrooms"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Banheiros</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="1" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o status" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Disponível">Disponível</SelectItem>
-                      <SelectItem value="Vendido">Vendido</SelectItem>
-                      <SelectItem value="Alugado">Alugado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="md:col-span-2 space-y-4">
-              <FormLabel>URLs das Imagens</FormLabel>
-               <CardDescription>
-                Adicione as URLs das imagens do imóvel. A primeira URL será usada como imagem de capa.
-               </CardDescription>
-              {fields.map((field, index) => (
-                <FormField
-                  key={field.id}
-                  control={form.control}
-                  name={`imageUrls.${index}.value`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex items-center gap-2">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Informações Essenciais</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                 <FormField
+                    control={form.control}
+                    name="refCode"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Código de Referência</FormLabel>
                         <FormControl>
-                          <Input placeholder="https://exemplo.com/imagem.png" {...field} />
+                            <Input placeholder="Ex: CA001, AP002" {...field} />
                         </FormControl>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          onClick={() => remove(index)}
-                          disabled={fields.length <= 1}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-2"
-                onClick={() => append({ value: "" })}
-              >
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Adicionar mais URLs
-              </Button>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-end gap-2">
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                        <FormLabel>Título do Anúncio</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Casa com 3 quartos no centro" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <FormField
+                    control={form.control}
+                    name="type"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Tipo de Imóvel</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="Apartamento">Apartamento</SelectItem>
+                                <SelectItem value="Casa">Casa</SelectItem>
+                                <SelectItem value="Terreno">Terreno</SelectItem>
+                                <SelectItem value="Sala Comercial">Sala Comercial</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <FormField
+                    control={form.control}
+                    name="subType"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Subtipo de Imóvel</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Ex: Cobertura, Kitnet" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Status do Anúncio</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="Ativo">Ativo</SelectItem>
+                                <SelectItem value="Inativo">Inativo</SelectItem>
+                                <SelectItem value="Vendido">Vendido</SelectItem>
+                                <SelectItem value="Alugado">Alugado</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Endereço</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-6 gap-6">
+                 <FormField
+                    control={form.control}
+                    name="cep"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>CEP</FormLabel>
+                            <FormControl>
+                                <Input placeholder="00000-000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 <FormField
+                    control={form.control}
+                    name="street"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-4">
+                            <FormLabel>Logradouro (Rua, Av.)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Av. Paulista" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 <FormField
+                    control={form.control}
+                    name="number"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-1">
+                            <FormLabel>Número</FormLabel>
+                            <FormControl>
+                                <Input placeholder="123" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                  <FormField
+                    control={form.control}
+                    name="neighborhood"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Bairro</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Bela Vista" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                 <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-2">
+                            <FormLabel>Cidade</FormLabel>
+                            <FormControl>
+                                <Input placeholder="São Paulo" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                        <FormItem className="md:col-span-1">
+                            <FormLabel>Estado (UF)</FormLabel>
+                            <FormControl>
+                                <Input placeholder="SP" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Valores</CardTitle>
+                 <CardDescription>Pelo menos um dos campos (Venda ou Aluguel) deve ser preenchido.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <FormField
+                    control={form.control}
+                    name="sellPrice"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Valor de Venda (R$)</FormLabel>
+                        <FormControl>
+                           <MaskedInput
+                            mask="R$ num"
+                            blocks={{
+                                num: { mask: Number, thousandsSeparator: '.', scale: 0 }
+                            }}
+                            unmaskedValue={String(field.value || '')}
+                            onAccept={(value: any) => field.onChange(Number(value))}
+                            placeholder="R$ 500.000"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <FormField
+                    control={form.control}
+                    name="rentPrice"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Valor de Aluguel (R$)</FormLabel>
+                        <FormControl>
+                            <MaskedInput
+                            mask="R$ num"
+                            blocks={{
+                                num: { mask: Number, thousandsSeparator: '.', scale: 0 }
+                            }}
+                            unmaskedValue={String(field.value || '')}
+                            onAccept={(value: any) => field.onChange(Number(value))}
+                            placeholder="R$ 2.500"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                <FormField
+                    control={form.control}
+                    name="condoPrice"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Valor do Condomínio (R$)</FormLabel>
+                        <FormControl>
+                            <MaskedInput
+                            mask="R$ num"
+                            blocks={{
+                                num: { mask: Number, thousandsSeparator: '.', scale: 0 }
+                            }}
+                            unmaskedValue={String(field.value || '')}
+                            onAccept={(value: any) => field.onChange(Number(value))}
+                            placeholder="R$ 500"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Características e Descrição</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                     <FormField
+                        control={form.control}
+                        name="area"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Área Útil (m²)</FormLabel>
+                                <FormControl>
+                                <Input type="number" placeholder="120" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                     <FormField
+                        control={form.control}
+                        name="bedrooms"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Quartos</FormLabel>
+                                <FormControl>
+                                <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                        control={form.control}
+                        name="suites"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Suítes</FormLabel>
+                                <FormControl>
+                                <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                        control={form.control}
+                        name="bathrooms"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Banheiros</FormLabel>
+                                <FormControl>
+                                <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    <FormField
+                        control={form.control}
+                        name="parkingSpaces"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Vagas</FormLabel>
+                                <FormControl>
+                                <Input type="number" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                </div>
+                 <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Descrição do Imóvel</FormLabel>
+                        <FormControl>
+                            <Textarea
+                            placeholder="Descreva os principais detalhes e características do imóvel..."
+                            className="resize-y min-h-[150px]"
+                            {...field}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Galeria de Fotos do Imóvel</CardTitle>
+                <CardDescription>
+                Adicione as fotos do imóvel. A primeira foto será a capa do anúncio, mas você pode escolher outra clicando na estrela.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    {fields.map((field, index) => (
+                        <div key={field.id} className="relative group aspect-square">
+                           <img src={field.value} alt={`Imagem ${index + 1}`} className="w-full h-full object-cover rounded-md" />
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleSetMainImage(field.value)}
+                                className="text-white hover:text-yellow-400"
+                                >
+                                <Star className={cn("h-5 w-5", mainImageUrl === field.value && "fill-yellow-400 text-yellow-400")} />
+                                </Button>
+                                <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => remove(index)}
+                                className="text-white hover:text-destructive"
+                                >
+                                <Trash2 className="h-5 w-5" />
+                                </Button>
+                            </div>
+                            {mainImageUrl === field.value && (
+                                <div className="absolute top-1 right-1">
+                                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                     <label className="flex flex-col items-center justify-center w-full aspect-square border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center">
+                            {isUploading ? (
+                                <>
+                                 <Loader2 className="w-8 h-8 mb-4 text-muted-foreground animate-spin"/>
+                                 <p className="mb-2 text-sm text-muted-foreground">Enviando...</p>
+                                </>
+                            ) : (
+                                <>
+                                    <UploadCloud className="w-8 h-8 mb-4 text-muted-foreground"/>
+                                    <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Adicionar fotos</span></p>
+                                </>
+                            )}
+                        </div>
+                        <input type="file" className="hidden" onChange={handleFileChange} multiple accept="image/*"/>
+                    </label>
+                 </div>
+                 <FormField
+                    control={form.control}
+                    name="imageUrls"
+                    render={() => (
+                        <FormItem>
+                         <FormMessage className="mt-4" />
+                        </FormItem>
+                    )}
+                    />
+            </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
             <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Salvar Imóvel'}</Button>
-          </CardFooter>
-        </form>
-      </Form>
-    </Card>
+        </div>
+      </form>
+    </Form>
   );
 }
-
-    
-
-    

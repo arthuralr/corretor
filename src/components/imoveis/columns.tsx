@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -30,7 +31,8 @@ import React, { useMemo } from "react";
 import { addActivityLog } from "@/lib/activity-log";
 
 
-const formatPrice = (price: number, status: Imovel['status']) => {
+const formatPrice = (price: number | undefined, status: Imovel['status']) => {
+  if (price === undefined) return "-";
   const formattedPrice = new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -165,7 +167,7 @@ export const columns: ColumnDef<Imovel>[] = [
     }
   },
   {
-    accessorKey: "price",
+    accessorKey: "sellPrice",
     header: ({ column }) => {
         return (
           <div className="text-right">
@@ -180,7 +182,8 @@ export const columns: ColumnDef<Imovel>[] = [
         );
       },
     cell: ({ row }) => {
-      const price = parseFloat(row.getValue("price"));
+      const imovel = row.original;
+      const price = imovel.sellPrice || imovel.rentPrice;
       const status = row.original.status;
       return <div className="text-right font-medium">{formatPrice(price, status)}</div>;
     },
@@ -191,7 +194,7 @@ export const columns: ColumnDef<Imovel>[] = [
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
       const variant =
-        status === "Disponível"
+        status === "Ativo"
           ? "secondary"
           : status === "Vendido" || status === "Alugado"
           ? "default"
