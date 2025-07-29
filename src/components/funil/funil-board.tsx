@@ -95,39 +95,27 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
     };
 
     const handleSaveNegocio = (savedNegocio: Negocio) => {
-        let newBoardData = [...boardData];
+        const newBoardData = [...boardData];
         const isEditing = !!editingNegocio;
+        const etapaAnterior = editingNegocio?.etapa;
 
         if (isEditing) {
             // Find and update the deal across all columns
-            newBoardData = newBoardData.map(column => ({
-                ...column,
-                negocios: column.negocios.map(n => n.id === savedNegocio.id ? savedNegocio : n)
-            }));
-        } else {
-            // Add new deal to the correct column
-            const columnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
-            if (columnIndex !== -1) {
-                newBoardData[columnIndex].negocios.push(savedNegocio);
+            const sourceColumnIndex = newBoardData.findIndex(col => col.etapa === etapaAnterior);
+            if (sourceColumnIndex !== -1) {
+                // Remove from old column first
+                newBoardData[sourceColumnIndex].negocios = newBoardData[sourceColumnIndex].negocios.filter(n => n.id !== savedNegocio.id);
             }
         }
-        
-        const etapaAnterior = editingNegocio?.etapa;
-        // If the etapa was changed during edit, we need to move it
-        if (isEditing && etapaAnterior !== savedNegocio.etapa) {
-             const sourceColumnIndex = newBoardData.findIndex(col => col.etapa === etapaAnterior);
-             const destColumnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
 
-             if (sourceColumnIndex !== -1 && sourceColumnIndex !== destColumnIndex) {
-                // Remove from old column
-                newBoardData[sourceColumnIndex].negocios = newBoardData[sourceColumnIndex].negocios.filter(n => n.id !== savedNegocio.id);
-                 // Add to new column
-                if (destColumnIndex !== -1) {
-                    newBoardData[destColumnIndex].negocios.push(savedNegocio);
-                }
-             }
+        // Add to the new/correct column
+        const destColumnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
+        if (destColumnIndex !== -1) {
+            // To preserve order, we might need to be more sophisticated
+            // For now, just add to the end
+            newBoardData[destColumnIndex].negocios.push(savedNegocio);
         }
-
+        
         if (savedNegocio.etapa === 'Fechado - Ganho' && etapaAnterior !== 'Fechado - Ganho') {
             createEntradaFromNegocio(savedNegocio);
         }
