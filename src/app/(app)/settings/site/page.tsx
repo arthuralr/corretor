@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
@@ -122,29 +122,39 @@ export default function SiteSettingsPage() {
             <CardTitle className="font-headline text-lg">Branding e Identidade Visual</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <ImageUploadPlaceholder
                 label="Logo da Empresa"
                 currentImage={form.watch('logo')}
                 onImageUpload={(url) => form.setValue('logo', url, { shouldDirty: true })}
               />
-               <FormField
-                control={form.control}
-                name="primaryColor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cor Principal do Site</FormLabel>
-                    <div className="flex items-center gap-2">
-                       <FormControl>
-                          <Input type="color" {...field} className="w-12 h-10 p-1" />
-                       </FormControl>
-                       <span className='text-muted-foreground'>{field.value}</span>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
+               <ImageUploadPlaceholder
+                label="Favicon (.ico, .png)"
+                currentImage={form.watch('favicon')}
+                onImageUpload={(url) => form.setValue('favicon', url, { shouldDirty: true })}
+              />
+               <ImageUploadPlaceholder
+                label="Imagem de Compartilhamento Social"
+                currentImage={form.watch('socialShareImage')}
+                onImageUpload={(url) => form.setValue('socialShareImage', url, { shouldDirty: true })}
               />
             </div>
+             <FormField
+              control={form.control}
+              name="primaryColor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cor Principal do Site</FormLabel>
+                  <div className="flex items-center gap-2">
+                     <FormControl>
+                        <Input type="color" {...field} className="w-12 h-10 p-1" />
+                     </FormControl>
+                     <span className='text-muted-foreground'>{field.value}</span>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
         
@@ -193,6 +203,18 @@ export default function SiteSettingsPage() {
                   <FormLabel>Título da Seção de Imóveis em Destaque</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="googleMapsApiKey"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Chave de API do Google Maps</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="password" />
                   </FormControl>
                 </FormItem>
               )}
