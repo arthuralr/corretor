@@ -25,9 +25,10 @@ interface AddTaskButtonProps {
     preselectedClientId?: string;
     preselectedNegocioId?: string;
     preselectedImovelId?: string;
+    preselectedDate?: Date;
 }
 
-export function AddTaskButton({ preselectedClientId, preselectedNegocioId, preselectedImovelId }: AddTaskButtonProps) {
+export function AddTaskButton({ preselectedClientId, preselectedNegocioId, preselectedImovelId, preselectedDate }: AddTaskButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
   const [negocios, setNegocios] = useState<Negocio[]>([]);
@@ -103,6 +104,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
   const initialData = {
       clientId: preselectedClientId,
       negocioId: preselectedNegocioId,
+      dueDate: preselectedDate,
   }
 
   return (
@@ -115,7 +117,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
           <DialogHeader>
             <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
             <DialogDescription>
-              Preencha os detalhes da sua nova tarefa. Você pode associá-la a um cliente ou a um negócio.
+              Preencha os detalhes da sua nova tarefa.
             </DialogDescription>
           </DialogHeader>
           <TaskForm 
