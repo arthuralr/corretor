@@ -26,7 +26,7 @@ const formSchema = z.object({
   clienteId: z.string().min(1, 'É obrigatório selecionar um cliente.'),
   imovelId: z.string().min(1, 'É obrigatório selecionar um imóvel.'),
   valorProposta: z.coerce.number().min(1, 'O valor da proposta é obrigatório.'),
-  taxaComissao: z.coerce.number().min(0).optional(),
+  taxaComissao: z.coerce.number().min(0, "A comissão não pode ser negativa.").max(100, "A comissão não pode ser maior que 100%.").optional(),
   etapa: z.enum(['Contato', 'Atendimento', 'Visita', 'Proposta', 'Reserva', 'Fechado - Ganho', 'Fechado - Perdido']),
 });
 

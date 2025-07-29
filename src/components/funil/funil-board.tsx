@@ -112,24 +112,24 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
             }
         }
         
-        // If the etapa was changed during edit, we might need to move it
-        if (isEditing && editingNegocio.etapa !== savedNegocio.etapa) {
-             const sourceColumnIndex = newBoardData.findIndex(col => col.etapa === editingNegocio.etapa);
+        const etapaAnterior = editingNegocio?.etapa;
+        // If the etapa was changed during edit, we need to move it
+        if (isEditing && etapaAnterior !== savedNegocio.etapa) {
+             const sourceColumnIndex = newBoardData.findIndex(col => col.etapa === etapaAnterior);
              const destColumnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
 
-             if (sourceColumnIndex !== -1) {
+             if (sourceColumnIndex !== -1 && sourceColumnIndex !== destColumnIndex) {
                 // Remove from old column
                 newBoardData[sourceColumnIndex].negocios = newBoardData[sourceColumnIndex].negocios.filter(n => n.id !== savedNegocio.id);
-             }
-             if (destColumnIndex !== -1) {
-                 // Add to new column (if not already there)
-                 if (!newBoardData[destColumnIndex].negocios.some(n => n.id === savedNegocio.id)) {
+                 // Add to new column
+                if (destColumnIndex !== -1) {
                     newBoardData[destColumnIndex].negocios.push(savedNegocio);
-                 }
+                }
              }
-             if (savedNegocio.etapa === 'Fechado - Ganho') {
-                createEntradaFromNegocio(savedNegocio);
-             }
+        }
+
+        if (savedNegocio.etapa === 'Fechado - Ganho' && etapaAnterior !== 'Fechado - Ganho') {
+            createEntradaFromNegocio(savedNegocio);
         }
         
         updateBoardData(newBoardData);
@@ -203,7 +203,7 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         
         toast({
           title: "Entrada Registrada!",
-          description: `Uma nova entrada de comissão de ${newEntrada.valor} foi registrada.`,
+          description: `Uma nova entrada de comissão de ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(comissao)} foi registrada.`,
         });
 
      } catch(e) {
