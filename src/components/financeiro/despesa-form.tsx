@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -122,10 +123,12 @@ export function DespesaForm({ onSave, onCancel, initialData }: DespesaFormProps)
                             radix: ',',
                             scale: 2,
                             padFractionalZeros: true,
+                            min: 0,
+                            max: 999999999,
                             }
                         }}
-                        value={String(field.value)}
-                        onAccept={(value: any, maskRef: any) => field.onChange(maskRef.unmaskedValue)}
+                        unmaskedValue={String(field.value)}
+                        onAccept={(value: any) => field.onChange(value)}
                         placeholder="R$ 150,00"
                     />
                   </FormControl>
@@ -206,5 +209,7 @@ export function DespesaForm({ onSave, onCancel, initialData }: DespesaFormProps)
     </Form>
   );
 }
+
+    
 
     

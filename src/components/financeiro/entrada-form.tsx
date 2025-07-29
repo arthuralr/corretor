@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -117,10 +118,12 @@ export function EntradaForm({ onSave, onCancel, initialData }: EntradaFormProps)
                             radix: ',',
                             scale: 2,
                             padFractionalZeros: true,
+                            min: 0,
+                            max: 999999999,
                             }
                         }}
-                        value={String(field.value)}
-                        onAccept={(value: any, maskRef: any) => field.onChange(maskRef.unmaskedValue)}
+                        unmaskedValue={String(field.value)}
+                        onAccept={(value: any) => field.onChange(value)}
                         placeholder="R$ 1.000,00"
                     />
                   </FormControl>
@@ -179,5 +182,7 @@ export function EntradaForm({ onSave, onCancel, initialData }: EntradaFormProps)
     </Form>
   );
 }
+
+    
 
     

@@ -194,7 +194,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preço (BRL)</FormLabel>
+                  <FormLabel>Preço (R$)</FormLabel>
                   <FormControl>
                      <MaskedInput
                       mask="R$ num"
@@ -205,10 +205,12 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                           radix: ',',
                           scale: 2,
                           padFractionalZeros: true,
+                          min: 0,
+                          max: 999999999
                         }
                       }}
-                      value={String(field.value)}
-                      onAccept={(value: any, maskRef: any) => field.onChange(maskRef.unmaskedValue)}
+                      unmaskedValue={String(field.value)}
+                      onAccept={(value: any) => field.onChange(value)}
                       placeholder="R$ 500.000,00"
                     />
                   </FormControl>
@@ -344,5 +346,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     </Card>
   );
 }
+
+    
 
     
