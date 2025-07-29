@@ -15,17 +15,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { EntradaForm } from "@/components/financeiro/entrada-form";
 
 export default function FinanceiroPage() {
     const [isDespesaModalOpen, setIsDespesaModalOpen] = useState(false);
-
-    const handleOpenModal = () => {
-        setIsDespesaModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsDespesaModalOpen(false);
-    };
+    const [isEntradaModalOpen, setIsEntradaModalOpen] = useState(false);
 
     return (
         <>
@@ -40,17 +34,23 @@ export default function FinanceiroPage() {
                     Gerencie suas entradas e despesas para manter a saúde financeira do seu negócio.
                 </p>
 
-                <Tabs defaultValue="despesas" className="space-y-4">
+                <Tabs defaultValue="entradas" className="space-y-4">
                     <TabsList>
                         <TabsTrigger value="entradas">Entradas</TabsTrigger>
                         <TabsTrigger value="despesas">Despesas</TabsTrigger>
                     </TabsList>
                     <TabsContent value="entradas" className="space-y-4">
+                       <div className="flex justify-end">
+                            <Button onClick={() => setIsEntradaModalOpen(true)}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Adicionar Entrada Manual
+                            </Button>
+                        </div>
                        <EntradasTable />
                     </TabsContent>
                     <TabsContent value="despesas" className="space-y-4">
                         <div className="flex justify-end">
-                            <Button onClick={handleOpenModal}>
+                            <Button onClick={() => setIsDespesaModalOpen(true)}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Adicionar Despesa
                             </Button>
@@ -59,6 +59,8 @@ export default function FinanceiroPage() {
                     </TabsContent>
                 </Tabs>
             </div>
+            
+            {/* Despesa Modal */}
             <Dialog open={isDespesaModalOpen} onOpenChange={setIsDespesaModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -67,7 +69,20 @@ export default function FinanceiroPage() {
                             Registre uma nova despesa para manter seus controles financeiros atualizados.
                         </DialogDescription>
                     </DialogHeader>
-                    <DespesaForm onCancel={handleCloseModal} onSave={handleCloseModal} />
+                    <DespesaForm onCancel={() => setIsDespesaModalOpen(false)} onSave={() => setIsDespesaModalOpen(false)} />
+                </DialogContent>
+            </Dialog>
+
+            {/* Entrada Modal */}
+            <Dialog open={isEntradaModalOpen} onOpenChange={setIsEntradaModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Adicionar Nova Entrada Manual</DialogTitle>
+                        <DialogDescription>
+                            Registre uma nova entrada que não veio de um negócio do funil.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <EntradaForm onCancel={() => setIsEntradaModalOpen(false)} onSave={() => setIsEntradaModalOpen(false)} />
                 </DialogContent>
             </Dialog>
         </>
