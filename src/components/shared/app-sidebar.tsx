@@ -25,6 +25,7 @@ import {
   MessageSquareText,
   BarChartHorizontal,
   Instagram,
+  Landmark,
 } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -36,6 +37,7 @@ const menuItems = [
   { href: "/agenda", label: "Minha Agenda", icon: CalendarCheck },
   { href: "/funil", label: "Funil de Vendas", icon: DollarSign },
   { href: "/radar", label: "Radar de Oportunidades", icon: Telescope },
+  { href: "/financeiro", label: "Financeiro", icon: Landmark },
   { href: "/relatorios", label: "Relatórios", icon: BarChartHorizontal },
   { href: "/clients", label: "Clientes", icon: Users },
   { href: "/imoveis", label: "Imóveis", icon: Home },

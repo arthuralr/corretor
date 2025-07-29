@@ -105,3 +105,13 @@ export type ActivityLog = {
     timestamp: string; // ISO String
     link?: string;
 }
+
+export type DespesaCategoria = 'Marketing' | 'Aluguel' | 'Salários' | 'Comissões' | 'Outros';
+
+export type Despesa = {
+    id: string;
+    description: string;
+    value: number;
+    date: string; // ISO String
+    category: DespesaCategoria;
+}
