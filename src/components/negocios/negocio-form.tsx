@@ -164,15 +164,21 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
                     <FormItem>
                       <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor da Proposta</FormLabel>
                       <FormControl>
-                          <MaskedInput
-                              mask={Number}
-                              radix="."
-                              thousandsSeparator="."
-                              scale={2}
-                              value={String(field.value)}
-                              onAccept={(value: any) => field.onChange(Number(value))}
-                              placeholder="750.000"
-                          />
+                        <MaskedInput
+                            mask="R$ num"
+                            blocks={{
+                                num: {
+                                mask: Number,
+                                thousandsSeparator: '.',
+                                radix: ',',
+                                scale: 2,
+                                padFractionalZeros: true,
+                                }
+                            }}
+                            value={String(field.value)}
+                            onAccept={(value: any, maskRef: any) => field.onChange(maskRef.unmaskedValue)}
+                            placeholder="R$ 750.000,00"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -225,3 +231,5 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
     </Form>
   );
 }
+
+    

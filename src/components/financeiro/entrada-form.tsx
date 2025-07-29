@@ -108,15 +108,21 @@ export function EntradaForm({ onSave, onCancel, initialData }: EntradaFormProps)
                 <FormItem>
                   <FormLabel>Valor (R$)</FormLabel>
                   <FormControl>
-                      <MaskedInput
-                          mask={Number}
-                          radix="."
-                          thousandsSeparator="."
-                          scale={2}
-                          value={String(field.value)}
-                          onAccept={(value: any) => field.onChange(Number(value))}
-                          placeholder="1.000,00"
-                      />
+                    <MaskedInput
+                        mask="R$ num"
+                        blocks={{
+                            num: {
+                            mask: Number,
+                            thousandsSeparator: '.',
+                            radix: ',',
+                            scale: 2,
+                            padFractionalZeros: true,
+                            }
+                        }}
+                        value={String(field.value)}
+                        onAccept={(value: any, maskRef: any) => field.onChange(maskRef.unmaskedValue)}
+                        placeholder="R$ 1.000,00"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,3 +179,5 @@ export function EntradaForm({ onSave, onCancel, initialData }: EntradaFormProps)
     </Form>
   );
 }
+
+    

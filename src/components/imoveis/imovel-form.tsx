@@ -196,14 +196,20 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                 <FormItem>
                   <FormLabel>Preço (BRL)</FormLabel>
                   <FormControl>
-                    <MaskedInput
-                      mask={Number}
-                      radix="."
-                      thousandsSeparator="."
-                      scale={2}
+                     <MaskedInput
+                      mask="R$ num"
+                      blocks={{
+                        num: {
+                          mask: Number,
+                          thousandsSeparator: '.',
+                          radix: ',',
+                          scale: 2,
+                          padFractionalZeros: true,
+                        }
+                      }}
                       value={String(field.value)}
-                      onAccept={(value: any) => field.onChange(Number(value))}
-                      placeholder="500.000"
+                      onAccept={(value: any, maskRef: any) => field.onChange(maskRef.unmaskedValue)}
+                      placeholder="R$ 500.000,00"
                     />
                   </FormControl>
                   <FormMessage />
@@ -338,3 +344,5 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     </Card>
   );
 }
+
+    
