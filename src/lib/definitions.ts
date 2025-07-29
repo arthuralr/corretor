@@ -115,3 +115,10 @@ export type Despesa = {
     date: string; // ISO String
     category: DespesaCategoria;
 }
+
+export type Entrada = {
+  id: string;
+  origem: string;
+  valor: number;
+  dataRecebimento: string; // ISO String
+}

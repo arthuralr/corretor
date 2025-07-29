@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { DespesasTable } from "@/components/financeiro/despesas-table";
 import { DespesaForm } from "@/components/financeiro/despesa-form";
+import { EntradasTable } from "@/components/financeiro/entradas-table";
 import { useState } from "react";
 import {
   Dialog,
@@ -45,9 +46,7 @@ export default function FinanceiroPage() {
                         <TabsTrigger value="despesas">Despesas</TabsTrigger>
                     </TabsList>
                     <TabsContent value="entradas" className="space-y-4">
-                        <div className="flex items-center justify-center h-48 rounded-lg border border-dashed text-muted-foreground">
-                           <p>A seção de entradas será construída no próximo passo.</p>
-                        </div>
+                       <EntradasTable />
                     </TabsContent>
                     <TabsContent value="despesas" className="space-y-4">
                         <div className="flex justify-end">

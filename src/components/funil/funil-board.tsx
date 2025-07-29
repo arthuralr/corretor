@@ -3,7 +3,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import type { Negocio, EtapaFunil, Client, Imovel } from "@/lib/definitions";
+import type { Negocio, EtapaFunil, Client, Imovel, Entrada } from "@/lib/definitions";
 import { FunilColumn } from './funil-column';
 import { DragDropContext, Droppable, OnDragEndResponder } from '@hello-pangea/dnd';
 import { addActivityLog } from '@/lib/activity-log';
@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 const LOCAL_STORAGE_KEY = 'funilBoardData';
 const CLIENTS_STORAGE_KEY = 'clientsData';
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
+const ENTRADAS_STORAGE_KEY = 'entradasData';
 
 interface FunilBoardProps {
   initialData: {
@@ -126,6 +127,9 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
                     newBoardData[destColumnIndex].negocios.push(savedNegocio);
                  }
              }
+             if (savedNegocio.etapa === 'Fechado - Ganho') {
+                createEntradaFromNegocio(savedNegocio);
+             }
         }
         
         updateBoardData(newBoardData);
@@ -171,6 +175,36 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         )
     }));
     updateBoardData(newBoardData);
+  }
+
+  const createEntradaFromNegocio = (negocio: Negocio) => {
+     try {
+        const savedEntradas = window.localStorage.getItem(ENTRADAS_STORAGE_KEY);
+        const entradas: Entrada[] = savedEntradas ? JSON.parse(savedEntradas) : [];
+
+        // Check if an entrada for this deal already exists
+        if (entradas.some(e => e.id === `ENTRADA-${negocio.id}`)) {
+            return;
+        }
+
+        const newEntrada: Entrada = {
+            id: `ENTRADA-${negocio.id}`,
+            origem: `Venda - ${negocio.imovelTitulo}`,
+            valor: negocio.valorProposta,
+            dataRecebimento: new Date().toISOString(),
+        };
+
+        entradas.push(newEntrada);
+        window.localStorage.setItem(ENTRADAS_STORAGE_KEY, JSON.stringify(entradas));
+        
+        toast({
+          title: "Entrada Registrada!",
+          description: `Uma nova entrada de ${newEntrada.valor} foi registrada.`,
+        });
+
+     } catch(e) {
+        console.error("Falha ao criar entrada a partir do negócio", e);
+     }
   }
 
   const onDragEnd: OnDragEndResponder = (result) => {
@@ -223,6 +257,11 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
             description: `Negócio "${updatedMovedNegocio.imovelTitulo}" movido para ${destColumnOriginal.etapa}.`,
             link: `/negocios/${updatedMovedNegocio.id}`
         });
+
+        // Automation: create entrada if moved to 'Fechado - Ganho'
+        if (destColumnOriginal.etapa === 'Fechado - Ganho') {
+            createEntradaFromNegocio(updatedMovedNegocio);
+        }
     }
     destColumnOriginal.negocios = destNegociosOriginal;
 
