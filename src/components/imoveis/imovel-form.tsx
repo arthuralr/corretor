@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { Imovel } from "@/lib/definitions";
 import React, { useState, useEffect } from "react";
+import { ImovelType, Subtypes, AmenitiesList } from "@/lib/definitions";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "../ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { addActivityLog } from "@/lib/activity-log";
@@ -41,7 +44,7 @@ const formSchema = z.object({
   refCode: z.string().min(1, "O código de referência é obrigatório"),
   title: z.string().min(1, "O título do anúncio é obrigatório."),
   
-  type: z.enum(["Apartamento", "Casa", "Terreno", "Sala Comercial"]),
+  type: z.enum(["Apartamento", "Casa", "Terreno", "Comercial"]),
   subType: z.string().optional(),
   
   cep: z.string().optional(),
@@ -52,6 +55,7 @@ const formSchema = z.object({
   number: z.string().optional(),
 
   status: z.enum(["Ativo", "Inativo", "Vendido", "Alugado"]),
+  exclusive: z.boolean().default(false),
   
   sellPrice: z.string().optional(),
   rentPrice: z.string().optional(),
@@ -62,6 +66,7 @@ const formSchema = z.object({
   suites: z.coerce.number().min(0, "A quantidade de suítes não pode ser negativa"),
   bathrooms: z.coerce.number().min(0, "A quantidade de banheiros não pode ser negativa"),
   parkingSpaces: z.coerce.number().min(0, "A quantidade de vagas não pode ser negativa"),
+  amenities: z.array(z.string()).optional(),
 
   description: z.string().optional(),
   
@@ -106,7 +111,9 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             suites: initialData.suites || 0,
             parkingSpaces: initialData.parkingSpaces || 0,
             status: initialData.status || 'Ativo',
-            type: initialData.type || 'Apartamento'
+            type: initialData.type || 'Apartamento',
+            exclusive: initialData.exclusive || false,
+            amenities: initialData.amenities || []
           }
         : {
             refCode: "",
@@ -119,6 +126,8 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             bathrooms: 0,
             parkingSpaces: 0,
             imageUrls: [],
+            exclusive: false,
+            amenities: [],
         },
   });
 
@@ -128,6 +137,12 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   });
   
   const mainImageUrl = form.watch("mainImageUrl");
+  const selectedType = form.watch("type");
+
+  useEffect(() => {
+    // Reset subtype when type changes
+    form.setValue("subType", undefined);
+  }, [selectedType, form]);
 
   const handleSetMainImage = (url: string) => {
     form.setValue("mainImageUrl", url);
@@ -274,10 +289,9 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                             </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                <SelectItem value="Apartamento">Apartamento</SelectItem>
-                                <SelectItem value="Casa">Casa</SelectItem>
-                                <SelectItem value="Terreno">Terreno</SelectItem>
-                                <SelectItem value="Sala Comercial">Sala Comercial</SelectItem>
+                                {(Object.keys(Subtypes) as ImovelType[]).map(type => (
+                                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
                         <FormMessage />
@@ -290,9 +304,18 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Subtipo de Imóvel</FormLabel>
-                        <FormControl>
-                            <Input placeholder="Ex: Cobertura, Kitnet" {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={!selectedType}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder={!selectedType ? "Selecione um tipo primeiro" : "Selecione o subtipo"} />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {selectedType && Subtypes[selectedType].map(subtype => (
+                                    <SelectItem key={subtype} value={subtype}>{subtype}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <FormMessage />
                         </FormItem>
                     )}
@@ -320,6 +343,26 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         </FormItem>
                     )}
                     />
+                <FormField
+                    control={form.control}
+                    name="exclusive"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 md:col-span-3">
+                            <div className="space-y-0.5">
+                                <FormLabel>Contrato de Exclusividade</FormLabel>
+                                <FormDescription>
+                                    Marque se você possui exclusividade na negociação deste imóvel.
+                                </FormDescription>
+                            </div>
+                            <FormControl>
+                                <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                        </FormItem>
+                    )}
+                 />
             </CardContent>
         </Card>
 
@@ -570,6 +613,58 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         </FormItem>
                     )}
                     />
+            </CardContent>
+        </Card>
+        
+        <Card>
+            <CardHeader>
+                <CardTitle className="font-headline">Características e Comodidades</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <FormField
+                    control={form.control}
+                    name="amenities"
+                    render={() => (
+                        <FormItem>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {AmenitiesList.map((item) => (
+                                <FormField
+                                    key={item}
+                                    control={form.control}
+                                    name="amenities"
+                                    render={({ field }) => {
+                                    return (
+                                        <FormItem
+                                            key={item}
+                                            className="flex flex-row items-start space-x-3 space-y-0"
+                                        >
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value?.includes(item)}
+                                                onCheckedChange={(checked) => {
+                                                    return checked
+                                                    ? field.onChange([...(field.value || []), item])
+                                                    : field.onChange(
+                                                        field.value?.filter(
+                                                            (value) => value !== item
+                                                        )
+                                                        )
+                                                }}
+                                            />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">
+                                            {item}
+                                        </FormLabel>
+                                        </FormItem>
+                                    )
+                                    }}
+                                />
+                                ))}
+                            </div>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
             </CardContent>
         </Card>
 

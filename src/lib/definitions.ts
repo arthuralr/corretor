@@ -21,14 +21,31 @@ export type Client = {
   searchProfile: string;
 };
 
+export type ImovelType = 'Apartamento' | 'Casa' | 'Terreno' | 'Comercial';
+
+export const Subtypes: Record<ImovelType, string[]> = {
+    Apartamento: ['Apartamento Padrão', 'Cobertura', 'Duplex', 'Flat', 'Kitnet/Studio', 'Loft'],
+    Casa: ['Casa Padrão', 'Casa de Condomínio', 'Casa de Vila', 'Sobrado'],
+    Terreno: ['Terreno Padrão', 'Lote', 'Chácara', 'Sítio', 'Fazenda'],
+    Comercial: ['Sala Comercial', 'Salão', 'Loja', 'Prédio Inteiro', 'Galpão/Depósito/Armazém'],
+};
+
+export const AmenitiesList = [
+    'Piscina', 'Churrasqueira', 'Salão de Festas', 'Sauna', 'Academia', 
+    'Playground', 'Quadra Poliesportiva', 'Portaria 24 Horas', 'Elevador', 
+    'Mobiliado', 'Armário Embutido', 'Cozinha Planejada', 'Ar Condicionado', 
+    'Varanda', 'Permite Animais'
+];
+
+
 export type Imovel = {
   id: string;
   refCode: string;
   title: string;
   description: string;
   
-  type: 'Apartamento' | 'Casa' | 'Terreno' | 'Sala Comercial';
-  subType?: string; // e.g., Cobertura, Kitnet, Casa de Condomínio
+  type: ImovelType;
+  subType?: string; 
   
   cep?: string;
   state?: string;
@@ -38,6 +55,7 @@ export type Imovel = {
   number?: string;
   
   status: 'Ativo' | 'Inativo' | 'Vendido' | 'Alugado';
+  exclusive?: boolean;
 
   sellPrice?: number;
   rentPrice?: number;
@@ -48,6 +66,7 @@ export type Imovel = {
   suites?: number;
   bathrooms: number;
   parkingSpaces?: number;
+  amenities?: string[];
 
   imageUrls?: string[];
   mainImageUrl?: string;
