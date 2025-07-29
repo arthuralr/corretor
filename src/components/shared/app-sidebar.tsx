@@ -28,9 +28,9 @@ import {
   Landmark,
 } from "lucide-react";
 import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { ThemeToggle } from "./theme-toggle";
+import { useSiteConfig } from "@/hooks/use-site-config";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -48,17 +48,22 @@ const menuItems = [
   },
   { href: "/social-media-generator", label: "Gerador de Posts", icon: Instagram },
   { href: "/settings/message-templates", label: "Modelos de Mensagens", icon: MessageSquareText },
-  { href: "/settings", label: "Configurações", icon: Settings },
+  { href: "/settings/site", label: "Configurações do Site", icon: Settings },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { siteConfig } = useSiteConfig();
 
   return (
     <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <Building className="w-6 h-6 text-primary" />
+           {siteConfig.logo ? (
+              <img src={siteConfig.logo} alt="Logo" className="h-8 w-auto" />
+            ) : (
+              <Building className="w-6 h-6 text-primary" />
+           )}
           <h1 className="text-lg font-semibold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
             RealConnect
           </h1>

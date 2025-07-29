@@ -9,6 +9,7 @@ import { PublicPropertyCard } from '@/components/public/public-property-card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Image from "next/image";
 import Autoplay from 'embla-carousel-autoplay';
+import { useSiteConfig } from '@/hooks/use-site-config';
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
@@ -20,20 +21,25 @@ const featuredImages = [
 
 export default function HomePage() {
   const [featuredProperties, setFeaturedProperties] = useState<Imovel[]>([]);
+  const { siteConfig, loading } = useSiteConfig();
   
   useEffect(() => {
     try {
       const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
       const allImoveis: Imovel[] = savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis();
       // Simple logic to feature some properties, can be replaced with a real 'featured' flag
-      const featured = allImoveis.filter(p => p.status === 'Ativo' && p.imageUrls && p.imageUrls.length > 0).slice(0, 6);
+      const featured = allImoveis.filter(p => p.status === 'Ativo').slice(0, 6);
       setFeaturedProperties(featured);
     } catch (error) {
       console.error("Failed to load properties:", error);
-      const initialFeatured = getInitialImoveis().filter(p => p.status === 'Ativo' && p.imageUrls && p.imageUrls.length > 0).slice(0, 6);
+      const initialFeatured = getInitialImoveis().filter(p => p.status === 'Ativo').slice(0, 6);
       setFeaturedProperties(initialFeatured);
     }
   }, []);
+
+  if (loading) {
+    return <div>Carregando...</div> // Or a proper skeleton loader
+  }
 
   return (
     <div>
@@ -76,7 +82,7 @@ export default function HomePage() {
       <section className="py-16 md:py-24 bg-public-background">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-public-heading mb-12">
-            Imóveis em Destaque
+            {siteConfig.featuredTitle || 'Imóveis em Destaque'}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {featuredProperties.map(property => (
