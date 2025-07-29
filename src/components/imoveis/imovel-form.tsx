@@ -8,7 +8,7 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { Imovel } from "@/lib/definitions";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -53,9 +53,9 @@ const formSchema = z.object({
 
   status: z.enum(["Ativo", "Inativo", "Vendido", "Alugado"]),
   
-  sellPrice: z.coerce.number().optional(),
-  rentPrice: z.coerce.number().optional(),
-  condoPrice: z.coerce.number().optional(),
+  sellPrice: z.string().optional(),
+  rentPrice: z.string().optional(),
+  condoPrice: z.string().optional(),
 
   area: z.coerce.number().min(1, "A área útil é obrigatória"),
   bedrooms: z.coerce.number().min(0, "A quantidade de quartos não pode ser negativa"),
@@ -79,6 +79,11 @@ interface ImovelFormProps {
     initialData?: Imovel;
 }
 
+const parseCurrency = (value: string | undefined): number | undefined => {
+    if (!value) return undefined;
+    return Number(String(value).replace(/\./g, '').replace(',', '.'));
+};
+
 export function ImovelForm({ initialData }: ImovelFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -90,6 +95,9 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     defaultValues: initialData 
         ? {
             ...initialData,
+            sellPrice: String(initialData.sellPrice || ''),
+            rentPrice: String(initialData.rentPrice || ''),
+            condoPrice: String(initialData.condoPrice || ''),
             imageUrls: initialData.imageUrls?.map(url => ({ value: url })) || [],
             mainImageUrl: initialData.mainImageUrl,
             area: initialData.area || 0,
@@ -160,11 +168,14 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         const finalImageUrls = values.imageUrls.map(urlObj => urlObj.value);
         
         const submissionData = { 
-            ...values, 
+            ...values,
+            sellPrice: parseCurrency(values.sellPrice),
+            rentPrice: parseCurrency(values.rentPrice),
+            condoPrice: parseCurrency(values.condoPrice),
             imageUrls: finalImageUrls, 
             mainImageUrl: values.mainImageUrl || finalImageUrls[0] || '',
             // Ensure compatibility with old fields if needed
-            price: values.sellPrice || values.rentPrice || 0,
+            price: parseCurrency(values.sellPrice) || parseCurrency(values.rentPrice) || 0,
             imageUrl: values.mainImageUrl || finalImageUrls[0] || '',
         };
 
@@ -412,13 +423,13 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Venda (R$)</FormLabel>
                         <FormControl>
                            <MaskedInput
-                            mask="R$ num"
-                            blocks={{
-                                num: { mask: Number, thousandsSeparator: '.', scale: 0 }
-                            }}
-                            unmaskedValue={String(field.value || '')}
-                            onAccept={(value: any) => field.onChange(Number(value))}
-                            placeholder="R$ 500.000"
+                                mask="num"
+                                blocks={{
+                                    num: { mask: Number, thousandsSeparator: '.', radix: ',', scale: 0 }
+                                }}
+                                unmaskedValue={field.value}
+                                onAccept={field.onChange}
+                                placeholder="R$ 500.000"
                             />
                         </FormControl>
                         <FormMessage />
@@ -433,13 +444,13 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Aluguel (R$)</FormLabel>
                         <FormControl>
                             <MaskedInput
-                            mask="R$ num"
-                            blocks={{
-                                num: { mask: Number, thousandsSeparator: '.', scale: 0 }
-                            }}
-                            unmaskedValue={String(field.value || '')}
-                            onAccept={(value: any) => field.onChange(Number(value))}
-                            placeholder="R$ 2.500"
+                                mask="num"
+                                blocks={{
+                                    num: { mask: Number, thousandsSeparator: '.', radix: ',', scale: 0 }
+                                }}
+                                unmaskedValue={field.value}
+                                onAccept={field.onChange}
+                                placeholder="R$ 2.500"
                             />
                         </FormControl>
                         <FormMessage />
@@ -453,14 +464,14 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem>
                         <FormLabel>Valor do Condomínio (R$)</FormLabel>
                         <FormControl>
-                            <MaskedInput
-                            mask="R$ num"
-                            blocks={{
-                                num: { mask: Number, thousandsSeparator: '.', scale: 0 }
-                            }}
-                            unmaskedValue={String(field.value || '')}
-                            onAccept={(value: any) => field.onChange(Number(value))}
-                            placeholder="R$ 500"
+                             <MaskedInput
+                                mask="num"
+                                blocks={{
+                                    num: { mask: Number, thousandsSeparator: '.', radix: ',', scale: 0 }
+                                }}
+                                unmaskedValue={field.value}
+                                onAccept={field.onChange}
+                                placeholder="R$ 500"
                             />
                         </FormControl>
                         <FormMessage />

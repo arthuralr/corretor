@@ -3,8 +3,8 @@
 'use client'
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight, Building, RulerSquare } from "lucide-react";
-import type { Imovel, Task } from "@/lib/definitions";
+import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight, Building, RulerSquare, Briefcase } from "lucide-react";
+import type { Imovel, Task, Negocio } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,14 +20,17 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { getInitialImoveis } from "@/lib/initial-data";
+import { getInitialImoveis, getInitialNegocios } from "@/lib/initial-data";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 const TASKS_STORAGE_KEY = 'tasksData';
+const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
+
 
 export default function ImovelDetailPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [loading, setLoading] = useState(true);
   const { id: imovelId } = params;
   
@@ -49,6 +52,17 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
                 const imovelTasks = allTasks.filter(t => t.imovelId === imovelId);
                 setTasks(imovelTasks);
             }
+
+            // Fetch Negocios
+             const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
+            if (savedNegocios) {
+                const boardData = JSON.parse(savedNegocios);
+                const allNegocios: Negocio[] = boardData.flatMap((column: any) => column.negocios);
+                const imovelNegocios = allNegocios.filter(n => n.imovelId === imovelId);
+                setNegocios(imovelNegocios);
+            }
+
+
         } catch (error) {
             console.error("Failed to load property data", error);
             setImovel(null);
@@ -208,6 +222,34 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
             </CardContent>
         </Card>
       </div>
+
+       <Card>
+        <CardHeader>
+            <CardTitle className="font-headline text-lg flex items-center gap-2">
+              <Briefcase className="w-5 h-5"/> Negócios Associados
+            </CardTitle>
+            <CardDescription>Oportunidades no funil de vendas para este imóvel.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            {negocios.length > 0 ? (
+                <div className="space-y-2">
+                    {negocios.map(negocio => (
+                        <Link key={negocio.id} href={`/negocios/${negocio.id}`} className="block hover:bg-muted/50 p-3 rounded-md">
+                           <div className="flex justify-between items-center">
+                             <div>
+                                <p className="font-semibold text-primary">{negocio.clienteNome}</p>
+                                <p className="text-sm text-muted-foreground">{formatPrice(negocio.valorProposta)}</p>
+                             </div>
+                             <Badge variant="secondary">{negocio.etapa}</Badge>
+                           </div>
+                        </Link>
+                    ))}
+                </div>
+            ) : (
+                <p className="text-sm text-muted-foreground">Nenhum negócio ativo para este imóvel.</p>
+            )}
+        </CardContent>
+      </Card>
       
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

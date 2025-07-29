@@ -31,14 +31,12 @@ import React, { useMemo } from "react";
 import { addActivityLog } from "@/lib/activity-log";
 
 
-const formatPrice = (price: number | undefined, status: Imovel['status']) => {
+const formatPrice = (price: number | undefined) => {
   if (price === undefined) return "-";
-  const formattedPrice = new Intl.NumberFormat("pt-BR", {
+  return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
   }).format(price);
-  
-  return status === 'Alugado' ? `${formattedPrice}/mês` : formattedPrice;
 }
 
 const ActionsCell = ({ row }: { row: any }) => {
@@ -185,7 +183,8 @@ export const columns: ColumnDef<Imovel>[] = [
       const imovel = row.original;
       const price = imovel.sellPrice || imovel.rentPrice;
       const status = row.original.status;
-      return <div className="text-right font-medium">{formatPrice(price, status)}</div>;
+      const formattedPrice = formatPrice(price)
+      return <div className="text-right font-medium">{status === 'Alugado' ? `${formattedPrice}/mês` : formattedPrice}</div>;
     },
   },
   {
