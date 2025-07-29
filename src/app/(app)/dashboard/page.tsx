@@ -115,6 +115,11 @@ export default function Dashboard() {
       currency: "BRL",
     }).format(value);
   }
+  
+  const upcomingTasks = tasks
+    .filter(t => !t.completed)
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .slice(0, 5);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -223,7 +228,7 @@ export default function Dashboard() {
             </Link>
           </CardHeader>
           <CardContent>
-            <TaskList tasks={tasks.filter(t => !t.completed).slice(0, 5)} onTaskChange={loadData}/>
+            <TaskList tasks={upcomingTasks} onTaskChange={loadData}/>
           </CardContent>
         </Card>
       </div>
