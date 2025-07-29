@@ -5,7 +5,7 @@ import { Header } from "@/components/public/header";
 import { Footer } from "@/components/public/footer";
 import "../public.css";
 import { useSiteConfig } from "@/hooks/use-site-config";
-import { Helmet } from "react-helmet";
+import Head from "next/head";
 
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
@@ -13,7 +13,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <Helmet>
+      <Head>
         <title>{siteConfig.metaTitle}</title>
         <meta name="description" content={siteConfig.metaDescription} />
         {siteConfig.favicon && <link rel="icon" href={siteConfig.favicon} />}
@@ -22,8 +22,8 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
                 --public-primary: ${siteConfig.primaryColor};
             }
         `}</style>
-        <script>{siteConfig.headerScripts}</script>
-      </Helmet>
+        {siteConfig.headerScripts && <script dangerouslySetInnerHTML={{ __html: siteConfig.headerScripts }} />}
+      </Head>
       <div className="flex flex-col min-h-screen bg-public-background text-public-foreground font-public-body">
         <Header />
         <main className="flex-1">
