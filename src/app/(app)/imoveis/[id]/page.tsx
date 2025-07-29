@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Imovel, Task } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
@@ -29,15 +29,16 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const imovelId = params.id;
   
-  const loadData = () => {
-     if (params.id) {
+  const loadData = useCallback(() => {
+     if (imovelId) {
         setLoading(true);
         try {
             // Fetch Imovel
             const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
             const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
-            const foundImovel = imoveis.find((i: Imovel) => i.id === params.id) || null;
+            const foundImovel = imoveis.find((i: Imovel) => i.id === imovelId) || null;
             setImovel(foundImovel);
 
             // Fetch Tasks
@@ -45,7 +46,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
             if (savedTasks) {
                 const allTasks: Task[] = JSON.parse(savedTasks);
                 // Filter tasks associated directly with the imovel or through a negocio
-                const imovelTasks = allTasks.filter(t => t.imovelId === params.id);
+                const imovelTasks = allTasks.filter(t => t.imovelId === imovelId);
                 setTasks(imovelTasks);
             }
         } catch (error) {
@@ -55,7 +56,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
             setLoading(false);
         }
     }
-  };
+  }, [imovelId]);
 
   useEffect(() => {
     loadData();
@@ -63,7 +64,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
     return () => {
         window.removeEventListener('dataUpdated', loadData);
     }
-  }, [params.id]);
+  }, [loadData]);
 
 
    const formatPrice = (price: number, status: Imovel['status']) => {

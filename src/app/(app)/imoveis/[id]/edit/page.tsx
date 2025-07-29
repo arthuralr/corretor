@@ -11,13 +11,14 @@ const IMOVEIS_STORAGE_KEY = 'imoveisData';
 export default function EditImovelPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [loading, setLoading] = useState(true);
+  const imovelId = params.id;
 
   useEffect(() => {
     try {
         const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
         if (savedData) {
             const imoveis: Imovel[] = JSON.parse(savedData);
-            const foundImovel = imoveis.find(i => i.id === params.id);
+            const foundImovel = imoveis.find(i => i.id === imovelId);
             if (foundImovel) {
                 setImovel(foundImovel);
             }
@@ -27,7 +28,7 @@ export default function EditImovelPage({ params }: { params: { id: string } }) {
     } finally {
         setLoading(false);
     }
-  }, [params.id]);
+  }, [imovelId]);
 
   if (loading) {
     return (

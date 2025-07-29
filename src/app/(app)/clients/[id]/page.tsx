@@ -20,9 +20,9 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const clientId = params.id;
 
   const loadData = useCallback(() => {
-    const clientId = params.id;
     if (!clientId) {
       setLoading(false);
       return;
@@ -49,7 +49,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     } finally {
       setLoading(false);
     }
-  }, [params.id]);
+  }, [clientId]);
 
   useEffect(() => {
     loadData();

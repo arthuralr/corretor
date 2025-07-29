@@ -31,10 +31,10 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
   // State for modal dependencies
   const [clients, setClients] = useState<Client[]>([]);
   const [imoveis, setImoveis] = useState<Imovel[]>([]);
+  const negocioId = params.id;
 
 
   const loadData = useCallback(() => {
-    const negocioId = params.id;
     if (!negocioId) {
         setLoading(false);
         return;
@@ -66,7 +66,7 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
     } finally {
         setLoading(false);
     }
-  }, [params.id]);
+  }, [negocioId]);
 
   // Load data for the modal
   const loadModalData = () => {
