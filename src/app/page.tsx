@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function Home() {
-  redirect('/dashboard');
+  // Redirects the root path to the public homepage
+  redirect('/inicio');
 }

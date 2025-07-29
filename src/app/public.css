@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .font-public-body {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  :root {
+    --public-background: 255 100% 100%; /* white */
+    --public-foreground: 220 13% 25%; /* dark grey */
+    --public-heading: 220 13% 15%; /* darker grey for headings */
+    --public-primary: 221 39% 28%; /* deep navy blue */
+    --public-primary-foreground: 255 100% 100%; /* white */
+    --public-muted: 220 13% 96%; /* light grey */
+    --public-muted-foreground: 220 13% 45%; /* medium grey */
+    --public-border: 220 13% 90%; /* border color */
+    --public-card: 255 100% 100%;
+    --public-card-foreground: 220 13% 25%;
+  }
+
+  .dark {
+    /* Optional: Define dark mode colors for public pages if needed later */
+    --public-background: 220 13% 10%;
+    --public-foreground: 220 13% 90%;
+    --public-heading: 255 100% 100%;
+    --public-primary: 210 80% 65%;
+    --public-primary-foreground: 220 13% 5%;
+    --public-muted: 220 13% 15%;
+    --public-muted-foreground: 220 13% 65%;
+    --public-border: 220 13% 20%;
+    --public-card: 220 13% 12%;
+    --public-card-foreground: 220 13% 90%;
+  }
+}

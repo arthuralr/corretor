@@ -3,7 +3,7 @@
 'use client'
 
 import React, { useEffect, useState, useCallback } from "react";
-import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight, Building, RulerSquare, Briefcase } from "lucide-react";
+import { Home, Tag, DollarSign, BedDouble, Bath, CheckSquare, XSquare, Info, CalendarCheck, Image as ImageIcon, Edit, ChevronLeft, ChevronRight, Building, AreaChart, Briefcase } from "lucide-react";
 import type { Imovel, Task, Negocio } from "@/lib/definitions";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -205,7 +205,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
                 </div>}
             </div>
              <div className="flex items-center gap-6 pt-4 border-t flex-wrap">
-                <span className="flex items-center gap-2"><RulerSquare className="w-5 h-5 text-muted-foreground" /> {imovel.area} m²</span>
+                <span className="flex items-center gap-2"><AreaChart className="w-5 h-5 text-muted-foreground" /> {imovel.area} m²</span>
                 <span className="flex items-center gap-2"><BedDouble className="w-5 h-5 text-muted-foreground" /> {imovel.bedrooms} quartos</span>
                 {imovel.suites && <span className="flex items-center gap-2"><BedDouble className="w-5 h-5 text-primary/80" /> {imovel.suites} suítes</span>}
                 <span className="flex items-center gap-2"><Bath className="w-5 h-5 text-muted-foreground" /> {imovel.bathrooms} banheiros</span>
@@ -266,3 +266,4 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
     </div>
   );
 }
+
