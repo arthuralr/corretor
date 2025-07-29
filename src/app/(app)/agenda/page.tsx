@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -17,26 +18,15 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CalendarCheck, PlusCircle, Calendar as CalendarIcon } from "lucide-react";
-import type { Task } from "@/lib/definitions";
+import type { Task, TaskCategory } from "@/lib/definitions";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { TaskItem } from "@/components/agenda/task-item";
+import { TaskItem, categoryConfig } from "@/components/agenda/task-item";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { getInitialTasks } from "@/lib/initial-data";
 
 const TASKS_STORAGE_KEY = 'tasksData';
-
-const getInitialTasks = (): Task[] => {
-    // This is a fallback and might not be used if localStorage has data.
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    return [
-        { id: 'TASK-1', title: 'Follow-up com cliente John Doe', description: 'Ligar para discutir a contra-proposta.', dueDate: today.toISOString(), completed: false, priority: 'Alta' },
-        { id: 'TASK-2', title: 'Preparar apresentação do imóvel AP002', description: 'Montar slides com fotos e detalhes.', dueDate: tomorrow.toISOString(), completed: false, priority: 'Média' },
-    ];
-};
 
 export default function AgendaPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -91,6 +81,15 @@ export default function AgendaPage() {
   const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
   const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
   
+  const getIndicatorColorForDay = (day: Date): string => {
+    const dateKey = format(day, 'yyyy-MM-dd');
+    const dayTasks = tasksByDate.get(dateKey);
+    if (!dayTasks || dayTasks.length === 0) return 'bg-accent';
+    const firstTaskCategory = dayTasks[0].category || 'Prazo';
+    // Get the Tailwind border color and convert it to a background color
+    return categoryConfig[firstTaskCategory].color.replace('border-', 'bg-') || 'bg-accent';
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -147,7 +146,7 @@ export default function AgendaPage() {
                             </span>
                             {tasksByDate.has(format(day, 'yyyy-MM-dd')) && (
                                 <div className="flex-grow flex items-center justify-center w-full">
-                                    <div className="w-2 h-2 bg-accent rounded-full mt-1"></div>
+                                    <div className={cn("w-2 h-2 rounded-full mt-1", getIndicatorColorForDay(day))}></div>
                                 </div>
                             )}
                         </div>
@@ -169,7 +168,7 @@ export default function AgendaPage() {
                             {format(selectedDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
                         </CardDescription>
                     </div>
-                    <AddTaskButton />
+                    <AddTaskButton preselectedDate={selectedDate} />
                 </CardHeader>
                 <CardContent className="h-[60vh] overflow-y-auto">
                    {selectedDayTasks.length > 0 ? (
@@ -192,4 +191,3 @@ export default function AgendaPage() {
     </div>
   );
 }
-

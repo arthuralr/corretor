@@ -79,6 +79,7 @@ export function AddTaskButton({ preselectedClientId, preselectedNegocioId, prese
             imovelId: selectedNegocio?.imovelId,
             imovelTitle: selectedImovel?.title,
             priority: values.priority || 'Baixa',
+            category: values.category || 'Prazo',
         };
 
         tasks.push(newTask);

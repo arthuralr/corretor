@@ -1,4 +1,5 @@
 
+
 export type Property = {
   id: string;
   address: string;
@@ -73,6 +74,7 @@ export type ImovelSimplificado = {
 };
 
 export type TaskPriority = 'Baixa' | 'Média' | 'Alta';
+export type TaskCategory = 'Visita' | 'Reunião' | 'Ligação' | 'Prazo';
 
 export type Task = {
   id: string;
@@ -87,6 +89,7 @@ export type Task = {
   imovelId?: string;
   imovelTitle?: string;
   priority?: TaskPriority;
+  category?: TaskCategory;
 };
 
 export type MessageTemplate = {

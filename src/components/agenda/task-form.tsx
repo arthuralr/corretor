@@ -6,8 +6,8 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CalendarIcon, User, ListTodo } from 'lucide-react';
+import { useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import type { Client, Negocio, TaskPriority } from '@/lib/definitions';
+import type { Client, Negocio, TaskCategory, TaskPriority } from '@/lib/definitions';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 const formSchema = z.object({
@@ -36,7 +36,8 @@ const formSchema = z.object({
   description: z.string().optional(),
   clientId: z.string().optional(),
   negocioId: z.string().optional(),
-  priority: z.enum(['Baixa', 'Média', 'Alta']).optional(),
+  priority: z.enum(['Baixa', 'Média', 'Alta']).default('Baixa'),
+  category: z.enum(['Visita', 'Reunião', 'Ligação', 'Prazo']).default('Prazo'),
 });
 
 type TaskFormValues = z.infer<typeof formSchema>;
@@ -61,6 +62,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
       negocioId: initialData?.negocioId || undefined,
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
       priority: initialData?.priority || 'Baixa',
+      category: initialData?.category || 'Prazo',
     },
   });
 
@@ -75,6 +77,7 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
       negocioId: initialData?.negocioId || undefined,
       dueDate: initialData?.dueDate ? new Date(initialData.dueDate) : undefined,
       priority: initialData?.priority || 'Baixa',
+      category: initialData?.category || 'Prazo',
     });
   }, [initialData, form]);
 
@@ -112,46 +115,71 @@ export function TaskForm({ onSave, onCancel, initialData, clients, negocios }: T
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="dueDate"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Data de Vencimento</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={'outline'}
-                      className={cn(
-                        'w-full pl-3 text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, 'PPP', { locale: ptBR })
-                      ) : (
-                        <span>Escolha uma data</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    locale={ptBR}
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="dueDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Data de Vencimento</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'w-full pl-3 text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        {field.value ? (
+                          format(field.value, 'PPP', { locale: ptBR })
+                        ) : (
+                          <span>Escolha uma data</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      locale={ptBR}
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      disabled={(date) => date < new Date(new Date().setHours(0,0,0,0)) }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2"><ListTodo className="h-4 w-4" /> Categoria</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Prazo">Prazo</SelectItem>
+                      <SelectItem value="Ligação">Ligação</SelectItem>
+                      <SelectItem value="Reunião">Reunião</SelectItem>
+                      <SelectItem value="Visita">Visita</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+        </div>
         <FormField
           control={form.control}
           name="clientId"

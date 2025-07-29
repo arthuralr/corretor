@@ -1,4 +1,5 @@
 
+
 import type { Negocio, Imovel, Client, Task } from './definitions';
 
 export const getInitialNegocios = (): Negocio[] => {
@@ -192,17 +193,10 @@ export const getInitialTasks = (): Task[] => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-    const lastWeek = new Date(today);
-    lastWeek.setDate(lastWeek.getDate() - 7);
-
+    
     return [
-        { id: 'TASK-1', title: 'Follow-up com cliente John Doe', description: 'Ligar para discutir a contra-proposta.', dueDate: today.toISOString(), completed: false },
-        { id: 'TASK-2', title: 'Preparar apresentação do imóvel AP002', description: 'Montar slides com fotos e detalhes.', dueDate: tomorrow.toISOString(), completed: false },
-        { id: 'TASK-3', title: 'Agendar visita com Jane Smith', description: 'Entrar em contato para marcar a visita à casa CA001.', dueDate: tomorrow.toISOString(), completed: true },
-        { id: 'TASK-4', title: 'Enviar documentação para o banco', description: 'Pendências do financiamento do cliente Sam Wilson.', dueDate: nextWeek.toISOString(), completed: false },
-        { id: 'TASK-5', title: 'Revisar contrato de aluguel', description: 'Verificar cláusulas do contrato do imóvel AP004.', dueDate: lastWeek.toISOString(), completed: true },
-        { id: 'TASK-6', title: 'Ligar para o proprietário da CA005', description: 'Confirmar o valor do condomínio.', dueDate: today.toISOString(), completed: false },
+        { id: 'TASK-1', title: 'Follow-up com cliente John Doe', description: 'Ligar para discutir a contra-proposta.', dueDate: today.toISOString(), completed: false, priority: 'Alta', category: 'Ligação' },
+        { id: 'TASK-2', title: 'Preparar apresentação do imóvel AP002', description: 'Montar slides com fotos e detalhes.', dueDate: tomorrow.toISOString(), completed: false, priority: 'Média', category: 'Prazo' },
+        { id: 'TASK-3', title: 'Visita ao imóvel com Jane Smith', description: 'Levar a cliente para conhecer a casa CA001.', dueDate: tomorrow.toISOString(), completed: false, priority: 'Alta', category: 'Visita'},
     ];
 };

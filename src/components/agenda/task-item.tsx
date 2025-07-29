@@ -1,8 +1,9 @@
 
+
 "use client";
 
 import { useState } from 'react';
-import type { Task, TaskPriority } from '@/lib/definitions';
+import type { Task, TaskPriority, TaskCategory } from '@/lib/definitions';
 import { format, isPast, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -13,10 +14,9 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { Button } from '../ui/button';
-import { ChevronDown, Trash2, User } from 'lucide-react';
+import { ChevronDown, Trash2, User, Car, Users, Phone, Flag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Badge } from '../ui/badge';
 import Link from 'next/link';
 
 const TASKS_STORAGE_KEY = 'tasksData';
@@ -30,6 +30,13 @@ const priorityConfig: Record<TaskPriority, { color: string, label: string }> = {
     'Baixa': { color: 'bg-gray-400', label: 'Prioridade Baixa' },
     'Média': { color: 'bg-yellow-500', label: 'Prioridade Média' },
     'Alta': { color: 'bg-red-500', label: 'Prioridade Alta' },
+}
+
+export const categoryConfig: Record<TaskCategory, { icon: React.ElementType, color: string, label: string }> = {
+    'Visita': { icon: Car, color: 'border-blue-500', label: 'Visita' },
+    'Reunião': { icon: Users, color: 'border-green-500', label: 'Reunião' },
+    'Ligação': { icon: Phone, color: 'border-orange-500', label: 'Ligação' },
+    'Prazo': { icon: Flag, color: 'border-red-500', label: 'Prazo' },
 }
 
 export function TaskItem({ task, onTaskChange }: TaskItemProps) {
@@ -74,13 +81,16 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
   const dueDate = new Date(task.dueDate);
   const isOverdue = !isChecked && isPast(dueDate) && !isToday(dueDate);
   const priority = task.priority || 'Baixa';
+  const category = task.category || 'Prazo';
   const currentPriorityConfig = priorityConfig[priority];
+  const currentCategoryConfig = categoryConfig[category];
+  const CategoryIcon = currentCategoryConfig.icon;
 
   return (
     <Collapsible open={isCollapsibleOpen} onOpenChange={setIsCollapsibleOpen} asChild>
         <div id={task.id} className={cn(
-            'p-4 rounded-lg border transition-all',
-            isChecked ? 'bg-muted/50 text-muted-foreground' : 'bg-card',
+            'p-4 rounded-lg border-l-4 transition-all',
+            isChecked ? 'bg-muted/50 text-muted-foreground border-muted' : `bg-card ${currentCategoryConfig.color}`,
             isOverdue && 'border-destructive/50'
         )}>
             <div className="flex items-center justify-between">
@@ -91,14 +101,17 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
                         onCheckedChange={handleCheckedChange}
                     />
                     <div>
-                        <label
-                            htmlFor={`task-${task.id}`}
-                            className={cn('font-medium', isChecked && 'line-through')}
-                        >
-                            {task.title}
-                        </label>
+                         <div className='flex items-center gap-2'>
+                           <CategoryIcon className="w-4 h-4 text-muted-foreground" />
+                            <label
+                                htmlFor={`task-${task.id}`}
+                                className={cn('font-medium', isChecked && 'line-through')}
+                            >
+                                {task.title}
+                            </label>
+                        </div>
                         {(task.clientName || task.imovelTitle) && (
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1 pl-6">
                                 {task.clientId && task.clientName && (
                                     <Link href={`/clients/${task.clientId}`} className="flex items-center gap-1 hover:underline">
                                         <User className="w-3 h-3" />
@@ -123,7 +136,7 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
 
                     <div className="text-sm text-muted-foreground">
                         <span className={cn(isOverdue && 'text-destructive font-semibold')}>
-                            {format(dueDate, "dd 'de' MMM", { locale: ptBR })}
+                            {format(dueDate, "HH:mm", { locale: ptBR })}
                         </span>
                     </div>
                      <Button variant="ghost" size="icon" onClick={handleDelete} className="text-muted-foreground hover:text-destructive">
