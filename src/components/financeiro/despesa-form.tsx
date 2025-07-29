@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Despesa, DespesaCategoria } from '@/lib/definitions';
+import { MaskedInput } from '../ui/masked-input';
 
 const formSchema = z.object({
   description: z.string().min(1, 'A descrição é obrigatória'),
@@ -111,10 +112,18 @@ export function DespesaForm({ onSave, onCancel, initialData }: DespesaFormProps)
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Valor (R$)</FormLabel>
-                <FormControl>
-                    <Input type="number" placeholder="150.00" {...field} />
-                </FormControl>
-                <FormMessage />
+                  <FormControl>
+                      <MaskedInput
+                          mask={Number}
+                          radix="."
+                          thousandsSeparator="."
+                          scale={2}
+                          value={String(field.value)}
+                          onAccept={(value: any) => field.onChange(Number(value))}
+                          placeholder="150,00"
+                      />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
             )}
             />

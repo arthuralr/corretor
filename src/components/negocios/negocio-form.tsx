@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Client, Imovel, EtapaFunil, Negocio } from '@/lib/definitions';
 import { useEffect } from 'react';
+import { MaskedInput } from '../ui/masked-input';
 
 const formSchema = z.object({
   clienteId: z.string().min(1, 'É obrigatório selecionar um cliente.'),
@@ -161,11 +162,19 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
                 name="valorProposta"
                 render={({ field }) => (
                     <FormItem>
-                    <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor da Proposta</FormLabel>
-                    <FormControl>
-                        <Input type="number" placeholder="750000" {...field} />
-                    </FormControl>
-                    <FormMessage />
+                      <FormLabel className="flex items-center gap-2"><DollarSign className="h-4 w-4" /> Valor da Proposta</FormLabel>
+                      <FormControl>
+                          <MaskedInput
+                              mask={Number}
+                              radix="."
+                              thousandsSeparator="."
+                              scale={2}
+                              value={String(field.value)}
+                              onAccept={(value: any) => field.onChange(Number(value))}
+                              placeholder="750.000"
+                          />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
                 )}
                 />

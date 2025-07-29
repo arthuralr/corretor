@@ -23,6 +23,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Entrada } from '@/lib/definitions';
+import { MaskedInput } from '../ui/masked-input';
 
 const formSchema = z.object({
   origem: z.string().min(1, 'A origem é obrigatória'),
@@ -105,11 +106,19 @@ export function EntradaForm({ onSave, onCancel, initialData }: EntradaFormProps)
             name="valor"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Valor (R$)</FormLabel>
-                <FormControl>
-                    <Input type="number" placeholder="1000.00" {...field} />
-                </FormControl>
-                <FormMessage />
+                  <FormLabel>Valor (R$)</FormLabel>
+                  <FormControl>
+                      <MaskedInput
+                          mask={Number}
+                          radix="."
+                          thousandsSeparator="."
+                          scale={2}
+                          value={String(field.value)}
+                          onAccept={(value: any) => field.onChange(Number(value))}
+                          placeholder="1.000,00"
+                      />
+                  </FormControl>
+                  <FormMessage />
                 </FormItem>
             )}
             />

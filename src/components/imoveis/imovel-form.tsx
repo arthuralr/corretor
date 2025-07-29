@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { addActivityLog } from "@/lib/activity-log";
 import { Trash2, PlusCircle } from "lucide-react";
+import { MaskedInput } from "../ui/masked-input";
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
@@ -195,7 +196,15 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                 <FormItem>
                   <FormLabel>Preço (BRL)</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="500000" {...field} />
+                    <MaskedInput
+                      mask={Number}
+                      radix="."
+                      thousandsSeparator="."
+                      scale={2}
+                      value={String(field.value)}
+                      onAccept={(value: any) => field.onChange(Number(value))}
+                      placeholder="500.000"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
