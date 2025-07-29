@@ -103,7 +103,10 @@ export default function Dashboard() {
 
   const salesTotal = negocios
     .filter(n => n.etapa === 'Fechado - Ganho')
-    .reduce((sum, n) => sum + n.valorProposta, 0);
+    .reduce((sum, n) => {
+        const commission = (n.valorProposta * (n.taxaComissao || 0)) / 100;
+        return sum + commission;
+    }, 0);
   
   const proposalsCount = negocios.filter(n => n.etapa === 'Proposta').length;
   const activeClientsCount = [...new Set(negocios.filter(n => n.etapa !== 'Fechado - Ganho' && n.etapa !== 'Fechado - Perdido').map(n => n.clienteId))].length;
@@ -129,13 +132,13 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vendas (Total)</CardTitle>
+            <CardTitle className="text-sm font-medium">Comissões (Ganhos)</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(salesTotal)}</div>
             <p className="text-xs text-muted-foreground">
-              Soma de todos os negócios ganhos
+              Soma das comissões de negócios ganhos
             </p>
           </CardContent>
         </Card>
