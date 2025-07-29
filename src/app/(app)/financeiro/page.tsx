@@ -16,6 +16,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { EntradaForm } from "@/components/financeiro/entrada-form";
+import { ExtratoTimeline } from "@/components/financeiro/extrato-timeline";
 
 export default function FinanceiroPage() {
     const [isDespesaModalOpen, setIsDespesaModalOpen] = useState(false);
@@ -34,11 +35,15 @@ export default function FinanceiroPage() {
                     Gerencie suas entradas e despesas para manter a saúde financeira do seu negócio.
                 </p>
 
-                <Tabs defaultValue="entradas" className="space-y-4">
+                <Tabs defaultValue="extrato" className="space-y-4">
                     <TabsList>
+                        <TabsTrigger value="extrato">Extrato</TabsTrigger>
                         <TabsTrigger value="entradas">Entradas</TabsTrigger>
                         <TabsTrigger value="despesas">Despesas</TabsTrigger>
                     </TabsList>
+                    <TabsContent value="extrato">
+                        <ExtratoTimeline />
+                    </TabsContent>
                     <TabsContent value="entradas" className="space-y-4">
                        <div className="flex justify-end">
                             <Button onClick={() => setIsEntradaModalOpen(true)}>
