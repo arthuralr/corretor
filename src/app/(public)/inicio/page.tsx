@@ -20,8 +20,7 @@ const featuredImages = [
 
 export default function HomePage() {
   const [featuredProperties, setFeaturedProperties] = useState<Imovel[]>([]);
-  const autoplayPlugin = useRef(Autoplay({ delay: 5000, stopOnInteraction: true }));
-
+  
   useEffect(() => {
     try {
       const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
@@ -42,9 +41,12 @@ export default function HomePage() {
       <section className="relative h-[70vh] md:h-[85vh] flex items-center justify-center text-white">
         <Carousel 
             opts={{ loop: true }}
-            plugins={[autoplayPlugin.current]}
-            onMouseEnter={autoplayPlugin.current.stop}
-            onMouseLeave={autoplayPlugin.current.reset}
+            plugins={[
+                Autoplay({
+                  delay: 5000,
+                  stopOnInteraction: true,
+                }),
+            ]}
             className="absolute inset-0 z-0"
         >
           <CarouselContent>
