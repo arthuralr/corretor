@@ -8,7 +8,7 @@ import { PropertySearchForm } from '@/components/public/property-search-form';
 import { PublicPropertyCard } from '@/components/public/public-property-card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Image from "next/image";
-import Autoplay from "embla-carousel-react";
+import Autoplay from 'embla-carousel-autoplay';
 
 const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
