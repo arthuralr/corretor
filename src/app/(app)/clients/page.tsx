@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import Link from "next/link";
@@ -8,7 +9,7 @@ import { columns } from "@/components/clients/columns";
 import { DataTable } from "@/components/data-table";
 import type { Client } from "@/lib/definitions";
 import { useState, useEffect, useCallback } from "react";
-import { collection, getDocs, writeBatch } from "firebase/firestore";
+import { collection, getDocs, writeBatch, doc, serverTimestamp, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ExportButton } from "@/components/shared/export-button";
@@ -24,7 +25,8 @@ export default function ClientsPage() {
   const loadClients = useCallback(async () => {
     setLoading(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "clients"));
+      const q = query(collection(db, "clients"), orderBy("createdAt", "desc"));
+      const querySnapshot = await getDocs(q);
       const clientsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -39,6 +41,13 @@ export default function ClientsPage() {
 
   useEffect(() => {
     loadClients();
+    
+    // Add event listener for when a client is deleted from the actions cell
+    window.addEventListener('clientDeleted', loadClients);
+    return () => {
+        window.removeEventListener('clientDeleted', loadClients);
+    };
+
   }, [loadClients]);
 
   const handleImport = async (importedData: any[]) => {
@@ -55,6 +64,10 @@ export default function ClientsPage() {
                 phone: String(row.phone),
                 searchProfile: row.searchProfile || "",
                 birthDate: row.birthDate || null,
+                status: row.status || 'Ativo',
+                source: row.source || '',
+                interest: row.interest || '',
+                createdAt: serverTimestamp(),
             });
             newClientsCount++;
         }
@@ -106,7 +119,7 @@ export default function ClientsPage() {
             </Link>
         </div>
       </div>
-      <DataTable columns={columns} data={data} filterColumnId="name" filterPlaceholder="Filtrar por nome..." />
+      <DataTable columns={columns(loadClients)} data={data} filterColumnId="name" filterPlaceholder="Filtrar por nome..." />
     </div>
   );
 }

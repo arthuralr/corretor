@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,8 +7,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import type { Client } from "@/lib/definitions";
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
+import type { Client, ClientStatus } from "@/lib/definitions";
+import { collection, addDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -30,6 +31,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -37,15 +39,21 @@ const formSchema = z.object({
   phone: z.string().min(1, "Número de telefone é obrigatório"),
   searchProfile: z.string().optional(),
   birthDate: z.date().optional(),
+  status: z.enum(['Ativo', 'Inativo', 'Futuro', 'Comprador', 'Locatário']).default('Ativo'),
+  source: z.string().optional(),
+  interest: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface ClientFormProps {
     initialData?: Client;
-    onSave?: (values: FormValues) => void;
+    onSave?: (values: Omit<Client, 'id' | 'createdAt'>) => void;
     onCancel?: () => void;
 }
+
+const clientStatuses: ClientStatus[] = ['Ativo', 'Inativo', 'Futuro', 'Comprador', 'Locatário'];
+
 
 export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
   const router = useRouter();
@@ -59,6 +67,9 @@ export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
       email: "",
       phone: "",
       searchProfile: "",
+      status: 'Ativo',
+      source: '',
+      interest: '',
     },
   });
 
@@ -71,8 +82,8 @@ export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
     }
   }, [initialData, form]);
 
-  async function onSubmit(data: FormValues) {
-    const values = {
+  const internalOnSave = onSave || (async (data: FormValues) => {
+     const values: Omit<Client, 'id' | 'createdAt'> = {
       ...data,
       birthDate: data.birthDate ? data.birthDate.toISOString() : undefined,
     }
@@ -92,7 +103,8 @@ export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
         });
         router.push("/clients");
       } else {
-        const docRef = await addDoc(collection(db, "clients"), values);
+        const finalValues = { ...values, createdAt: serverTimestamp() };
+        const docRef = await addDoc(collection(db, "clients"), finalValues);
         addActivityLog({
             type: 'cliente',
             description: `Novo cliente "${values.name}" adicionado.`,
@@ -112,14 +124,14 @@ export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
             variant: "destructive"
         });
     }
-  }
+  });
 
   const handleCancel = onCancel || (() => router.back());
 
   return (
     <Card>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
+        <form onSubmit={form.handleSubmit(internalOnSave)}>
           <CardHeader>
              <CardTitle className="font-headline">{isEditing ? "Editar Informações" : "Informações do Cliente"}</CardTitle>
           </CardHeader>
@@ -165,51 +177,103 @@ export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
                 )}
                 />
             </div>
-             <FormField
-                control={form.control}
-                name="birthDate"
-                render={({ field }) => (
-                <FormItem className="flex flex-col">
-                    <FormLabel>Data de Aniversário</FormLabel>
-                    <Popover>
-                    <PopoverTrigger asChild>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <FormField
+                    control={form.control}
+                    name="birthDate"
+                    render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Data de Aniversário</FormLabel>
+                        <Popover>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                            <Button
+                                variant={'outline'}
+                                className={cn(
+                                'w-full pl-3 text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                                )}
+                            >
+                                {field.value ? (
+                                format(field.value, 'PPP', { locale: ptBR })
+                                ) : (
+                                <span>Escolha uma data</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                            locale={ptBR}
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            />
+                        </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione o status" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {clientStatuses.map(status => (
+                                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="source"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Origem do Cliente</FormLabel>
                         <FormControl>
-                        <Button
-                            variant={'outline'}
-                            className={cn(
-                            'w-full pl-3 text-left font-normal',
-                            !field.value && 'text-muted-foreground'
-                            )}
-                        >
-                            {field.value ? (
-                            format(field.value, 'PPP', { locale: ptBR })
-                            ) : (
-                            <span>Escolha uma data</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
+                            <Input placeholder="Ex: Indicação, Site, Rede Social" {...field} />
                         </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                        locale={ptBR}
-                        mode="single"
-                        selected={field.value}
-                        onSelect={field.onChange}
-                        initialFocus
-                        />
-                    </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                </FormItem>
-                )}
-            />
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="interest"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Interesse Principal</FormLabel>
+                        <FormControl>
+                            <Input placeholder="Ex: Comprar Casa, Alugar Apartamento" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            </div>
             <FormField
               control={form.control}
               name="searchProfile"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Perfil de Busca</FormLabel>
+                  <FormLabel>Perfil de Busca Detalhado</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Ex: Apartamento de 3 quartos, com sacada e perto do centro..."

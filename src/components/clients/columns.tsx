@@ -1,9 +1,10 @@
 
+
 "use client";
 
 import React, { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import type { Client, Negocio, Task } from "@/lib/definitions";
+import type { Client, Negocio, Task, ClientStatus } from "@/lib/definitions";
 import { ArrowUpDown, MoreHorizontal, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,10 +28,50 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { addActivityLog } from "@/lib/activity-log";
-import { doc, deleteDoc } from "firebase/firestore";
+import { doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { Badge } from "../ui/badge";
+
+const StatusSelector = ({ row, onUpdate }: { row: any, onUpdate: () => void }) => {
+    const client = row.original as Client;
+    const [status, setStatus] = React.useState(client.status);
+    const { toast } = useToast();
+
+    const handleStatusChange = async (newStatus: ClientStatus) => {
+        setStatus(newStatus);
+        try {
+            const clientRef = doc(db, "clients", client.id);
+            await updateDoc(clientRef, { status: newStatus });
+            onUpdate();
+        } catch (error) {
+            toast({
+                title: "Erro ao atualizar status",
+                variant: "destructive",
+            });
+            console.error("Falha ao atualizar status do cliente:", error);
+            setStatus(client.status); // Revert on error
+        }
+    }
+
+    return (
+        <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-32 h-8 text-xs">
+                <SelectValue placeholder="Selecione o status" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="Ativo">Ativo</SelectItem>
+                <SelectItem value="Inativo">Inativo</SelectItem>
+                <SelectItem value="Futuro">Futuro</SelectItem>
+                <SelectItem value="Comprador">Comprador</SelectItem>
+                <SelectItem value="Locatário">Locatário</SelectItem>
+            </SelectContent>
+        </Select>
+    );
+};
+
 
 const ActionsCell = ({ row }: { row: any }) => {
     const { toast } = useToast();
@@ -118,7 +159,26 @@ const ActionsCell = ({ row }: { row: any }) => {
 };
 
 
-export const columns: ColumnDef<Client>[] = [
+export const columns = (onUpdate: () => void): ColumnDef<Client>[] => [
+   {
+    accessorKey: "createdAt",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        Data Criação
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const createdAt = row.original.createdAt;
+      if (!createdAt) return "-";
+      // Firestore timestamp object needs to be converted to Date
+      const date = createdAt.toDate ? createdAt.toDate() : parseISO(createdAt);
+      return format(date, "dd/MM/yyyy", { locale: ptBR });
+    },
+  },
   {
     accessorKey: "name",
     header: ({ column }) => {
@@ -127,7 +187,7 @@ export const columns: ColumnDef<Client>[] = [
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Nome Completo
+          Nome
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       );
@@ -141,32 +201,27 @@ export const columns: ColumnDef<Client>[] = [
       );
     },
   },
+   {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => <StatusSelector row={row} onUpdate={onUpdate} />,
+  },
+   {
+    accessorKey: "source",
+    header: "Origem",
+     cell: ({ row }) => row.original.source ? <Badge variant="outline">{row.original.source}</Badge> : '-',
+  },
   {
-    accessorKey: "email",
-    header: ({ column }) => {
-        return (
-            <Button
-              variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Email
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            </Button>
-        );
-      },
+    accessorKey: "interest",
+    header: "Interesse",
   },
   {
     accessorKey: "phone",
     header: "Telefone",
   },
   {
-    accessorKey: "birthDate",
-    header: "Data de Aniversário",
-    cell: ({ row }) => {
-        const birthDate = row.getValue("birthDate") as string;
-        if (!birthDate) return "-";
-        return format(parseISO(birthDate), "dd/MM/yyyy", { locale: ptBR });
-    }
+    accessorKey: "email",
+    header: "Email",
   },
   {
     id: "actions",

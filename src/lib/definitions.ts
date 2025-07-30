@@ -13,6 +13,9 @@ export type Property = {
   amenities: string[];
 };
 
+export type LeadStatus = 'Novo' | 'Em Contato' | 'Convertido' | 'Perdido';
+export type ClientStatus = 'Ativo' | 'Inativo' | 'Futuro' | 'Comprador' | 'Locatário';
+
 export type Client = {
   id: string;
   name: string;
@@ -20,6 +23,10 @@ export type Client = {
   phone: string;
   searchProfile: string;
   birthDate?: string;
+  status: ClientStatus;
+  source?: string;
+  interest?: string;
+  createdAt?: any;
 };
 
 export type ImovelType = 'Apartamento' | 'Casa' | 'Terreno' | 'Comercial';
@@ -171,6 +178,6 @@ export type Lead = {
   message?: string;
   source: string; // e.g., "Site - Contato", "Site - WhatsApp", "Site - Imóvel X"
   createdAt: string; // ISO String
-  status: 'Novo' | 'Em Contato' | 'Convertido' | 'Perdido';
+  status: LeadStatus;
   birthDate?: string;
 };
