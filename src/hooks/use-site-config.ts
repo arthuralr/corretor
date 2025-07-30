@@ -2,8 +2,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-export const SITE_CONFIG_STORAGE_KEY = 'siteConfig';
+export const SITE_CONFIG_STORAGE_KEY = 'siteConfig'; // This can now be considered a cache key or identifier
+const SITE_CONFIG_DOC_ID = 'main';
 
 export interface HeroImage {
   src: string;
@@ -45,21 +48,41 @@ export function useSiteConfig() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
-      if (savedConfig) {
-        // Merge saved config with defaults to ensure all keys are present
-        const parsedConfig = JSON.parse(savedConfig);
-        setSiteConfig({ ...defaultConfig, ...parsedConfig });
-      } else {
-        setSiteConfig(defaultConfig);
-      }
-    } catch (error) {
-      console.error("Failed to load site config from local storage", error);
-      setSiteConfig(defaultConfig);
-    } finally {
-      setLoading(false);
+    const fetchConfig = async () => {
+        try {
+            const configRef = doc(db, "siteSettings", SITE_CONFIG_DOC_ID);
+            const configSnap = await getDoc(configRef);
+
+            if (configSnap.exists()) {
+                const fetchedConfig = configSnap.data() as SiteConfig;
+                // Merge with default to ensure all keys are present, just in case
+                setSiteConfig({ ...defaultConfig, ...fetchedConfig });
+            } else {
+                // If no config in Firestore, set the default one
+                await setDoc(configRef, defaultConfig);
+                setSiteConfig(defaultConfig);
+            }
+        } catch (error) {
+            console.error("Failed to load site config from Firestore", error);
+            // Fallback to default if Firestore is not available
+            setSiteConfig(defaultConfig);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    fetchConfig();
+    
+    // Add a listener for real-time updates if needed in the future
+    const handleConfigUpdate = () => {
+        fetchConfig();
     }
+    window.addEventListener('configUpdated', handleConfigUpdate);
+
+    return () => {
+        window.removeEventListener('configUpdated', handleConfigUpdate);
+    };
+
   }, []);
 
   return { siteConfig, loading };

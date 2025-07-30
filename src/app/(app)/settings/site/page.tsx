@@ -12,7 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { UploadCloud, Image as ImageIcon, Palette, Save, Trash2, PlusCircle, Loader2 } from 'lucide-react';
-import { type SiteConfig, SITE_CONFIG_STORAGE_KEY, type HeroImage } from '@/hooks/use-site-config';
+import { type SiteConfig, useSiteConfig as useSiteConfigHook } from '@/hooks/use-site-config';
+import { doc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
 
 const heroImageSchema = z.object({
   src: z.string().url({ message: "Por favor, insira uma URL válida." }).min(1, "A URL é obrigatória."),
@@ -37,9 +41,8 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label: string; currentImage?: string; onImageUpload: (url: string) => void; }) => {
+const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload, isUploading }: { label: string; currentImage?: string; onImageUpload: (file: File) => void; isUploading: boolean }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -48,13 +51,7 @@ const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label:
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    setIsUploading(true);
-    // In a real app, this would upload to a service and return a real URL
-    // For now, we use a local blob URL to preview the image
-    const localUrl = URL.createObjectURL(file);
-    onImageUpload(localUrl);
-    setIsUploading(false);
+    onImageUpload(file);
   };
 
   return (
@@ -74,54 +71,16 @@ const ImageUploadPlaceholder = ({ label, currentImage, onImageUpload }: { label:
   );
 };
 
+
 export default function SiteSettingsPage() {
   const { toast } = useToast();
-  const [initialConfig, setInitialConfig] = useState<SiteConfig | null>(null);
+  const { siteConfig: initialConfig, loading } = useSiteConfigHook();
   const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
-    const defaultConfig = {
-        siteName: 'RealConnect CRM',
-        logo: '',
-        favicon: '',
-        socialShareImage: '',
-        primaryColor: '#22426A',
-        metaTitle: 'Bataglin Imóveis',
-        metaDescription: 'Encontre o imóvel dos seus sonhos.',
-        featuredTitle: 'Imóveis em Destaque',
-        googleMapsApiKey: '',
-        whatsappPhone: '',
-        headerScripts: '',
-        heroImages: [
-            { src: 'https://placehold.co/1920x1080.png', alt: 'Modern Living Room', hint: 'modern living room' },
-            { src: 'https://placehold.co/1920x1080.png', alt: 'Luxury Kitchen', hint: 'luxury kitchen' },
-            { src: 'https://placehold.co/1920x1080.png', alt: 'House Exterior', hint: 'house exterior' },
-        ],
-    };
-    if (savedConfig) {
-      setInitialConfig({ ...defaultConfig, ...JSON.parse(savedConfig) });
-    } else {
-      setInitialConfig(defaultConfig);
-    }
-  }, []);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    values: initialConfig || {
-      siteName: '',
-      logo: '',
-      favicon: '',
-      socialShareImage: '',
-      primaryColor: '',
-      metaTitle: '',
-      metaDescription: '',
-      featuredTitle: '',
-      googleMapsApiKey: '',
-      whatsappPhone: '',
-      headerScripts: '',
-      heroImages: [],
-    },
+    values: initialConfig,
   });
   
   const { fields, append, remove } = useFieldArray({
@@ -133,37 +92,66 @@ export default function SiteSettingsPage() {
     if (initialConfig) {
         form.reset(initialConfig);
     }
-  }, [initialConfig, form])
+  }, [initialConfig, form]);
 
-  const onSubmit = (data: FormValues) => {
+  const uploadImage = async (file: File, path: string): Promise<string> => {
+    const storage = getStorage();
+    const storageRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  }
+
+  const handleGenericImageUpload = async (file: File, fieldName: keyof FormValues) => {
+    setIsUploading(true);
     try {
-      localStorage.setItem(SITE_CONFIG_STORAGE_KEY, JSON.stringify(data));
+        const url = await uploadImage(file, 'site-assets');
+        form.setValue(fieldName, url, { shouldDirty: true, shouldValidate: true });
+        toast({ title: "Imagem enviada com sucesso!" });
+    } catch (error) {
+        toast({ title: "Erro no Upload", description: "Não foi possível enviar a imagem.", variant: 'destructive' });
+    } finally {
+        setIsUploading(false);
+    }
+  }
+
+  const handleSlideImageUpload = async (index: number, file: File) => {
+    setIsUploading(true);
+    try {
+        const url = await uploadImage(file, 'hero-slides');
+        form.setValue(`heroImages.${index}.src`, url, { shouldDirty: true, shouldValidate: true });
+        toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada.' });
+    } catch(error) {
+        toast({ title: "Erro no Upload", description: "Não foi possível enviar a imagem do slide.", variant: 'destructive' });
+    } finally {
+        setIsUploading(false);
+    }
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSaving(true);
+    try {
+      const configRef = doc(db, "siteSettings", "main");
+      await setDoc(configRef, data);
+
       toast({
         title: 'Configurações Salvas!',
         description: 'As configurações do site público foram atualizadas com sucesso.',
       });
-      // Consider a less disruptive way to apply changes if possible
       window.dispatchEvent(new CustomEvent('configUpdated'));
-      window.location.reload(); // Force a reload to apply changes everywhere
     } catch (error) {
       toast({
         title: 'Erro!',
         description: 'Não foi possível salvar as configurações.',
         variant: 'destructive',
       });
+    } finally {
+        setIsSaving(false);
     }
   };
 
-  const handleSlideImageUpload = (index: number, file: File) => {
-    setIsUploading(true);
-    const localUrl = URL.createObjectURL(file);
-    form.setValue(`heroImages.${index}.src`, localUrl, { shouldDirty: true, shouldValidate: true });
-    setIsUploading(false);
-    toast({ title: 'Imagem Alterada!', description: 'A imagem do slide foi atualizada.' });
-  };
 
-
-  if (!initialConfig) {
+  if (loading) {
     return <div>Carregando configurações...</div>;
   }
 
@@ -172,8 +160,8 @@ export default function SiteSettingsPage() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight font-headline">Configurações do Site</h2>
-          <Button type="submit">
-            <Save className="mr-2 h-4 w-4" />
+          <Button type="submit" disabled={isSaving || isUploading}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Salvar Alterações
           </Button>
         </div>
@@ -199,17 +187,20 @@ export default function SiteSettingsPage() {
               <ImageUploadPlaceholder
                 label="Logo da Empresa"
                 currentImage={form.watch('logo')}
-                onImageUpload={(url) => form.setValue('logo', url, { shouldDirty: true })}
+                onImageUpload={(file) => handleGenericImageUpload(file, 'logo')}
+                isUploading={isUploading}
               />
                <ImageUploadPlaceholder
                 label="Favicon (.ico, .png)"
                 currentImage={form.watch('favicon')}
-                onImageUpload={(url) => form.setValue('favicon', url, { shouldDirty: true })}
+                onImageUpload={(file) => handleGenericImageUpload(file, 'favicon')}
+                isUploading={isUploading}
               />
                <ImageUploadPlaceholder
                 label="Imagem de Compartilhamento Social"
                 currentImage={form.watch('socialShareImage')}
-                onImageUpload={(url) => form.setValue('socialShareImage', url, { shouldDirty: true })}
+                onImageUpload={(file) => handleGenericImageUpload(file, 'socialShareImage')}
+                isUploading={isUploading}
               />
             </div>
              <FormField
