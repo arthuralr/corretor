@@ -3,7 +3,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Lead } from "@/lib/definitions";
-import { ArrowUpDown, MoreHorizontal, Trash2 } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import React from "react";
-
+import { LeadForm } from "./lead-form";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 
 const LEADS_STORAGE_KEY = 'leadsData';
 
@@ -65,6 +66,7 @@ const StatusSelector = ({ row, onUpdate }: { row: any, onUpdate: () => void }) =
 const ActionsCell = ({ row, onUpdate }: { row: any, onUpdate: () => void }) => {
     const { toast } = useToast();
     const lead = row.original as Lead;
+    const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
     const handleDelete = () => {
         try {
@@ -89,29 +91,80 @@ const ActionsCell = ({ row, onUpdate }: { row: any, onUpdate: () => void }) => {
             });
         }
     };
+    
+    const handleEditSave = (values: any) => {
+        try {
+            const savedData = window.localStorage.getItem(LEADS_STORAGE_KEY);
+            if (!savedData) return;
+            let leads: Lead[] = JSON.parse(savedData);
+            
+            const updatedLead = {
+                ...lead,
+                ...values,
+                birthDate: values.birthDate ? values.birthDate.toISOString() : undefined,
+            };
+
+            leads = leads.map(l => l.id === lead.id ? updatedLead : l);
+            window.localStorage.setItem(LEADS_STORAGE_KEY, JSON.stringify(leads));
+
+            toast({
+                title: "Lead Atualizado!",
+                description: "As informações do lead foram salvas.",
+            });
+            onUpdate();
+            setIsEditDialogOpen(false);
+        } catch (e) {
+             toast({
+                title: "Erro",
+                description: "Não foi possível atualizar o lead.",
+                variant: "destructive",
+            });
+        }
+    }
+
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                    <span className="sr-only">Abrir menu</span>
-                    <MoreHorizontal className="h-4 w-4" />
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
-                    Copiar Email
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <DropdownMenuItem 
-                    className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                    onSelect={handleDelete}
-                >
-                    <Trash2 className="mr-2 h-4 w-4" /> Excluir Lead
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                        <span className="sr-only">Abrir menu</span>
+                        <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                     <DropdownMenuItem onSelect={() => setIsEditDialogOpen(true)} className="cursor-pointer">
+                        <Edit className="mr-2 h-4 w-4" /> Editar Lead
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.email)}>
+                        Copiar Email
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                        onSelect={handleDelete}
+                    >
+                        <Trash2 className="mr-2 h-4 w-4" /> Excluir Lead
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+            <DialogContent>
+                 <DialogHeader>
+                    <DialogTitle>Editar Lead</DialogTitle>
+                    <DialogDescription>
+                        Atualize as informações de {lead.name}.
+                    </DialogDescription>
+                </DialogHeader>
+                <LeadForm
+                    onSave={handleEditSave}
+                    onCancel={() => setIsEditDialogOpen(false)}
+                    initialData={lead}
+                />
+            </DialogContent>
+        </Dialog>
+        </>
     );
 };
 

@@ -7,6 +7,7 @@ import * as z from "zod";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Lead } from "@/lib/definitions";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -45,9 +47,10 @@ type LeadFormValues = z.infer<typeof formSchema>;
 interface LeadFormProps {
   onSave: (values: LeadFormValues) => void;
   onCancel: () => void;
+  initialData?: Lead;
 }
 
-export function LeadForm({ onSave, onCancel }: LeadFormProps) {
+export function LeadForm({ onSave, onCancel, initialData }: LeadFormProps) {
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -59,6 +62,15 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
       message: "",
     },
   });
+  
+  useEffect(() => {
+    if (initialData) {
+        form.reset({
+            ...initialData,
+            birthDate: initialData.birthDate ? new Date(initialData.birthDate) : undefined,
+        });
+    }
+  }, [initialData, form]);
 
   return (
     <Form {...form}>
@@ -111,7 +123,7 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Interesse</FormLabel>
-                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                 <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o principal interesse" />
@@ -203,7 +215,7 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button type="submit">Salvar Lead</Button>
+          <Button type="submit">Salvar</Button>
         </div>
       </form>
     </Form>
