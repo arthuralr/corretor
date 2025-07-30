@@ -35,11 +35,9 @@ export function BusinessSummaryReport({ data }: BusinessSummaryReportProps) {
 
   if (totalDeals === 0) {
     return (
-        <Card>
-            <CardContent className="flex h-48 items-center justify-center text-muted-foreground">
-                <p>Nenhum negócio encontrado no período selecionado para análise.</p>
-            </CardContent>
-        </Card>
+        <div className="flex h-24 items-center justify-center text-muted-foreground text-sm">
+            <p>Nenhum negócio encontrado no período para análise.</p>
+        </div>
     )
   }
 
@@ -96,3 +94,4 @@ export function BusinessSummaryReport({ data }: BusinessSummaryReportProps) {
     </div>
   );
 }
+
