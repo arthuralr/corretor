@@ -94,7 +94,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
 
   const images = imovel?.imageUrls && imovel.imageUrls.length > 0 
     ? imovel.imageUrls 
-    : (imovel?.imageUrl ? [imovel.imageUrl] : []);
+    : (imovel?.mainImageUrl ? [imovel.mainImageUrl] : []);
 
 
   if (loading) {

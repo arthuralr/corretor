@@ -1,4 +1,5 @@
 
+
 'use client'
 
 import React, { useEffect, useState } from "react";
@@ -17,10 +18,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { getInitialImoveis } from "@/lib/initial-data";
 import { PropertyContactForm } from "@/components/public/property-contact-form";
-
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
@@ -30,17 +30,23 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
   useEffect(() => {
     if (imovelId) {
       setLoading(true);
-      try {
-        const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-        const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
-        const foundImovel = imoveis.find((i: Imovel) => i.id === imovelId) || null;
-        setImovel(foundImovel);
-      } catch (error) {
-        console.error("Failed to load property data", error);
-        setImovel(null);
-      } finally {
-        setLoading(false);
-      }
+      const fetchImovel = async () => {
+        try {
+          const imovelRef = doc(db, "imoveis", imovelId);
+          const imovelSnap = await getDoc(imovelRef);
+          if (imovelSnap.exists()) {
+            setImovel({ id: imovelSnap.id, ...imovelSnap.data() } as Imovel);
+          } else {
+            setImovel(null);
+          }
+        } catch (error) {
+          console.error("Failed to load property data", error);
+          setImovel(null);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchImovel();
     }
   }, [imovelId]);
 
@@ -54,7 +60,7 @@ export default function PropertyDetailPage({ params }: { params: { id: string } 
   
   const images = imovel?.imageUrls && imovel.imageUrls.length > 0 
     ? imovel.imageUrls 
-    : (imovel?.imageUrl ? [imovel.imageUrl] : []);
+    : (imovel?.mainImageUrl ? [imovel.mainImageUrl] : []);
 
   if (loading) {
     return (

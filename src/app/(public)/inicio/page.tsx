@@ -1,41 +1,36 @@
 
+
 'use client'
 
 import { useState, useEffect, useRef } from 'react';
 import type { Imovel } from '@/lib/definitions';
-import { getInitialImoveis } from '@/lib/initial-data';
-import { PropertySearchForm } from '@/components/public/property-search-form';
 import { PublicPropertyCard } from '@/components/public/public-property-card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Image from "next/image";
 import Autoplay from 'embla-carousel-autoplay';
 import { useSiteConfig } from '@/hooks/use-site-config';
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { PropertySearchForm } from '@/components/public/property-search-form';
 
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 export default function HomePage() {
   const [featuredProperties, setFeaturedProperties] = useState<Imovel[]>([]);
   const { siteConfig, loading } = useSiteConfig();
   
   useEffect(() => {
-    try {
-      const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-      const allImoveis: Imovel[] = savedImoveis ? JSON.parse(JSON.parse(savedImoveis)) : getInitialImoveis();
-      const featured = allImoveis.filter(p => p.status === 'Ativo').slice(0, 6);
-      setFeaturedProperties(featured);
-    } catch (error) {
-      // It might be double-stringified, try parsing again
+    const fetchFeatured = async () => {
       try {
-        const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-        const allImoveis: Imovel[] = savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis();
-        const featured = allImoveis.filter(p => p.status === 'Ativo').slice(0, 6);
-        setFeaturedProperties(featured);
-      } catch (innerError) {
-         console.error("Failed to load properties:", innerError);
-         const initialFeatured = getInitialImoveis().filter(p => p.status === 'Ativo').slice(0, 6);
-         setFeaturedProperties(initialFeatured);
+        const q = query(collection(db, "imoveis"), where("status", "==", "Ativo"), limit(6));
+        const querySnapshot = await getDocs(q);
+        const properties = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Imovel));
+        setFeaturedProperties(properties);
+      } catch (error) {
+        console.error("Failed to load featured properties:", error);
       }
-    }
+    };
+    
+    fetchFeatured();
   }, []);
   
   const heroImages = siteConfig.heroImages || [];
