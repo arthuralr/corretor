@@ -11,8 +11,8 @@ import type { Imovel } from "@/lib/definitions";
 import React, { useState, useEffect } from "react";
 import { ImovelType, Subtypes, AmenitiesList } from "@/lib/definitions";
 import { collection, addDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -87,7 +87,12 @@ interface ImovelFormProps {
 
 const parseCurrency = (value: string | undefined): number | undefined => {
     if (!value) return undefined;
-    const num = Number(String(value).replace(/[^0-9,]/g, '').replace(',', '.'));
+    // Remove R$, spaces, and dots. Replace comma with a dot for decimal parsing.
+    const numString = String(value)
+      .replace(/R\$\s?/, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+    const num = parseFloat(numString);
     return isNaN(num) ? undefined : num;
 };
 
@@ -147,7 +152,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         },
   });
 
-  const { fields, append, remove, move } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "imageUrls",
   });
@@ -165,10 +170,9 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   };
   
   const uploadImage = async (file: File): Promise<string> => {
-    const storage = getStorage();
     const storageRef = ref(storage, `imoveis/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
+    const snapshot = await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(snapshot.ref);
     return downloadURL;
   }
   
@@ -179,10 +183,10 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     setIsUploading(true);
     
     try {
-        const uploadPromises = Array.from(files).map(uploadImage);
+        const uploadPromises = Array.from(files).map(file => uploadImage(file));
         const urls = await Promise.all(uploadPromises);
-        const newUrls = urls.map(url => ({ value: url }));
         
+        const newUrls = urls.map(url => ({ value: url }));
         append(newUrls);
 
         if (!mainImageUrl && newUrls.length > 0) {
@@ -195,6 +199,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         })
 
     } catch (error) {
+        console.error("Upload error:", error);
         toast({ title: "Erro no Upload", description: "Não foi possível enviar as imagens.", variant: "destructive" });
     } finally {
         setIsUploading(false);
@@ -484,18 +489,19 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Venda (R$)</FormLabel>
                         <FormControl>
                            <MaskedInput
-                                mask="R$ #.##0,00"
-                                lazy={false}
-                                thousandsSeparator="."
-                                radix=","
-                                mapToRadix={['.']}
+                                mask="R$ num"
                                 blocks={{
-                                    '#': {
-                                        mask: Number,
-                                        thousandsSeparator: '.',
+                                    num: {
+                                    mask: Number,
+                                    thousandsSeparator: '.',
+                                    radix: ',',
+                                    scale: 2,
+                                    padFractionalZeros: true,
+                                    min: 0,
+                                    max: 999999999,
                                     }
                                 }}
-                                onAccept={(value: any) => field.onChange(value)}
+                                onAccept={(value: any, mask: any) => field.onChange(mask.value)}
                                 placeholder="R$ 500.000,00"
                                 value={field.value ?? ""}
                             />
@@ -512,18 +518,19 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Aluguel (R$)</FormLabel>
                         <FormControl>
                             <MaskedInput
-                                mask="R$ #.##0,00"
-                                lazy={false}
-                                thousandsSeparator="."
-                                radix=","
-                                mapToRadix={['.']}
+                                mask="R$ num"
                                 blocks={{
-                                    '#': {
-                                        mask: Number,
-                                        thousandsSeparator: '.',
+                                    num: {
+                                    mask: Number,
+                                    thousandsSeparator: '.',
+                                    radix: ',',
+                                    scale: 2,
+                                    padFractionalZeros: true,
+                                    min: 0,
+                                    max: 999999999,
                                     }
                                 }}
-                                onAccept={(value: any) => field.onChange(value)}
+                                onAccept={(value: any, mask: any) => field.onChange(mask.value)}
                                 placeholder="R$ 2.500,00"
                                 value={field.value ?? ""}
                             />
@@ -540,18 +547,19 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor do Condomínio (R$)</FormLabel>
                         <FormControl>
                              <MaskedInput
-                                mask="R$ #.##0,00"
-                                lazy={false}
-                                thousandsSeparator="."
-                                radix=","
-                                mapToRadix={['.']}
+                                mask="R$ num"
                                 blocks={{
-                                    '#': {
-                                        mask: Number,
-                                        thousandsSeparator: '.',
+                                    num: {
+                                    mask: Number,
+                                    thousandsSeparator: '.',
+                                    radix: ',',
+                                    scale: 2,
+                                    padFractionalZeros: true,
+                                    min: 0,
+                                    max: 999999999,
                                     }
                                 }}
-                                onAccept={(value: any) => field.onChange(value)}
+                                onAccept={(value: any, mask: any) => field.onChange(mask.value)}
                                 placeholder="R$ 500,00"
                                 value={field.value ?? ""}
                             />
