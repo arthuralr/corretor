@@ -5,8 +5,8 @@ import { ImovelForm } from "@/components/imoveis/imovel-form";
 import type { Imovel } from "@/lib/definitions";
 import { useEffect, useState } from 'react';
 import { Skeleton } from "@/components/ui/skeleton";
-
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function EditImovelPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
@@ -14,19 +14,23 @@ export default function EditImovelPage({ params }: { params: { id: string } }) {
   const imovelId = params.id;
 
   useEffect(() => {
-    try {
-        const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-        if (savedData) {
-            const imoveis: Imovel[] = JSON.parse(savedData);
-            const foundImovel = imoveis.find(i => i.id === imovelId);
-            if (foundImovel) {
-                setImovel(foundImovel);
+    if (imovelId) {
+        const fetchImovel = async () => {
+            try {
+                const docRef = doc(db, "imoveis", imovelId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    setImovel({ id: docSnap.id, ...docSnap.data() } as Imovel);
+                } else {
+                     console.log("No such document!");
+                }
+            } catch (error) {
+                console.error("Failed to load property data from firestore", error);
+            } finally {
+                setLoading(false);
             }
-        }
-    } catch (error) {
-        console.error("Failed to load property data from local storage", error);
-    } finally {
-        setLoading(false);
+        };
+        fetchImovel();
     }
   }, [imovelId]);
 

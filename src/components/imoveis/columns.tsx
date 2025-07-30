@@ -29,6 +29,8 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import React, { useMemo } from "react";
 import { addActivityLog } from "@/lib/activity-log";
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 const formatPrice = (price: number | undefined) => {
@@ -39,41 +41,26 @@ const formatPrice = (price: number | undefined) => {
   }).format(price);
 }
 
-const ActionsCell = ({ row }: { row: any }) => {
+const ActionsCell = ({ row, onUpdate }: { row: any, onUpdate: () => void }) => {
     const { toast } = useToast();
     const imovel = row.original as Imovel;
     const [isAlertOpen, setIsAlertOpen] = React.useState(false);
 
-    const dependencies = useMemo(() => {
-      if (typeof window === 'undefined') return { associatedDeals: 0, associatedTasks: 0 };
-      
-      const savedDeals = window.localStorage.getItem('funilBoardData');
-      const allDeals: Negocio[] = savedDeals ? JSON.parse(savedDeals).flatMap((c: any) => c.negocios) : [];
-      const associatedDeals = allDeals.filter(d => d.imovelId === imovel.id).length;
-
-      const savedTasks = window.localStorage.getItem('tasksData');
-      const allTasks: Task[] = savedTasks ? JSON.parse(savedTasks) : [];
-      const associatedTasks = allTasks.filter(t => t.imovelId === imovel.id).length;
-
-      return { associatedDeals, associatedTasks };
-    }, [imovel.id]);
-
-    const handleDelete = () => {
+    // This dependency check can be complex on the client side with Firestore.
+    // For now, we'll assume a check needs to be done or show a generic warning.
+    // A more robust solution involves backend checks (e.g., in a Cloud Function).
+    const handleDelete = async () => {
         try {
-            const savedData = window.localStorage.getItem('imoveisData');
-            if (!savedData) return;
-            let imoveis: Imovel[] = JSON.parse(savedData);
-            imoveis = imoveis.filter(i => i.id !== imovel.id);
-            window.localStorage.setItem('imoveisData', JSON.stringify(imoveis));
+            await deleteDoc(doc(db, "imoveis", imovel.id));
             
             addActivityLog({ type: 'imovel', description: `Imóvel "${imovel.title}" foi excluído.`});
-            window.dispatchEvent(new CustomEvent('dataUpdated'));
-
+            
             toast({
                 title: "Imóvel Excluído!",
                 description: `O imóvel "${imovel.title}" foi removido.`,
             });
             setIsAlertOpen(false);
+            onUpdate(); // Trigger data reload
         } catch (error) {
             console.error("Falha ao excluir imóvel:", error);
             toast({
@@ -118,16 +105,9 @@ const ActionsCell = ({ row }: { row: any }) => {
                     <AlertDialogDescription>
                         Esta ação não pode ser desfeita. Isso excluirá permanentemente o imóvel
                         <span className="font-semibold"> {imovel.title}</span> de seus registros.
-                         {(dependencies.associatedDeals > 0 || dependencies.associatedTasks > 0) && (
-                            <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-300 dark:border-yellow-700 rounded-md text-yellow-800 dark:text-yellow-200 text-sm">
-                                <p className="font-bold">Atenção!</p>
-                                <ul className="list-disc pl-5">
-                                    {dependencies.associatedDeals > 0 && <li>Este imóvel está em {dependencies.associatedDeals} negócio(s).</li>}
-                                    {dependencies.associatedTasks > 0 && <li>Este imóvel tem {dependencies.associatedTasks} tarefa(s) associada(s).</li>}
-                                </ul>
-                                <p className="mt-1">A exclusão não removerá os negócios ou tarefas, mas eles perderão a referência a este imóvel.</p>
-                            </div>
-                        )}
+                         <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-300 dark:border-yellow-700 rounded-md text-yellow-800 dark:text-yellow-200 text-sm">
+                            Atenção: Negócios ou tarefas associadas a este imóvel não serão excluídos, mas perderão a referência.
+                        </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -140,7 +120,7 @@ const ActionsCell = ({ row }: { row: any }) => {
 };
 
 
-export const columns: ColumnDef<Imovel>[] = [
+export const columns = (onUpdate: () => void): ColumnDef<Imovel>[] => [
   {
     accessorKey: "refCode",
     header: "Cód. Ref.",
@@ -184,7 +164,7 @@ export const columns: ColumnDef<Imovel>[] = [
       const price = imovel.sellPrice || imovel.rentPrice;
       const status = row.original.status;
       const formattedPrice = formatPrice(price)
-      return <div className="text-right font-medium">{status === 'Alugado' ? `${formattedPrice}/mês` : formattedPrice}</div>;
+      return <div className="text-right font-medium">{imovel.rentPrice ? `${formattedPrice}/mês` : formattedPrice}</div>;
     },
   },
   {
@@ -203,6 +183,6 @@ export const columns: ColumnDef<Imovel>[] = [
   },
   {
     id: "actions",
-    cell: ActionsCell,
+    cell: ({ row }) => <ActionsCell row={row} onUpdate={onUpdate} />,
   },
 ];

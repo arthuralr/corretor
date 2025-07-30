@@ -36,10 +36,6 @@ export default function ImoveisPage() {
 
   useEffect(() => {
     loadImoveis();
-    window.addEventListener('dataUpdated', loadImoveis);
-    return () => {
-        window.removeEventListener('dataUpdated', loadImoveis);
-    }
   }, [loadImoveis]);
   
   if (loading) {
@@ -68,7 +64,7 @@ export default function ImoveisPage() {
           </Button>
         </Link>
       </div>
-      <DataTable columns={columns} data={data} filterColumnId="title" filterPlaceholder="Filtrar por título..." />
+      <DataTable columns={columns(loadImoveis)} data={data} filterColumnId="title" filterPlaceholder="Filtrar por título..." />
     </div>
   );
 }
