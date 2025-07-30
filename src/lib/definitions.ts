@@ -181,3 +181,14 @@ export type Lead = {
   status: LeadStatus;
   birthDate?: string;
 };
+
+export type NotificationType = 'lead' | 'aniversario' | 'tarefa_hoje' | 'tarefa_atrasada' | 'negocio';
+
+export type Notification = {
+    id: string;
+    type: NotificationType;
+    title: string;
+    description: string;
+    link?: string;
+    createdAt: string; // ISO string
+};

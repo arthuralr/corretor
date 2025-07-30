@@ -33,6 +33,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { useSiteConfig } from "@/hooks/use-site-config";
+import { NotificationCenter } from "./notification-center";
 
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -94,7 +95,7 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:justify-center">
-          <div className="flex-1" />
+          <NotificationCenter />
           <ThemeToggle />
            <Link href="/login" className="group-data-[collapsible=icon]:hidden">
             <Button asChild variant="ghost" size="icon" aria-label="Sair">

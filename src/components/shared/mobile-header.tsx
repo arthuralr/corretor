@@ -5,6 +5,7 @@ import { Building } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
 import { useSiteConfig } from "@/hooks/use-site-config";
+import { NotificationCenter } from "./notification-center";
 
 export function MobileHeader() {
   const { siteConfig } = useSiteConfig();
@@ -22,7 +23,8 @@ export function MobileHeader() {
           </>
         )}
       </Link>
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <NotificationCenter />
         <ThemeToggle />
       </div>
     </header>
