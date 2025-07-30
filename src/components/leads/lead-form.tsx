@@ -22,6 +22,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -104,9 +111,20 @@ export function LeadForm({ onSave, onCancel }: LeadFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Interesse</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ex: Apartamento 3 quartos" {...field} />
-                </FormControl>
+                 <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o principal interesse" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Comprar Imóvel">Comprar Imóvel</SelectItem>
+                      <SelectItem value="Alugar Imóvel">Alugar Imóvel</SelectItem>
+                      <SelectItem value="Avaliar Imóvel">Avaliar Imóvel</SelectItem>
+                      <SelectItem value="Falar com Corretor">Falar com Corretor</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 <FormMessage />
               </FormItem>
             )}
