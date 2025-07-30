@@ -6,6 +6,7 @@ import { Footer } from "@/components/public/footer";
 import "../public.css";
 import { useSiteConfig } from "@/hooks/use-site-config";
 import Head from "next/head";
+import { WhatsappButton } from "@/components/public/whatsapp-button";
 
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
@@ -30,6 +31,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <Footer />
+        <WhatsappButton />
       </div>
     </>
   );
