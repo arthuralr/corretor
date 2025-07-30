@@ -11,6 +11,7 @@ import { ExportButton } from "@/components/shared/export-button";
 import { ImportButton } from "@/components/shared/import-button";
 import { saveLead } from "@/lib/lead-capture";
 import { useToast } from "@/hooks/use-toast";
+import { AddLeadButton } from "@/components/leads/add-lead-button";
 
 const LEADS_STORAGE_KEY = 'leadsData';
 
@@ -35,7 +36,6 @@ export default function LeadsPage() {
   useEffect(() => {
     loadLeads();
     
-    // Custom event to reload data when a new lead is captured elsewhere
     const handleDataUpdate = () => {
         loadLeads();
     }
@@ -97,6 +97,7 @@ export default function LeadsPage() {
         <div className="flex items-center gap-2">
             <ImportButton onImport={handleImport} />
             <ExportButton data={data} fileName="leads" />
+            <AddLeadButton onLeadAdded={loadLeads} />
         </div>
       </div>
       <p className="text-muted-foreground">
