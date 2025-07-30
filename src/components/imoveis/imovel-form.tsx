@@ -58,9 +58,9 @@ const formSchema = z.object({
   status: z.enum(["Ativo", "Inativo", "Vendido", "Alugado"]),
   exclusive: z.boolean().default(false),
   
-  sellPrice: z.string().transform(v => v || "0"),
-  rentPrice: z.string().transform(v => v || "0"),
-  condoPrice: z.string().transform(v => v || "0"),
+  sellPrice: z.string().optional(),
+  rentPrice: z.string().optional(),
+  condoPrice: z.string().optional(),
 
   area: z.coerce.number().min(1, "A área útil é obrigatória"),
   bedrooms: z.coerce.number().min(0, "A quantidade de quartos não pode ser negativa"),
@@ -74,7 +74,7 @@ const formSchema = z.object({
   imageUrls: z.array(z.object({ value: z.string().url("URL da imagem inválida.") })),
   mainImageUrl: z.string().optional(),
 
-}).refine(data => parseFloat(data.sellPrice) > 0 || parseFloat(data.rentPrice) > 0, {
+}).refine(data => (data.sellPrice && parseFloat(data.sellPrice.replace(/\./g, '').replace(',', '.')) > 0) || (data.rentPrice && parseFloat(data.rentPrice.replace(/\./g, '').replace(',', '.')) > 0), {
   message: "É necessário preencher o 'Valor de Venda' ou o 'Valor de Aluguel' com um valor maior que zero.",
   path: ["sellPrice"],
 });
@@ -87,7 +87,7 @@ interface ImovelFormProps {
 
 const parseCurrency = (value: string | undefined): number | undefined => {
     if (!value) return undefined;
-    const num = Number(String(value).replace(/\./g, '').replace(',', '.'));
+    const num = Number(String(value).replace(/\D/g, '')) / 100;
     return isNaN(num) ? undefined : num;
 };
 
@@ -104,9 +104,9 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     defaultValues: initialData 
         ? {
             ...initialData,
-            sellPrice: String(initialData.sellPrice || ''),
-            rentPrice: String(initialData.rentPrice || ''),
-            condoPrice: String(initialData.condoPrice || ''),
+            sellPrice: initialData.sellPrice?.toString() ?? "",
+            rentPrice: initialData.rentPrice?.toString() ?? "",
+            condoPrice: initialData.condoPrice?.toString() ?? "",
             imageUrls: initialData.imageUrls?.map(url => ({ value: url })) || [],
             mainImageUrl: initialData.mainImageUrl || '',
             area: initialData.area || 0,
@@ -396,7 +396,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem className="md:col-span-2">
                             <FormLabel>CEP</FormLabel>
                             <FormControl>
-                                <Input placeholder="00000-000" {...field} />
+                                <Input placeholder="00000-000" {...field} value={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -409,7 +409,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem className="md:col-span-4">
                             <FormLabel>Logradouro (Rua, Av.)</FormLabel>
                             <FormControl>
-                                <Input placeholder="Av. Paulista" {...field} />
+                                <Input placeholder="Av. Paulista" {...field} value={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -422,7 +422,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem className="md:col-span-1">
                             <FormLabel>Número</FormLabel>
                             <FormControl>
-                                <Input placeholder="123" {...field} />
+                                <Input placeholder="123" {...field} value={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -435,7 +435,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem className="md:col-span-2">
                             <FormLabel>Bairro</FormLabel>
                             <FormControl>
-                                <Input placeholder="Bela Vista" {...field} />
+                                <Input placeholder="Bela Vista" {...field} value={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -448,7 +448,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem className="md:col-span-2">
                             <FormLabel>Cidade</FormLabel>
                             <FormControl>
-                                <Input placeholder="São Paulo" {...field} />
+                                <Input placeholder="São Paulo" {...field} value={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -461,7 +461,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormItem className="md:col-span-1">
                             <FormLabel>Estado (UF)</FormLabel>
                             <FormControl>
-                                <Input placeholder="SP" {...field} />
+                                <Input placeholder="SP" {...field} value={field.value ?? ""} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -484,13 +484,18 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Venda (R$)</FormLabel>
                         <FormControl>
                            <MaskedInput
-                                mask="num"
+                                mask="R$ #.##0"
+                                lazy={false}
+                                thousandsSeparator="."
                                 blocks={{
-                                    num: { mask: Number, thousandsSeparator: '.', radix: ',', scale: 0 }
+                                    '#': {
+                                        mask: Number,
+                                        thousandsSeparator: '.',
+                                    }
                                 }}
-                                unmaskedValue={field.value}
-                                onAccept={field.onChange}
+                                onAccept={(value: any) => field.onChange(value)}
                                 placeholder="R$ 500.000"
+                                value={field.value ?? ""}
                             />
                         </FormControl>
                         <FormMessage />
@@ -505,13 +510,18 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Aluguel (R$)</FormLabel>
                         <FormControl>
                             <MaskedInput
-                                mask="num"
+                                mask="R$ #.##0"
+                                lazy={false}
+                                thousandsSeparator="."
                                 blocks={{
-                                    num: { mask: Number, thousandsSeparator: '.', radix: ',', scale: 0 }
+                                    '#': {
+                                        mask: Number,
+                                        thousandsSeparator: '.',
+                                    }
                                 }}
-                                unmaskedValue={field.value}
-                                onAccept={field.onChange}
+                                onAccept={(value: any) => field.onChange(value)}
                                 placeholder="R$ 2.500"
+                                value={field.value ?? ""}
                             />
                         </FormControl>
                         <FormMessage />
@@ -526,13 +536,18 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor do Condomínio (R$)</FormLabel>
                         <FormControl>
                              <MaskedInput
-                                mask="num"
+                                mask="R$ #.##0"
+                                lazy={false}
+                                thousandsSeparator="."
                                 blocks={{
-                                    num: { mask: Number, thousandsSeparator: '.', radix: ',', scale: 0 }
+                                    '#': {
+                                        mask: Number,
+                                        thousandsSeparator: '.',
+                                    }
                                 }}
-                                unmaskedValue={field.value}
-                                onAccept={field.onChange}
+                                onAccept={(value: any) => field.onChange(value)}
                                 placeholder="R$ 500"
+                                value={field.value ?? ""}
                             />
                         </FormControl>
                         <FormMessage />
@@ -625,6 +640,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                             placeholder="Descreva os principais detalhes e características do imóvel..."
                             className="resize-y min-h-[150px]"
                             {...field}
+                            value={field.value ?? ""}
                             />
                         </FormControl>
                         <FormMessage />
