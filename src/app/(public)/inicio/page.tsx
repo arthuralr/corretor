@@ -20,13 +20,21 @@ export default function HomePage() {
   useEffect(() => {
     try {
       const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-      const allImoveis: Imovel[] = savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis();
+      const allImoveis: Imovel[] = savedImoveis ? JSON.parse(JSON.parse(savedImoveis)) : getInitialImoveis();
       const featured = allImoveis.filter(p => p.status === 'Ativo').slice(0, 6);
       setFeaturedProperties(featured);
     } catch (error) {
-      console.error("Failed to load properties:", error);
-      const initialFeatured = getInitialImoveis().filter(p => p.status === 'Ativo').slice(0, 6);
-      setFeaturedProperties(initialFeatured);
+      // It might be double-stringified, try parsing again
+      try {
+        const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
+        const allImoveis: Imovel[] = savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis();
+        const featured = allImoveis.filter(p => p.status === 'Ativo').slice(0, 6);
+        setFeaturedProperties(featured);
+      } catch (innerError) {
+         console.error("Failed to load properties:", innerError);
+         const initialFeatured = getInitialImoveis().filter(p => p.status === 'Ativo').slice(0, 6);
+         setFeaturedProperties(initialFeatured);
+      }
     }
   }, []);
   

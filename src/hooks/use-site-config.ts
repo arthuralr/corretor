@@ -5,9 +5,6 @@ import { useState, useEffect } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-export const SITE_CONFIG_STORAGE_KEY = 'siteConfig'; // This can now be considered a cache key or identifier
-const SITE_CONFIG_DOC_ID = 'main';
-
 export interface HeroImage {
   src: string;
   alt: string;
@@ -32,7 +29,7 @@ export interface SiteConfig {
 const defaultConfig: SiteConfig = {
     siteName: 'RealConnect CRM',
     primaryColor: '#22426A', // Default navy blue
-    metaTitle: 'Bataglin Imóveis',
+    metaTitle: 'Encontre os melhores imóveis da região',
     metaDescription: 'Encontre os melhores imóveis da região.',
     featuredTitle: 'Imóveis em Destaque',
     whatsappPhone: '5511999998888',
@@ -50,7 +47,7 @@ export function useSiteConfig() {
   useEffect(() => {
     const fetchConfig = async () => {
         try {
-            const configRef = doc(db, "siteSettings", SITE_CONFIG_DOC_ID);
+            const configRef = doc(db, "siteSettings", "main");
             const configSnap = await getDoc(configRef);
 
             if (configSnap.exists()) {
@@ -73,7 +70,6 @@ export function useSiteConfig() {
     
     fetchConfig();
     
-    // Add a listener for real-time updates if needed in the future
     const handleConfigUpdate = () => {
         fetchConfig();
     }

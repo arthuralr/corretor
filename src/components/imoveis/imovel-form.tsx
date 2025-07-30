@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import type { Imovel } from "@/lib/definitions";
 import React, { useState, useEffect } from "react";
 import { ImovelType, Subtypes, AmenitiesList } from "@/lib/definitions";
+import { collection, addDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "../ui/switch";
 import { Checkbox } from "../ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -37,8 +40,6 @@ import { addActivityLog } from "@/lib/activity-log";
 import { Trash2, PlusCircle, Star, UploadCloud, Loader2 } from "lucide-react";
 import { MaskedInput } from "../ui/masked-input";
 import { cn } from "@/lib/utils";
-
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 const formSchema = z.object({
   refCode: z.string().min(1, "O código de referência é obrigatório"),
@@ -57,9 +58,9 @@ const formSchema = z.object({
   status: z.enum(["Ativo", "Inativo", "Vendido", "Alugado"]),
   exclusive: z.boolean().default(false),
   
-  sellPrice: z.string().optional(),
-  rentPrice: z.string().optional(),
-  condoPrice: z.string().optional(),
+  sellPrice: z.string().transform(v => v || "0"),
+  rentPrice: z.string().transform(v => v || "0"),
+  condoPrice: z.string().transform(v => v || "0"),
 
   area: z.coerce.number().min(1, "A área útil é obrigatória"),
   bedrooms: z.coerce.number().min(0, "A quantidade de quartos não pode ser negativa"),
@@ -73,8 +74,8 @@ const formSchema = z.object({
   imageUrls: z.array(z.object({ value: z.string().url("URL da imagem inválida.") })),
   mainImageUrl: z.string().optional(),
 
-}).refine(data => data.sellPrice || data.rentPrice, {
-  message: "É necessário preencher o 'Valor de Venda' ou o 'Valor de Aluguel'.",
+}).refine(data => parseFloat(data.sellPrice) > 0 || parseFloat(data.rentPrice) > 0, {
+  message: "É necessário preencher o 'Valor de Venda' ou o 'Valor de Aluguel' com um valor maior que zero.",
   path: ["sellPrice"],
 });
 
@@ -86,14 +87,17 @@ interface ImovelFormProps {
 
 const parseCurrency = (value: string | undefined): number | undefined => {
     if (!value) return undefined;
-    return Number(String(value).replace(/\./g, '').replace(',', '.'));
+    const num = Number(String(value).replace(/\./g, '').replace(',', '.'));
+    return isNaN(num) ? undefined : num;
 };
+
 
 export function ImovelForm({ initialData }: ImovelFormProps) {
   const router = useRouter();
   const { toast } = useToast();
   const isEditing = !!initialData;
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const form = useForm<ImovelFormValues>({
     resolver: zodResolver(formSchema),
@@ -148,58 +152,62 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     form.setValue("mainImageUrl", url);
   };
   
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const uploadImage = async (file: File): Promise<string> => {
+    const storage = getStorage();
+    const storageRef = ref(storage, `imoveis/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    return downloadURL;
+  }
+  
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
     setIsUploading(true);
-    // Mock upload - in a real app, this would upload to cloud storage
-    // and return URLs. Here we'll use placeholder.co
-    setTimeout(() => {
-        const newUrls = Array.from(files).map((file, index) => ({
-            value: `https://placehold.co/600x400.png?text=Imagem+${fields.length + index + 1}`
-        }));
+    
+    try {
+        const uploadPromises = Array.from(files).map(uploadImage);
+        const urls = await Promise.all(uploadPromises);
+        const newUrls = urls.map(url => ({ value: url }));
         
         append(newUrls);
 
-        // If it's the first image, set it as main
         if (!mainImageUrl && newUrls.length > 0) {
-            form.setValue('mainImageUrl', newUrls[0].value);
+            form.setValue('mainImageUrl', newUrls[0].value, { shouldDirty: true });
         }
 
-        setIsUploading(false);
         toast({
             title: "Imagens Adicionadas",
             description: `${files.length} imagem(ns) foram adicionadas à galeria.`
         })
-    }, 1000);
+
+    } catch (error) {
+        toast({ title: "Erro no Upload", description: "Não foi possível enviar as imagens.", variant: "destructive" });
+    } finally {
+        setIsUploading(false);
+        if(event.target) event.target.value = ''; // Reset file input
+    }
   }
 
-  function onSubmit(values: ImovelFormValues) {
+  async function onSubmit(values: ImovelFormValues) {
+    setIsSaving(true);
     try {
-        const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-        const imoveis: Imovel[] = savedData ? JSON.parse(savedData) : [];
-        
         const finalImageUrls = values.imageUrls.map(urlObj => urlObj.value);
         
-        const submissionData = { 
+        const submissionData: Omit<Imovel, 'id' | 'createdAt'> = { 
             ...values,
             sellPrice: parseCurrency(values.sellPrice),
             rentPrice: parseCurrency(values.rentPrice),
             condoPrice: parseCurrency(values.condoPrice),
             imageUrls: finalImageUrls, 
             mainImageUrl: values.mainImageUrl || finalImageUrls[0] || '',
-            // Ensure compatibility with old fields if needed
-            price: parseCurrency(values.sellPrice) || parseCurrency(values.rentPrice) || 0,
-            imageUrl: values.mainImageUrl || finalImageUrls[0] || '',
         };
 
-        if (isEditing && initialData) {
-            const updatedImoveis = imoveis.map(imovel => 
-                imovel.id === initialData.id ? { ...imovel, ...submissionData } : imovel
-            );
-            window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(updatedImoveis));
-             addActivityLog({
+        if (isEditing && initialData?.id) {
+            const imovelRef = doc(db, "imoveis", initialData.id);
+            await setDoc(imovelRef, submissionData, { merge: true });
+            addActivityLog({
                 type: 'imovel',
                 description: `Imóvel "${values.title}" atualizado.`,
                 link: `/imoveis/${initialData.id}`
@@ -209,18 +217,14 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
               description: "As informações do imóvel foram salvas.",
             });
         } else {
-            const newImovel: Imovel = {
-                id: `IMOVEL-${Date.now()}`,
+            const docRef = await addDoc(collection(db, "imoveis"), {
                 ...submissionData,
-                description: values.description || '',
-                createdAt: new Date().toISOString(),
-            };
-            imoveis.push(newImovel);
-            window.localStorage.setItem(IMOVEIS_STORAGE_KEY, JSON.stringify(imoveis));
+                createdAt: serverTimestamp(),
+            });
             addActivityLog({
                 type: 'imovel',
                 description: `Novo imóvel "${values.title}" adicionado.`,
-                link: `/imoveis/${newImovel.id}`
+                link: `/imoveis/${docRef.id}`
             });
             toast({
               title: "Imóvel Salvo!",
@@ -230,15 +234,17 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         
         window.dispatchEvent(new CustomEvent('dataUpdated'));
         router.push("/imoveis");
-        router.refresh(); 
+        router.refresh();
 
     } catch (error) {
-        console.error("Falha ao salvar imóvel no localStorage", error);
+        console.error("Falha ao salvar imóvel no Firestore", error);
         toast({
             title: "Erro ao Salvar",
             description: "Não foi possível salvar o imóvel. Tente novamente.",
             variant: "destructive",
         });
+    } finally {
+        setIsSaving(false);
     }
   }
 
@@ -304,7 +310,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Subtipo de Imóvel</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value} disabled={!selectedType}>
+                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!selectedType}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder={!selectedType ? "Selecione um tipo primeiro" : "Selecione o subtipo"} />
@@ -738,7 +744,10 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
 
         <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => router.back()}>Cancelar</Button>
-            <Button type="submit">{isEditing ? 'Salvar Alterações' : 'Salvar Imóvel'}</Button>
+            <Button type="submit" disabled={isSaving || isUploading}>
+                {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : null}
+                {isEditing ? 'Salvar Alterações' : 'Salvar Imóvel'}
+            </Button>
         </div>
       </form>
     </Form>

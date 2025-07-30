@@ -231,7 +231,9 @@ export default function SiteSettingsPage() {
             {fields.map((field, index) => (
               <div key={field.id} className="flex items-end gap-4 p-4 border rounded-md">
                 <div className="relative w-24 h-24 rounded-md overflow-hidden bg-muted">
-                    <img src={form.watch(`heroImages.${index}.src`)} alt={form.watch(`heroImages.${index}.alt`)} className="w-full h-full object-cover"/>
+                    {form.watch(`heroImages.${index}.src`) ? (
+                      <img src={form.watch(`heroImages.${index}.src`)} alt={form.watch(`heroImages.${index}.alt`)} className="w-full h-full object-cover"/>
+                    ) : <ImageIcon className="w-full h-full text-muted-foreground p-4"/> }
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
                    <div className="md:col-span-2">

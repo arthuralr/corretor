@@ -1,5 +1,6 @@
 
 
+
 export type Property = {
   id: string;
   address: string;
@@ -71,10 +72,7 @@ export type Imovel = {
   imageUrls?: string[];
   mainImageUrl?: string;
   
-  // Deprecated fields, kept for compatibility if needed, but should be migrated
-  price: number; 
-  imageUrl?: string;
-  createdAt?: string;
+  createdAt?: any;
 };
 
 export type EtapaFunil = 'Contato' | 'Atendimento' | 'Visita' | 'Proposta' | 'Reserva' | 'Fechado - Ganho' | 'Fechado - Perdido';

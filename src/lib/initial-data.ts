@@ -1,6 +1,6 @@
 
 
-import type { Negocio, Imovel, Client, Task } from './definitions';
+import type { Negocio, Imovel, Client, Task, Lead } from './definitions';
 
 export const getInitialNegocios = (): Negocio[] => {
   const today = new Date().toISOString();
@@ -102,7 +102,6 @@ export const getInitialImoveis = (): Imovel[] => {
       description: "Uma bela casa com 3 quartos, 2 banheiros e uma grande área de lazer com piscina.",
       type: "Casa",
       sellPrice: 750000,
-      price: 750000,
       bedrooms: 3,
       bathrooms: 2,
       area: 250,
@@ -118,7 +117,6 @@ export const getInitialImoveis = (): Imovel[] => {
       description: "Apartamento de 2 quartos totalmente reformado no coração da cidade.",
       type: "Apartamento",
       sellPrice: 450000,
-      price: 450000,
       bedrooms: 2,
       bathrooms: 1,
       area: 90,
@@ -133,7 +131,6 @@ export const getInitialImoveis = (): Imovel[] => {
       description: "Excelente terreno para construir a casa dos seus sonhos em condomínio fechado.",
       type: "Terreno",
       sellPrice: 200000,
-      price: 200000,
       bedrooms: 0,
       bathrooms: 0,
       area: 1000,
@@ -147,7 +144,6 @@ export const getInitialImoveis = (): Imovel[] => {
       description: "Apartamento com 1 quarto, mobiliado, pronto para morar.",
       type: "Apartamento",
       rentPrice: 1500,
-      price: 1500,
       bedrooms: 1,
       bathrooms: 1,
       area: 45,
@@ -161,7 +157,6 @@ export const getInitialImoveis = (): Imovel[] => {
       description: "Casa com 3 quartos, jardim de inverno e edícula. Perfeita para famílias que buscam sossego.", 
       type: "Casa", 
       sellPrice: 680000,
-      price: 680000, 
       bedrooms: 3, 
       bathrooms: 2, 
       area: 180,
@@ -210,3 +205,29 @@ export const getInitialTasks = (): Task[] => {
         { id: 'TASK-3', title: 'Visita ao imóvel com Jane Smith', description: 'Levar a cliente para conhecer a casa CA001.', dueDate: tomorrow.toISOString(), completed: false, priority: 'Alta', category: 'Visita'},
     ];
 };
+
+export const getInitialLeads = (): Lead[] => {
+    return [
+        {
+          id: `LEAD-${Date.now() - 10000}`,
+          name: "Ana Silva",
+          email: "ana.silva@example.com",
+          phone: "11 98765-4321",
+          interest: "Casa Espaçosa com Piscina",
+          source: "Site - Imóvel CA001",
+          createdAt: new Date(Date.now() - 10000).toISOString(),
+          status: 'Novo',
+        },
+        {
+          id: `LEAD-${Date.now() - 20000}`,
+          name: "Carlos Pereira",
+          email: "carlos.p@example.com",
+          phone: "21 91234-5678",
+          interest: "Falar com um corretor",
+          message: "Gostaria de entender melhor as opções de financiamento.",
+          source: "Site - Contato",
+          createdAt: new Date(Date.now() - 20000).toISOString(),
+          status: 'Em Contato',
+        }
+    ]
+}
