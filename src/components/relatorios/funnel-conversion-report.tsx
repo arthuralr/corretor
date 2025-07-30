@@ -72,57 +72,45 @@ export function FunnelConversionReport({ data }: FunnelConversionReportProps) {
   const { report, totalConversion } = processReportData();
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle>Relatório de Conversão do Funil</CardTitle>
+        <CardTitle>Conversão do Funil</CardTitle>
         <CardDescription>
-          Analisa a transição de negócios entre as etapas do funil de vendas.
+          A transição de negócios entre as etapas do funil.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow flex flex-col">
         {data.length === 0 ? (
-          <div className="flex h-48 items-center justify-center text-muted-foreground">
-            <p>Nenhum negócio encontrado no período selecionado.</p>
+          <div className="flex-grow flex items-center justify-center text-muted-foreground">
+            <p>Nenhum negócio no período.</p>
           </div>
         ) : (
-          <>
+          <div className="flex-grow flex flex-col justify-between">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/3">Etapa</TableHead>
-                  <TableHead className="text-center w-1/3">Nº de Negócios</TableHead>
-                  <TableHead className="text-right w-1/3">Taxa de Conversão para Próxima Etapa</TableHead>
+                  <TableHead>Etapa</TableHead>
+                  <TableHead className="text-center">Negócios</TableHead>
+                  <TableHead className="text-right">Conversão</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {report.map((row, index) => (
-                  <React.Fragment key={row.stage}>
-                    <TableRow>
+                {report.map((row) => (
+                    <TableRow key={row.stage}>
                       <TableCell className="font-medium">{row.stage}</TableCell>
                       <TableCell className="text-center">{row.dealCount}</TableCell>
-                      <TableCell className="text-right">
-                        {row.conversionRate !== null ? `${row.conversionRate.toFixed(1)}%` : 'N/A'}
+                      <TableCell className="text-right text-muted-foreground">
+                        {row.conversionRate !== null ? `${row.conversionRate.toFixed(1)}%` : '–'}
                       </TableCell>
                     </TableRow>
-                    {index < report.length - 1 && (
-                      <TableRow>
-                        <TableCell colSpan={3} className="py-2 text-center">
-                            <div className="flex items-center justify-center text-muted-foreground text-xs">
-                                <ArrowDown className="h-4 w-4 mr-2" />
-                                {row.conversionRate !== null ? `(${row.conversionRate.toFixed(1)}%)` : ''}
-                            </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>
-            <div className="mt-6 flex items-center justify-end border-t pt-4">
-                <h3 className="text-sm font-medium text-muted-foreground">Taxa de Conversão Total (Contato para Ganho):</h3>
+            <div className="mt-4 flex items-center justify-end border-t pt-4">
+                <h3 className="text-sm font-medium text-muted-foreground">Conversão Total:</h3>
                 <p className="ml-2 text-lg font-bold text-primary">{totalConversion.toFixed(1)}%</p>
             </div>
-          </>
+          </div>
         )}
       </CardContent>
     </Card>
