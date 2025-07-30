@@ -47,16 +47,17 @@ const getNotifications = async (): Promise<Notification[]> => {
         });
     } catch (e) { console.error(e)}
 
-    // 2. Birthdays
+    // 2. Birthdays (Clients & Leads)
     try {
+        // Clients
         const clientsSnapshot = await getDocs(collection(db, "clients"));
-        const clients = clientsSnapshot.docs.map(doc => doc.data() as Client);
+        const clients = clientsSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}) as Client);
         clients.forEach(client => {
             if (client.birthDate) {
                 const birthDate = parseISO(client.birthDate);
                 if (birthDate.getDate() === today.getDate() && birthDate.getMonth() === today.getMonth()) {
                     notifications.push({
-                        id: `notif-bday-${client.id}`,
+                        id: `notif-bday-client-${client.id}`,
                         type: 'aniversario',
                         title: "Aniversário de Cliente!",
                         description: `Hoje é o aniversário de ${client.name}.`,
@@ -66,6 +67,26 @@ const getNotifications = async (): Promise<Notification[]> => {
                 }
             }
         });
+
+        // Leads
+        const savedLeads = window.localStorage.getItem(LEADS_STORAGE_KEY);
+        const leads: Lead[] = savedLeads ? JSON.parse(savedLeads) : [];
+         leads.forEach(lead => {
+            if (lead.birthDate) {
+                const birthDate = parseISO(lead.birthDate);
+                if (birthDate.getDate() === today.getDate() && birthDate.getMonth() === today.getMonth()) {
+                    notifications.push({
+                        id: `notif-bday-lead-${lead.id}`,
+                        type: 'aniversario',
+                        title: "Aniversário de Lead!",
+                        description: `Hoje é o aniversário de ${lead.name}.`,
+                        link: `/leads`, // No specific lead page, link to list
+                        createdAt: today.toISOString()
+                    });
+                }
+            }
+        });
+
     } catch(e) { console.error(e)}
 
     // 3. Tasks for today & overdue tasks
