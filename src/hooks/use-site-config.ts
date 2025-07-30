@@ -12,6 +12,7 @@ export interface HeroImage {
 }
 
 export interface SiteConfig {
+  siteName?: string;
   logo?: string;
   favicon?: string;
   socialShareImage?: string;
@@ -26,6 +27,7 @@ export interface SiteConfig {
 }
 
 const defaultConfig: SiteConfig = {
+    siteName: 'RealConnect CRM',
     primaryColor: '#22426A', // Default navy blue
     metaTitle: 'Bataglin Imóveis',
     metaDescription: 'Encontre os melhores imóveis da região.',

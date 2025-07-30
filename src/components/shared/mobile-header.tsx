@@ -8,6 +8,7 @@ import { useSiteConfig } from "@/hooks/use-site-config";
 
 export function MobileHeader() {
   const { siteConfig } = useSiteConfig();
+  const siteName = siteConfig.siteName || "RealConnect";
   return (
     <header className="md:hidden sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
       <SidebarTrigger />
@@ -17,7 +18,7 @@ export function MobileHeader() {
         ): (
           <>
             <Building className="h-6 w-6 text-primary" />
-            <span className="font-headline">RealConnect</span>
+            <span className="font-headline">{siteName}</span>
           </>
         )}
       </Link>

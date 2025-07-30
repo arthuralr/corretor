@@ -21,6 +21,7 @@ const heroImageSchema = z.object({
 });
 
 const formSchema = z.object({
+  siteName: z.string().optional(),
   logo: z.string().url().optional().or(z.literal('')),
   favicon: z.string().url().optional().or(z.literal('')),
   socialShareImage: z.string().url().optional().or(z.literal('')),
@@ -81,6 +82,7 @@ export default function SiteSettingsPage() {
   useEffect(() => {
     const savedConfig = localStorage.getItem(SITE_CONFIG_STORAGE_KEY);
     const defaultConfig = {
+        siteName: 'RealConnect CRM',
         logo: '',
         favicon: '',
         socialShareImage: '',
@@ -107,6 +109,7 @@ export default function SiteSettingsPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     values: initialConfig || {
+      siteName: '',
       logo: '',
       favicon: '',
       socialShareImage: '',
@@ -141,6 +144,7 @@ export default function SiteSettingsPage() {
       });
       // Consider a less disruptive way to apply changes if possible
       window.dispatchEvent(new CustomEvent('configUpdated'));
+      window.location.reload(); // Force a reload to apply changes everywhere
     } catch (error) {
       toast({
         title: 'Erro!',
@@ -179,6 +183,18 @@ export default function SiteSettingsPage() {
             <CardTitle className="font-headline text-lg">Branding e Identidade Visual</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            <FormField
+              control={form.control}
+              name="siteName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome do Site/CRM</FormLabel>
+                  <FormControl>
+                    <Input {...field} value={field.value || ''} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <ImageUploadPlaceholder
                 label="Logo da Empresa"

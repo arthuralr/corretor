@@ -56,6 +56,7 @@ const menuItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { siteConfig } = useSiteConfig();
+  const siteName = siteConfig.siteName || "RealConnect";
 
   return (
     <Sidebar>
@@ -67,7 +68,7 @@ export function AppSidebar() {
               <Building className="w-6 h-6 text-primary" />
            )}
           <h1 className="text-lg font-semibold font-headline text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            RealConnect
+            {siteName}
           </h1>
         </div>
       </SidebarHeader>
