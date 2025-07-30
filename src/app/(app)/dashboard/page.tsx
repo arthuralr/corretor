@@ -123,6 +123,15 @@ export default function Dashboard() {
     .filter(t => !t.completed)
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 5);
+
+  const getLogDate = (log: ActivityLog) => {
+    if (!log.timestamp) return new Date();
+    // Firestore Timestamps have a toDate() method, otherwise we parse it.
+    if (typeof log.timestamp.toDate === 'function') {
+        return log.timestamp.toDate();
+    }
+    return new Date(log.timestamp);
+  }
   
   if (loading) {
     return (
@@ -230,7 +239,7 @@ export default function Dashboard() {
                                 </p>
                                 <p className="text-xs text-muted-foreground flex items-center gap-1">
                                     <Clock className="w-3 h-3"/>
-                                    {formatDistanceToNow(new Date(log.timestamp), { addSuffix: true, locale: ptBR })}
+                                    {formatDistanceToNow(getLogDate(log), { addSuffix: true, locale: ptBR })}
                                 </p>
                            </div>
                         </div>
