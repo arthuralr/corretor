@@ -4,6 +4,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { saveLead } from "@/lib/lead-capture";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,38 +26,49 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "O nome deve ter pelo menos 2 caracteres." }),
-  phone: z.string().min(10, { message: "Por favor, insira um telefone válido." }),
-  email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
-  interest: z.string({ required_error: "Por favor, selecione um interesse." }),
+  name: z.string().min(2, "O nome é obrigatório."),
+  phone: z.string().min(10, "O telefone é obrigatório."),
+  email: z.string().email("Por favor, insira um email válido."),
+  interest: z.string().min(1, "Por favor, selecione um interesse."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 interface WhatsappFormProps {
-    onSave: (values: FormValues) => void;
-    onCancel: () => void;
+    onSubmit: (values: FormValues) => void;
 }
 
-export function WhatsappForm({ onSave, onCancel }: WhatsappFormProps) {
+export function WhatsappForm({ onSubmit }: WhatsappFormProps) {
   const { toast } = useToast();
-  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       phone: "",
       email: "",
+      interest: "",
     },
   });
 
-  function onSubmit(values: FormValues) {
-    onSave(values);
+  const handleFormSubmit = (values: FormValues) => {
+    try {
+        saveLead({
+            ...values,
+            source: 'Site - Botão WhatsApp',
+        });
+        onSubmit(values);
+    } catch(e) {
+        toast({
+            title: "Erro",
+            description: "Não foi possível salvar o lead. Tente novamente.",
+            variant: "destructive"
+        })
+    }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -75,7 +87,7 @@ export function WhatsappForm({ onSave, onCancel }: WhatsappFormProps) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Telefone</FormLabel>
+              <FormLabel>Telefone / WhatsApp</FormLabel>
               <FormControl>
                 <Input placeholder="(XX) XXXXX-XXXX" {...field} />
               </FormControl>
@@ -88,9 +100,9 @@ export function WhatsappForm({ onSave, onCancel }: WhatsappFormProps) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>E-mail</FormLabel>
+              <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input type="email" placeholder="seu@email.com" {...field} />
+                <Input type="email" placeholder="seu.email@exemplo.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -110,22 +122,19 @@ export function WhatsappForm({ onSave, onCancel }: WhatsappFormProps) {
                 </FormControl>
                 <SelectContent>
                   <SelectItem value="Falar com um corretor">Falar com um corretor</SelectItem>
-                  <SelectItem value="Comprar">Comprar</SelectItem>
-                  <SelectItem value="Alugar">Alugar</SelectItem>
-                  <SelectItem value="Vender">Vender</SelectItem>
-                  <SelectItem value="Investir">Investir</SelectItem>
+                  <SelectItem value="Comprar um imóvel">Comprar um imóvel</SelectItem>
+                  <SelectItem value="Alugar um imóvel">Alugar um imóvel</SelectItem>
+                  <SelectItem value="Vender um imóvel">Vender um imóvel</SelectItem>
+                  <SelectItem value="Investir em imóveis">Investir em imóveis</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancelar
-          </Button>
-          <Button type="submit">Iniciar Conversa</Button>
-        </div>
+        <Button type="submit" className="w-full">
+            {form.formState.isSubmitting ? 'Aguarde...' : 'Iniciar Conversa no WhatsApp'}
+        </Button>
       </form>
     </Form>
   );

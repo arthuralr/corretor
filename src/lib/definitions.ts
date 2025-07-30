@@ -163,3 +163,15 @@ export type Entrada = {
   valor: number;
   dataRecebimento: string; // ISO String
 }
+
+export type Lead = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  interest: string;
+  message?: string;
+  source: string; // e.g., "Site - Contato", "Site - WhatsApp", "Site - Imóvel X"
+  createdAt: string; // ISO String
+  status: 'Novo' | 'Em Contato' | 'Convertido' | 'Perdido';
+};

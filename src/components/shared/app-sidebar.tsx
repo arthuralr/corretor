@@ -26,6 +26,7 @@ import {
   BarChartHorizontal,
   Instagram,
   Landmark,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -35,6 +36,7 @@ import { useSiteConfig } from "@/hooks/use-site-config";
 const menuItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/agenda", label: "Minha Agenda", icon: CalendarCheck },
+  { href: "/leads", label: "Leads", icon: ClipboardList },
   { href: "/funil", label: "Funil de Vendas", icon: DollarSign },
   { href: "/radar", label: "Radar de Oportunidades", icon: Telescope },
   { href: "/financeiro", label: "Financeiro", icon: Landmark },

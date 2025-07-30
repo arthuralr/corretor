@@ -23,10 +23,14 @@ const formSchema = z.object({
   name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres."),
   email: z.string().email("Por favor, insira um email válido."),
   phone: z.string().min(10, "Por favor, insira um telefone válido."),
-  message: z.string().min(10, "A mensagem deve ter pelo menos 10 caracteres."),
+  message: z.string().optional(),
 });
 
-export function ContactForm() {
+interface PropertyContactFormProps {
+    propertyTitle: string;
+}
+
+export function PropertyContactForm({ propertyTitle }: PropertyContactFormProps) {
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,7 +39,7 @@ export function ContactForm() {
       name: "",
       email: "",
       phone: "",
-      message: "",
+      message: `Olá, tenho interesse no imóvel "${propertyTitle}". Gostaria de mais informações.`,
     },
   });
 
@@ -43,14 +47,19 @@ export function ContactForm() {
     try {
       saveLead({
         ...values,
-        interest: 'Contato Geral',
-        source: 'Site - Página de Contato',
+        interest: `Imóvel: ${propertyTitle}`,
+        source: 'Site - Página do Imóvel',
       });
       toast({
         title: "Mensagem Enviada!",
-        description: "Obrigado por entrar em contato. Retornaremos em breve.",
+        description: "Obrigado! Um de nossos corretores entrará em contato em breve.",
       });
-      form.reset();
+      form.reset({
+        name: "",
+        email: "",
+        phone: "",
+        message: `Olá, tenho interesse no imóvel "${propertyTitle}". Gostaria de mais informações.`,
+      });
     } catch (error) {
       toast({
         title: "Erro ao Enviar",
@@ -70,7 +79,20 @@ export function ContactForm() {
             <FormItem>
               <FormLabel className="text-public-foreground">Nome</FormLabel>
               <FormControl>
-                <Input placeholder="Seu nome completo" {...field} />
+                <Input placeholder="Seu nome" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-public-foreground">Telefone</FormLabel>
+              <FormControl>
+                <Input placeholder="(XX) XXXXX-XXXX" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -89,19 +111,7 @@ export function ContactForm() {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-public-foreground">Telefone</FormLabel>
-              <FormControl>
-                <Input placeholder="(XX) XXXXX-XXXX" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+       
         <FormField
           control={form.control}
           name="message"
@@ -110,7 +120,6 @@ export function ContactForm() {
               <FormLabel className="text-public-foreground">Mensagem</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Como podemos te ajudar?"
                   className="resize-none"
                   rows={4}
                   {...field}
@@ -121,7 +130,7 @@ export function ContactForm() {
           )}
         />
         <Button type="submit" className="w-full bg-public-primary hover:bg-public-primary/90 text-public-primary-foreground">
-            {form.formState.isSubmitting ? 'Enviando...' : 'Enviar Mensagem'}
+            {form.formState.isSubmitting ? 'Enviando...' : 'Quero mais informações'}
         </Button>
       </form>
     </Form>

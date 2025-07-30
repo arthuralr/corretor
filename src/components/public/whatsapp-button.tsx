@@ -1,69 +1,53 @@
 
-'use client';
+"use client";
 
 import { useState } from 'react';
-import { useSiteConfig } from '@/hooks/use-site-config';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { useSiteConfig } from "@/hooks/use-site-config";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { WhatsappForm } from './whatsapp-form';
 
 export function WhatsappButton() {
-  const { siteConfig } = useSiteConfig();
+  const { siteConfig, loading } = useSiteConfig();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  if (!siteConfig.whatsappPhone) {
+  if (loading || !siteConfig.whatsappPhone) {
     return null;
   }
-
-  const handleFormSubmit = (data: { name: string; email: string; phone: string; interest: string }) => {
-    const message = `Olá! Meu nome é ${data.name}.
-Telefone: ${data.phone}
-Email: ${data.email}
-Meu interesse é: ${data.interest}.
-Gostaria de mais informações.`;
-    
+  
+  const handleFormSubmit = (data: { name: string; email: string; phone: string; interest: string; }) => {
+    const message = `Olá! Meu nome é ${data.name}. Tenho interesse em "${data.interest}". Meu telefone é ${data.phone} e meu email é ${data.email}.`;
     const whatsappUrl = `https://wa.me/${siteConfig.whatsappPhone}?text=${encodeURIComponent(message)}`;
     
     window.open(whatsappUrl, '_blank');
     setIsModalOpen(false);
   };
-  
-  const WhatsappIcon = () => (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className="lucide lucide-message-circle"
-    >
-        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 2.55 1.01 4.98 2.68 6.78L2.25 22l3.82-2.52c1.45.86 3.12 1.34 4.97 1.34 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zM9.89 8.65c.42-.42 1-.42 1.42 0l.9.9c.42.42.42 1 0 1.42l-1.8 1.8c-.42.42-1 .42-1.42 0l-2.4-2.4c-.42-.42-.42-1 0-1.42l1.3-1.3zm4.26 4.26c.42-.42 1-.42 1.42 0l.9.9c.42.42.42 1 0 1.42l-1.8 1.8c-.42.42-1 .42-1.42 0l-2.4-2.4c-.42-.42-.42-1 0-1.42l1.3-1.3z"/>
-    </svg>
-  );
 
   return (
     <>
-      <Button
+      <Button 
+        className="fixed bottom-6 right-6 h-16 w-auto px-6 rounded-full shadow-lg z-50 flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white"
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-6 right-6 h-16 w-auto p-4 rounded-full shadow-lg z-50 flex items-center gap-3 bg-green-500 hover:bg-green-600 text-white"
       >
-        <WhatsappIcon />
-        <span className="hidden md:block text-lg font-semibold">Fale Conosco Agora</span>
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 448 512"
+            className="w-8 h-8 fill-current"
+            >
+            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.8 0-67.6-9.5-97.8-26.7l-7-4.1-72.7 19.1 19.4-71.4-4.5-7.4c-18.5-30.4-28.2-65.4-28.2-101.7 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+        </svg>
+        <span className="text-lg font-semibold">Fale Conosco Agora</span>
       </Button>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Contato Rápido</DialogTitle>
-            <DialogDescription>
-              Preencha o formulário abaixo e um de nossos consultores entrará em contato.
-            </DialogDescription>
-          </DialogHeader>
-          <WhatsappForm onSave={handleFormSubmit} onCancel={() => setIsModalOpen(false)} />
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Fale Conosco</DialogTitle>
+                <DialogDescription>
+                    Preencha o formulário abaixo e iniciaremos a conversa no WhatsApp.
+                </DialogDescription>
+            </DialogHeader>
+            <WhatsappForm onSubmit={handleFormSubmit} />
         </DialogContent>
       </Dialog>
     </>
