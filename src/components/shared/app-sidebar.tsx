@@ -27,6 +27,7 @@ import {
   Instagram,
   Landmark,
   ClipboardList,
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -51,6 +52,7 @@ const menuItems = [
   { href: "/social-media-generator", label: "Gerador de Posts", icon: Instagram },
   { href: "/settings/message-templates", label: "Modelos de Mensagens", icon: MessageSquareText },
   { href: "/settings/site", label: "Configurações do Site", icon: Settings },
+  { href: "/inicio", label: "Ver Site", icon: Globe, target: "_blank" },
 ];
 
 export function AppSidebar() {
@@ -81,7 +83,7 @@ export function AppSidebar() {
                 isActive={pathname.startsWith(item.href) && (item.href === '/dashboard' ? pathname === '/dashboard' : true)}
                 tooltip={item.label}
               >
-                <Link href={item.href}>
+                <Link href={item.href} target={item.target}>
                   <item.icon />
                   <span>{item.label}</span>
                 </Link>
