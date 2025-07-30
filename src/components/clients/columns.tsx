@@ -29,6 +29,8 @@ import { useToast } from "@/hooks/use-toast";
 import { addActivityLog } from "@/lib/activity-log";
 import { doc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const ActionsCell = ({ row }: { row: any }) => {
     const { toast } = useToast();
@@ -156,6 +158,15 @@ export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "phone",
     header: "Telefone",
+  },
+  {
+    accessorKey: "birthDate",
+    header: "Data de Aniversário",
+    cell: ({ row }) => {
+        const birthDate = row.getValue("birthDate") as string;
+        if (!birthDate) return "-";
+        return format(parseISO(birthDate), "dd/MM/yyyy", { locale: ptBR });
+    }
   },
   {
     id: "actions",

@@ -1,6 +1,5 @@
 
 
-
 export type Property = {
   id: string;
   address: string;
@@ -20,6 +19,7 @@ export type Client = {
   email: string;
   phone: string;
   searchProfile: string;
+  birthDate?: string;
 };
 
 export type ImovelType = 'Apartamento' | 'Casa' | 'Terreno' | 'Comercial';
@@ -172,4 +172,5 @@ export type Lead = {
   source: string; // e.g., "Site - Contato", "Site - WhatsApp", "Site - Imóvel X"
   createdAt: string; // ISO String
   status: 'Novo' | 'Em Contato' | 'Convertido' | 'Perdido';
+  birthDate?: string;
 };

@@ -133,6 +133,15 @@ export const columns = (onUpdate: () => void): ColumnDef<Lead>[] => [
         accessorKey: "name",
         header: "Nome",
     },
+     {
+        accessorKey: "birthDate",
+        header: "Data de Aniversário",
+        cell: ({ row }) => {
+            const birthDate = row.getValue("birthDate") as string;
+            if (!birthDate) return "-";
+            return format(parseISO(birthDate), "dd/MM/yyyy", { locale: ptBR });
+        }
+      },
     {
         accessorKey: "email",
         header: "Email",
