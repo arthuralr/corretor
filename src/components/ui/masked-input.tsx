@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -8,7 +7,7 @@ import type { IMaskInputProps } from "react-imask";
 
 import { cn } from "@/lib/utils";
 
-const MaskedInputComponent = IMaskMixin(({ inputRef, ...props }: any) => (
+const MaskedInputComponent = IMaskMixin(({ inputRef, unmaskedValue, ...props }: any) => (
     <input
         {...props}
         ref={inputRef}
