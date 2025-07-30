@@ -30,7 +30,7 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
   // State for modal dependencies
   const [clients, setClients] = useState<Client[]>([]);
   const [imoveis, setImoveis] = useState<Imovel[]>([]);
-  const { id: negocioId } = params;
+  const negocioId = params.id;
 
 
   const loadData = useCallback(async () => {

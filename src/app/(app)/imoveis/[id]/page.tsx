@@ -30,7 +30,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [tasks, setTasks] = useState<Task[]>([]);
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [loading, setLoading] = useState(true);
-  const { id: imovelId } = params;
+  const imovelId = params.id;
   
   const loadData = useCallback(async () => {
      if (imovelId) {

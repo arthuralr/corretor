@@ -20,7 +20,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { id: clientId } = params;
+  const clientId = params.id;
 
   const loadData = useCallback(async () => {
     if (!clientId) {

@@ -25,7 +25,7 @@ const IMOVEIS_STORAGE_KEY = 'imoveisData';
 export default function PropertyDetailPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
   const [loading, setLoading] = useState(true);
-  const { id: imovelId } = params;
+  const imovelId = params.id;
 
   useEffect(() => {
     if (imovelId) {
