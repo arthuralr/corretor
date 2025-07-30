@@ -8,13 +8,15 @@ import type { IMaskInputProps } from "react-imask";
 
 import { cn } from "@/lib/utils";
 
-// This is a workaround to make the IMaskMixin work with forwardRef
+// This component integrates react-imask with a standard input
+// and handles the `inputRef` prop correctly to avoid React warnings.
 const MaskedInputComponent = IMaskMixin(
-    React.forwardRef<HTMLInputElement, any>((props, ref) => (
-        <input {...props} ref={ref} />
-    ))
+  ({ inputRef, ...props }: { inputRef: React.Ref<HTMLInputElement> }) => (
+    <input {...props} ref={inputRef} />
+  )
 );
 MaskedInputComponent.displayName = 'MaskedInputComponent';
+
 
 const MaskedInput = React.forwardRef<HTMLInputElement, IMaskInputProps<any>>(
   ({ onAccept, className, ...props }, ref) => {
