@@ -12,26 +12,28 @@ import { ClientForm } from './client-form';
 import type { Client } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 import { addActivityLog } from '@/lib/activity-log';
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface ClientEditModalProps {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     client: Client;
+    onClientUpdate: () => void;
 }
 
-export function ClientEditModal({ isOpen, onOpenChange, client }: ClientEditModalProps) {
+export function ClientEditModal({ isOpen, onOpenChange, client, onClientUpdate }: ClientEditModalProps) {
   const { toast } = useToast();
 
-  const handleSave = (values: Omit<Client, 'id'>) => {
+  const handleSave = async (values: Omit<Client, 'id'>) => {
+    if (!client.id) {
+        toast({ title: "Erro", description: "ID do cliente não encontrado.", variant: "destructive" });
+        return;
+    }
     try {
-        const savedData = window.localStorage.getItem('clientsData');
-        const clients: Client[] = savedData ? JSON.parse(savedData) : [];
-        
-        const updatedClients = clients.map(c => 
-            c.id === client.id ? { ...c, ...values } : c
-        );
+        const clientRef = doc(db, "clients", client.id);
+        await setDoc(clientRef, values, { merge: true });
 
-        window.localStorage.setItem('clientsData', JSON.stringify(updatedClients));
         addActivityLog({
             type: 'cliente',
             description: `Dados do cliente "${values.name}" atualizados.`,
@@ -43,7 +45,7 @@ export function ClientEditModal({ isOpen, onOpenChange, client }: ClientEditModa
           description: "As informações do cliente foram salvas.",
         });
 
-        window.dispatchEvent(new CustomEvent('dataUpdated'));
+        onClientUpdate();
         onOpenChange(false);
 
     } catch (error) {

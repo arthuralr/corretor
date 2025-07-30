@@ -27,6 +27,8 @@ import {
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { addActivityLog } from "@/lib/activity-log";
+import { doc, deleteDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const ActionsCell = ({ row }: { row: any }) => {
     const { toast } = useToast();
@@ -34,29 +36,21 @@ const ActionsCell = ({ row }: { row: any }) => {
     const [isAlertOpen, setIsAlertOpen] = React.useState(false);
 
     const dependencies = useMemo(() => {
-        if (typeof window === 'undefined') return { associatedDeals: 0, associatedTasks: 0 };
-        
-        const savedDeals = window.localStorage.getItem('funilBoardData');
-        const allDeals: Negocio[] = savedDeals ? JSON.parse(savedDeals).flatMap((c: any) => c.negocios) : [];
-        const associatedDeals = allDeals.filter(d => d.clienteId === client.id).length;
+        // This is now harder to check synchronously on the client-side.
+        // We will just show a generic warning. A more robust solution
+        // would involve checking for dependencies on the backend before deletion.
+        return { hasDependencies: true };
+    }, []);
 
-        const savedTasks = window.localStorage.getItem('tasksData');
-        const allTasks: Task[] = savedTasks ? JSON.parse(savedTasks) : [];
-        const associatedTasks = allTasks.filter(t => t.clientId === client.id).length;
-
-        return { associatedDeals, associatedTasks };
-    }, [client.id]);
-
-    const handleDelete = () => {
+    const handleDelete = async () => {
         try {
-            const savedData = window.localStorage.getItem('clientsData');
-            if (!savedData) return;
-            let clients: Client[] = JSON.parse(savedData);
-            clients = clients.filter(c => c.id !== client.id);
-            window.localStorage.setItem('clientsData', JSON.stringify(clients));
+            await deleteDoc(doc(db, "clients", client.id));
             
             addActivityLog({ type: 'cliente', description: `Cliente "${client.name}" foi excluído.` });
-            window.dispatchEvent(new CustomEvent('dataUpdated'));
+            
+            // This is a bit of a hack to trigger a re-render on the parent page.
+            // A more robust solution might use a state management library or context.
+            window.dispatchEvent(new Event('clientDeleted'));
 
             toast({
                 title: "Cliente Excluído!",
@@ -107,16 +101,9 @@ const ActionsCell = ({ row }: { row: any }) => {
                     <AlertDialogDescription>
                         Esta ação não pode ser desfeita. Isso excluirá permanentemente o cliente
                         <span className="font-semibold"> {client.name}</span> de seus registros.
-                        {(dependencies.associatedDeals > 0 || dependencies.associatedTasks > 0) && (
-                            <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-300 dark:border-yellow-700 rounded-md text-yellow-800 dark:text-yellow-200 text-sm">
-                                <p className="font-bold">Atenção!</p>
-                                <ul className="list-disc pl-5">
-                                    {dependencies.associatedDeals > 0 && <li>Este cliente tem {dependencies.associatedDeals} negócio(s) associado(s).</li>}
-                                    {dependencies.associatedTasks > 0 && <li>Este cliente tem {dependencies.associatedTasks} tarefa(s) associada(s).</li>}
-                                </ul>
-                                <p className="mt-1">A exclusão não removerá os negócios ou tarefas, mas eles perderão a referência a este cliente.</p>
-                            </div>
-                        )}
+                        <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900/50 border border-yellow-300 dark:border-yellow-700 rounded-md text-yellow-800 dark:text-yellow-200 text-sm">
+                            A exclusão não removerá negócios ou tarefas associadas, mas eles perderão a referência a este cliente.
+                        </div>
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

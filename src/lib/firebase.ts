@@ -1,4 +1,3 @@
-
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -13,7 +12,7 @@ const firebaseConfig = {
   storageBucket: "realconnect-crm.appspot.com",
   apiKey: "AIzaSyAwDZSIxuRLHzpW-k5ax6xuJqyhCaWSXTg",
   authDomain: "realconnect-crm.firebaseapp.com",
-  messagingSenderId: "266116411962",
+  messagingSenderId: "266116411962"
 };
 
 // Initialize Firebase

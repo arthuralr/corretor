@@ -7,6 +7,8 @@ import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import type { Client } from "@/lib/definitions";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -59,35 +61,36 @@ export function ClientForm({ initialData, onSave, onCancel }: ClientFormProps) {
     }
   }, [initialData, form]);
 
-  function onSubmit(values: FormValues) {
-    if (isEditing && onSave) {
-        onSave(values);
-        return;
-    }
-
-    // Create new client logic
-    const newClient = { id: `CLIENT-${Date.now()}`, ...values };
+  async function onSubmit(values: FormValues) {
     try {
-        const savedClients = window.localStorage.getItem('clientsData');
-        const clients = savedClients ? JSON.parse(savedClients) : [];
-        clients.push(newClient);
-        window.localStorage.setItem('clientsData', JSON.stringify(clients));
-        
+      if (isEditing && initialData?.id) {
+        const clientRef = doc(db, "clients", initialData.id);
+        await setDoc(clientRef, values, { merge: true });
+        addActivityLog({
+            type: 'cliente',
+            description: `Dados do cliente "${values.name}" atualizados.`,
+            link: `/clients/${initialData.id}`
+        });
+        toast({
+          title: "Cliente Atualizado!",
+          description: "As informações do cliente foram salvas.",
+        });
+        router.push("/clients");
+      } else {
+        const docRef = await addDoc(collection(db, "clients"), values);
         addActivityLog({
             type: 'cliente',
             description: `Novo cliente "${values.name}" adicionado.`,
-            link: `/clients/${newClient.id}`
+            link: `/clients/${docRef.id}`
         });
-
         toast({
           title: "Cliente Salvo!",
           description: "O novo cliente foi adicionado aos seus registros.",
         });
-        
-        window.dispatchEvent(new CustomEvent('dataUpdated'));
         router.push("/clients");
+      }
     } catch(error) {
-        console.error("Failed to save client to localStorage", error);
+        console.error("Erro ao salvar cliente no Firestore: ", error);
         toast({
             title: "Erro ao Salvar",
             description: "Não foi possível salvar o cliente.",

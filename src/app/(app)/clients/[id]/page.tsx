@@ -9,10 +9,10 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { TaskList } from "@/components/agenda/task-list";
 import { AddTaskButton } from "@/components/agenda/add-task-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getInitialClients, getInitialTasks } from "@/lib/initial-data";
 import { ClientEditModal } from "@/components/clients/client-edit-modal";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const CLIENTS_STORAGE_KEY = 'clientsData';
 const TASKS_STORAGE_KEY = 'tasksData';
 
 export default function ClientDetailPage({ params }: { params: { id: string } }) {
@@ -22,7 +22,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const { id: clientId } = params;
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     if (!clientId) {
       setLoading(false);
       return;
@@ -30,16 +30,20 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
     
     setLoading(true);
     try {
-      // Fetch Client
-      const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-      const allClients = savedClients ? JSON.parse(savedClients) : getInitialClients();
-      const foundClient = allClients.find((c: Client) => c.id === clientId);
-      setClient(foundClient || null);
+      // Fetch Client from Firestore
+      const clientRef = doc(db, "clients", clientId);
+      const clientSnap = await getDoc(clientRef);
 
+      if (clientSnap.exists()) {
+        setClient({ id: clientSnap.id, ...clientSnap.data() } as Client);
+      } else {
+        console.log("No such client!");
+        setClient(null);
+      }
 
-      // Fetch Tasks for Client
+      // Fetch Tasks for Client (still from localStorage for now)
       const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
-      const allTasks: Task[] = savedTasks ? JSON.parse(savedTasks) : getInitialTasks();
+      const allTasks: Task[] = savedTasks ? JSON.parse(savedTasks) : [];
       const clientTasks = allTasks.filter(t => t.clientId === clientId);
       setTasks(clientTasks);
       
@@ -53,6 +57,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
 
   useEffect(() => {
     loadData();
+    // This event listener might need to be updated once Tasks are moved to Firestore
     window.addEventListener('dataUpdated', loadData);
     return () => {
         window.removeEventListener('dataUpdated', loadData);
@@ -144,6 +149,7 @@ export default function ClientDetailPage({ params }: { params: { id: string } })
         isOpen={isEditModalOpen}
         onOpenChange={setIsEditModalOpen}
         client={client}
+        onClientUpdate={loadData}
     />
     </>
   );
