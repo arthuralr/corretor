@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,30 +10,37 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, ArrowRight } from "lucide-react";
 import { ImovelCard } from "./imovel-card";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "../ui/skeleton";
 
 interface RadarDeOportunidadesProps {
   clients: Client[];
   allProperties: Imovel[];
+  isLoading: boolean;
 }
 
-export function RadarDeOportunidades({ clients, allProperties }: RadarDeOportunidadesProps) {
+export function RadarDeOportunidades({ clients, allProperties, isLoading: isDataLoading }: RadarDeOportunidadesProps) {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [matchingProperties, setMatchingProperties] = useState<Imovel[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   const handleClientSelect = async (client: Client) => {
     setSelectedClient(client);
     setMatchingProperties([]);
-    setIsLoading(true);
     
-    // The AI flow expects a simplified property object
+    if (!client.searchProfile) {
+        toast({ title: "Perfil de Busca Vazio", description: "Este cliente não possui um perfil de busca para análise.", variant: "destructive" });
+        return;
+    }
+
+    setIsSearching(true);
+    
     const simplifiedProperties: ImovelSimplificado[] = allProperties.map(p => ({
         id: p.id,
         title: p.title,
         description: p.description,
         type: p.type,
-        price: p.price,
+        price: p.sellPrice || p.rentPrice || 0,
         bedrooms: p.bedrooms,
         bathrooms: p.bathrooms,
         status: p.status,
@@ -55,7 +63,7 @@ export function RadarDeOportunidades({ clients, allProperties }: RadarDeOportuni
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
@@ -68,22 +76,30 @@ export function RadarDeOportunidades({ clients, allProperties }: RadarDeOportuni
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[60vh]">
-            <div className="space-y-2">
-              {clients.map((client) => (
-                <Button
-                  key={client.id}
-                  variant={selectedClient?.id === client.id ? "secondary" : "ghost"}
-                  className="w-full justify-start text-left h-auto py-2"
-                  onClick={() => handleClientSelect(client)}
-                  disabled={isLoading}
-                >
-                  <div>
-                    <p className="font-semibold">{client.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{client.searchProfile}</p>
-                  </div>
-                </Button>
-              ))}
-            </div>
+            {isDataLoading ? (
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                </div>
+            ) : (
+                <div className="space-y-2">
+                {clients.map((client) => (
+                    <Button
+                    key={client.id}
+                    variant={selectedClient?.id === client.id ? "secondary" : "ghost"}
+                    className="w-full justify-start text-left h-auto py-2"
+                    onClick={() => handleClientSelect(client)}
+                    disabled={isSearching}
+                    >
+                    <div>
+                        <p className="font-semibold">{client.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{client.searchProfile || "Sem perfil de busca"}</p>
+                    </div>
+                    </Button>
+                ))}
+                </div>
+            )}
           </ScrollArea>
         </CardContent>
       </Card>
@@ -99,24 +115,24 @@ export function RadarDeOportunidades({ clients, allProperties }: RadarDeOportuni
         </CardHeader>
         <CardContent>
             <ScrollArea className="h-[60vh] -mx-6 px-6">
-                {isLoading && (
+                {isSearching && (
                     <div className="flex items-center justify-center h-full flex-col gap-4 text-muted-foreground">
                         <Loader2 className="h-8 w-8 animate-spin" />
                         <p>A IA está buscando as melhores oportunidades...</p>
                     </div>
                 )}
-                {!isLoading && !selectedClient && (
+                {!isSearching && !selectedClient && (
                     <div className="flex items-center justify-center h-full flex-col gap-4 text-center text-muted-foreground">
                         <ArrowRight className="h-8 w-8" />
                         <p>Comece selecionando um cliente na lista ao lado.</p>
                     </div>
                 )}
-                {!isLoading && selectedClient && matchingProperties.length === 0 && (
+                {!isSearching && selectedClient && matchingProperties.length === 0 && (
                      <div className="flex items-center justify-center h-full flex-col gap-4 text-center text-muted-foreground">
                         <p>Nenhum imóvel compatível encontrado para este cliente no momento.</p>
                     </div>
                 )}
-                {!isLoading && matchingProperties.length > 0 && (
+                {!isSearching && matchingProperties.length > 0 && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                         {matchingProperties.map(imovel => (
                             <ImovelCard key={imovel.id} imovel={imovel} />

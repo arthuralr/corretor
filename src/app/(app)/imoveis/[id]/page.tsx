@@ -20,12 +20,10 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { getInitialImoveis, getInitialNegocios } from "@/lib/initial-data";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
 const TASKS_STORAGE_KEY = 'tasksData';
-const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
-
 
 export default function ImovelDetailPage({ params }: { params: { id: string } }) {
   const [imovel, setImovel] = useState<Imovel | null>(null);
@@ -34,34 +32,32 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
   const [loading, setLoading] = useState(true);
   const { id: imovelId } = params;
   
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
      if (imovelId) {
         setLoading(true);
         try {
-            // Fetch Imovel
-            const savedData = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-            const imoveis = savedData ? JSON.parse(savedData) : getInitialImoveis();
-            const foundImovel = imoveis.find((i: Imovel) => i.id === imovelId) || null;
-            setImovel(foundImovel);
+            // Fetch Imovel from Firestore
+            const imovelRef = doc(db, "imoveis", imovelId);
+            const imovelSnap = await getDoc(imovelRef);
+            if (imovelSnap.exists()) {
+              setImovel({ id: imovelSnap.id, ...imovelSnap.data() } as Imovel);
+            } else {
+              setImovel(null);
+            }
 
-            // Fetch Tasks
+            // Fetch Tasks (from localStorage)
             const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
             if (savedTasks) {
                 const allTasks: Task[] = JSON.parse(savedTasks);
-                // Filter tasks associated directly with the imovel or through a negocio
                 const imovelTasks = allTasks.filter(t => t.imovelId === imovelId);
                 setTasks(imovelTasks);
             }
 
-            // Fetch Negocios
-             const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-            if (savedNegocios) {
-                const boardData = JSON.parse(savedNegocios);
-                const allNegocios: Negocio[] = boardData.flatMap((column: any) => column.negocios);
-                const imovelNegocios = allNegocios.filter(n => n.imovelId === imovelId);
-                setNegocios(imovelNegocios);
-            }
-
+            // Fetch Negocios from Firestore
+            const q = query(collection(db, "negocios"), where("imovelId", "==", imovelId));
+            const querySnapshot = await getDocs(q);
+            const imovelNegocios = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Negocio));
+            setNegocios(imovelNegocios);
 
         } catch (error) {
             console.error("Failed to load property data", error);
@@ -266,4 +262,3 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
     </div>
   );
 }
-

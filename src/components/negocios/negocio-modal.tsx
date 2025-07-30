@@ -54,7 +54,7 @@ export function NegocioModal({
     });
   };
 
-  const initialData = negocio ? negocio : { etapa: defaultEtapa };
+  const initialData = negocio ? negocio : { etapa: defaultEtapa || 'Contato' };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>

@@ -9,6 +9,7 @@ import { Upload, FileText, FileImage, FileType, Trash2, Download } from 'lucide-
 
 interface DocumentManagerProps {
   initialDocuments: Documento[];
+  onDocumentsChange: (documents: Documento[]) => void;
 }
 
 const getFileIcon = (type: Documento['type']) => {
@@ -40,7 +41,7 @@ const getFileType = (fileName: string): Documento['type'] => {
     return 'other';
 }
 
-export function DocumentManager({ initialDocuments }: DocumentManagerProps) {
+export function DocumentManager({ initialDocuments, onDocumentsChange }: DocumentManagerProps) {
   const [documents, setDocuments] = useState<Documento[]>(initialDocuments);
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
@@ -63,7 +64,9 @@ export function DocumentManager({ initialDocuments }: DocumentManagerProps) {
         size: file.size,
       }));
 
-      setDocuments(prev => [...prev, ...newDocuments]);
+      const updatedDocuments = [...documents, ...newDocuments];
+      setDocuments(updatedDocuments);
+      onDocumentsChange(updatedDocuments);
       setIsUploading(false);
 
       toast({
@@ -71,7 +74,6 @@ export function DocumentManager({ initialDocuments }: DocumentManagerProps) {
         description: `${files.length} arquivo(s) foram adicionados.`,
       });
       
-      // Reset file input
       if(fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -84,8 +86,9 @@ export function DocumentManager({ initialDocuments }: DocumentManagerProps) {
 
   const handleDelete = (docId: string) => {
     const docToDelete = documents.find(d => d.id === docId);
-    // In a real app, you'd also delete the file from storage.
-    setDocuments(docs => docs.filter(d => d.id !== docId));
+    const updatedDocuments = documents.filter(d => d.id !== docId);
+    setDocuments(updatedDocuments);
+    onDocumentsChange(updatedDocuments);
     toast({
         title: "Documento Excluído",
         description: `O arquivo "${docToDelete?.name}" foi removido.`,
@@ -126,7 +129,7 @@ export function DocumentManager({ initialDocuments }: DocumentManagerProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                   <a href={doc.url} download={doc.name}>
+                   <a href={doc.url} download={doc.name} target="_blank" rel="noopener noreferrer">
                      <Button variant="outline" size="icon">
                         <Download className="h-4 w-4" />
                      </Button>

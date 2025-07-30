@@ -1,32 +1,29 @@
+
 import type { ActivityLog } from './definitions';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase';
 
-const ACTIVITY_LOG_KEY = 'activityLog';
-const MAX_LOG_ENTRIES = 50; // Keep the log from growing indefinitely
+const ACTIVITY_LOG_KEY = 'activityLog'; // This can be removed if not used elsewhere
 
-export function addActivityLog(logEntry: Omit<ActivityLog, 'id' | 'timestamp'>) {
+export async function addActivityLog(logEntry: Omit<ActivityLog, 'id' | 'timestamp'>) {
     if (typeof window === 'undefined') return;
     
     try {
-        const newLog: ActivityLog = {
+        const newLog = {
             ...logEntry,
-            id: `LOG-${Date.now()}`,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toISOString() // Keep client-side timestamp for immediate display if needed
         };
-
-        const savedLog = window.localStorage.getItem(ACTIVITY_LOG_KEY);
-        let logs: ActivityLog[] = savedLog ? JSON.parse(savedLog) : [];
-
-        // Add the new log to the beginning of the array
-        logs.unshift(newLog);
-
-        // Keep the log size manageable
-        if (logs.length > MAX_LOG_ENTRIES) {
-            logs = logs.slice(0, MAX_LOG_ENTRIES);
-        }
-
-        window.localStorage.setItem(ACTIVITY_LOG_KEY, JSON.stringify(logs));
         
+        // Add to Firestore
+        await addDoc(collection(db, "activityLog"), {
+             ...logEntry,
+             timestamp: serverTimestamp() // Use server timestamp for consistency
+        });
+
+        // Optional: Dispatch an event for real-time updates in other components
+        window.dispatchEvent(new CustomEvent('dataUpdated'));
+
     } catch (error) {
-        console.error("Failed to add activity log:", error);
+        console.error("Failed to add activity log to Firestore:", error);
     }
 }

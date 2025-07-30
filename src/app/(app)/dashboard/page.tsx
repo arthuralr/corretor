@@ -9,18 +9,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Building2, Users, DollarSign, Home, FileText, Activity, Clock, CheckCircle, UserPlus, HomeIcon } from "lucide-react"
-import type { Negocio, Task, Imovel, ActivityLog } from "@/lib/definitions";
+import type { Negocio, Task, Imovel, ActivityLog, Client } from "@/lib/definitions";
 import { TaskList } from "@/components/agenda/task-list";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { getInitialNegocios, getInitialImoveis, getInitialClients, getInitialTasks } from "@/lib/initial-data";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DealsChart } from "@/components/dashboard/deals-chart";
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
-const CLIENTS_STORAGE_KEY = 'clientsData';
 const TASKS_STORAGE_KEY = 'tasksData';
 const ACTIVITY_LOG_KEY = 'activityLog';
 
@@ -52,55 +51,49 @@ export default function Dashboard() {
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [imoveis, setImoveis] = React.useState<Imovel[]>([]);
   const [activityLog, setActivityLog] = React.useState<ActivityLog[]>([]);
+  const [clients, setClients] = React.useState<Client[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
 
   const loadData = React.useCallback(async () => {
+    setLoading(true);
     try {
-      // Load Negocios
-      const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-      const initialNegocios = getInitialNegocios();
-      if (savedNegocios) {
-        const boardData = JSON.parse(savedNegocios);
-        const allNegocios = Array.isArray(boardData) ? boardData.flatMap((column: any) => column.negocios) : initialNegocios;
-        setNegocios(allNegocios);
-      } else {
-        setNegocios(initialNegocios);
-      }
-
-      // Load Imoveis
-      const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-      setImoveis(savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis());
+      // Load from Firestore
+      const negociosSnapshot = await getDocs(collection(db, "negocios"));
+      setNegocios(negociosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Negocio)));
       
-      // Load Tasks
-      const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
-      setTasks(savedTasks ? JSON.parse(savedTasks) : getInitialTasks());
+      const imoveisSnapshot = await getDocs(collection(db, "imoveis"));
+      setImoveis(imoveisSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Imovel)));
+      
+      const clientsSnapshot = await getDocs(collection(db, "clients"));
+      setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
 
-      // Load Activity Log
+      // Load from LocalStorage (Tasks and ActivityLog are not migrated yet)
+      const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+      setTasks(savedTasks ? JSON.parse(savedTasks) : []);
+
       const savedActivityLog = window.localStorage.getItem(ACTIVITY_LOG_KEY);
-      setActivityLog(savedActivityLog ? JSON.parse(savedActivityLog) : []);
+      const logQuery = query(collection(db, "activityLog"), orderBy("timestamp", "desc"), limit(7));
+      const logSnapshot = await getDocs(logQuery);
+      setActivityLog(logSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()} as ActivityLog)))
 
     } catch (error) {
       console.error("Failed to load data, using initial data", error);
-      setNegocios(getInitialNegocios());
-      setImoveis(getInitialImoveis());
-      setTasks(getInitialTasks());
+    } finally {
+      setLoading(false);
     }
   }, []);
 
 
   React.useEffect(() => {
     loadData();
-    
-    const handleDataUpdate = () => {
-        loadData();
-    }
-    window.addEventListener('dataUpdated', handleDataUpdate);
-
-
+    // Keep a generic dataUpdated listener in case some parts are still using it
+    window.addEventListener('dataUpdated', loadData);
     return () => {
-        window.removeEventListener('dataUpdated', handleDataUpdate);
+        window.removeEventListener('dataUpdated', loadData);
     };
   }, [loadData]);
-
+  
   const salesTotal = negocios
     .filter(n => n.etapa === 'Fechado - Ganho')
     .reduce((sum, n) => {
@@ -109,8 +102,15 @@ export default function Dashboard() {
     }, 0);
   
   const proposalsCount = negocios.filter(n => n.etapa === 'Proposta').length;
-  const activeClientsCount = [...new Set(negocios.filter(n => n.etapa !== 'Fechado - Ganho' && n.etapa !== 'Fechado - Perdido').map(n => n.clienteId))].length;
-  const availablePropertiesCount = imoveis.filter(i => i.status === 'Disponível').length;
+  
+  const activeClientIds = new Set(
+    negocios
+      .filter(n => n.etapa !== 'Fechado - Ganho' && n.etapa !== 'Fechado - Perdido')
+      .map(n => n.clienteId)
+  );
+  const activeClientsCount = activeClientIds.size;
+  
+  const availablePropertiesCount = imoveis.filter(i => i.status === 'Ativo').length;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -123,6 +123,24 @@ export default function Dashboard() {
     .filter(t => !t.completed)
     .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     .slice(0, 5);
+  
+  if (loading) {
+    return (
+       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent className="pt-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+          </div>
+           <Card><CardContent className="pt-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
+           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+              <Card className="col-span-4"><CardContent className="pt-6"><Skeleton className="h-64 w-full" /></CardContent></Card>
+              <Card className="col-span-3"><CardContent className="pt-6"><Skeleton className="h-64 w-full" /></CardContent></Card>
+           </div>
+       </div>
+    )
+  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -199,7 +217,7 @@ export default function Dashboard() {
           <CardContent className="pl-2">
             {activityLog.length > 0 ? (
                 <div className="space-y-4">
-                    {activityLog.slice(0, 7).map(log => (
+                    {activityLog.map(log => (
                         <div key={log.id} className="flex items-start gap-4">
                            <div className="flex-shrink-0 pt-1">
                              <span className={`flex h-8 w-8 items-center justify-center rounded-full bg-secondary ${getActivityColor(log.type)}`}>

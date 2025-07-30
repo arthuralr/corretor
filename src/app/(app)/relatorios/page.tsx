@@ -7,51 +7,30 @@ import type { DateRange } from "react-day-picker";
 import type { Negocio, EtapaFunil } from "@/lib/definitions";
 import { BarChartHorizontal } from "lucide-react";
 import { DateRangePicker } from "@/components/relatorios/date-range-picker";
-import { getInitialNegocios } from "@/lib/initial-data";
 import { BusinessSummaryReport } from "@/components/relatorios/business-summary-report";
 import { FunnelConversionReport } from "@/components/relatorios/funnel-conversion-report";
-
-const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
-
-const etapas: EtapaFunil[] = [
-  'Contato', 
-  'Atendimento', 
-  'Visita', 
-  'Proposta', 
-  'Reserva', 
-  'Fechado - Ganho', 
-  'Fechado - Perdido'
-];
-
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function RelatoriosPage() {
   const [allNegocios, setAllNegocios] = React.useState<Negocio[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: subDays(new Date(), 29),
     to: new Date(),
   });
 
-  const loadData = React.useCallback(() => {
+  const loadData = React.useCallback(async () => {
+    setLoading(true);
     try {
-        const savedData = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-        if (savedData) {
-            const boardData = JSON.parse(savedData);
-            // Ensure we extract from the columns structure { etapa, negocios }
-            const negocios = boardData.flatMap((column: any) => column.negocios || []);
-            setAllNegocios(negocios);
-        } else {
-            // If no data, initialize it
-            const initialNegocios = getInitialNegocios();
-            const negociosPorEtapa = etapas.map(etapa => ({
-                etapa,
-                negocios: initialNegocios.filter(n => n.etapa === etapa)
-            }));
-            window.localStorage.setItem(NEGOCIOS_STORAGE_KEY, JSON.stringify(negociosPorEtapa));
-            setAllNegocios(initialNegocios);
-        }
+        const negociosSnapshot = await getDocs(collection(db, "negocios"));
+        const negociosData = negociosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Negocio));
+        setAllNegocios(negociosData);
     } catch (error) {
         console.error("Failed to load business data for reports", error);
-        setAllNegocios(getInitialNegocios());
+    } finally {
+        setLoading(false);
     }
   }, []);
 
@@ -69,7 +48,6 @@ export default function RelatoriosPage() {
     const fromDate = date.from;
     const toDate = date.to ?? new Date();
     
-    // Set hours to the end of the day for 'to' date to include all deals on that day
     toDate.setHours(23, 59, 59, 999);
     fromDate.setHours(0,0,0,0);
 
@@ -91,10 +69,17 @@ export default function RelatoriosPage() {
       <p className="text-muted-foreground">
         Analise o desempenho de suas vendas e atividades no período selecionado.
       </p>
-      <div className="mt-6 space-y-6">
-        <BusinessSummaryReport data={filteredNegocios} />
-        <FunnelConversionReport data={filteredNegocios} />
-      </div>
+        {loading ? (
+             <div className="mt-6 space-y-6">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-96 w-full" />
+             </div>
+        ) : (
+             <div className="mt-6 space-y-6">
+                <BusinessSummaryReport data={filteredNegocios} />
+                <FunnelConversionReport data={filteredNegocios} />
+            </div>
+        )}
     </div>
   );
 }

@@ -5,27 +5,28 @@ import { useState, useEffect, useCallback } from "react";
 import type { Client, Imovel } from "@/lib/definitions";
 import { RadarDeOportunidades } from "@/components/radar/radar-oportunidades";
 import { Telescope } from "lucide-react";
-import { getInitialClients, getInitialImoveis } from "@/lib/initial-data";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-
-const CLIENTS_STORAGE_KEY = 'clientsData';
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 export default function RadarPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [properties, setProperties] = useState<Imovel[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
+    setLoading(true);
     try {
-      const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-      setClients(savedClients ? JSON.parse(savedClients) : getInitialClients());
+      const clientsSnapshot = await getDocs(collection(db, "clients"));
+      setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
 
-      const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-      setProperties(savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis());
+      const imoveisSnapshot = await getDocs(collection(db, "imoveis"));
+      setProperties(imoveisSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Imovel)));
+      
     } catch (error) {
       console.error("Failed to load data for Radar page", error);
-      setClients(getInitialClients());
-      setProperties(getInitialImoveis());
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -49,7 +50,7 @@ export default function RadarPage() {
       <p className="text-muted-foreground">
         Selecione um cliente para que a IA encontre os imóveis mais compatíveis com seu perfil de busca.
       </p>
-      <RadarDeOportunidades clients={clients} allProperties={properties} />
+      <RadarDeOportunidades clients={clients} allProperties={properties} isLoading={loading} />
     </div>
   );
 }

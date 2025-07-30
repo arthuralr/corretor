@@ -16,11 +16,10 @@ import Link from "next/link";
 import { DocumentManager } from "@/components/negocios/document-manager";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NegocioModal } from "@/components/negocios/negocio-modal";
+import { doc, getDoc, setDoc, collection, getDocs, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const NEGOCIOS_STORAGE_KEY = 'funilBoardData';
 const TASKS_STORAGE_KEY = 'tasksData';
-const CLIENTS_STORAGE_KEY = 'clientsData';
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
 
 export default function NegocioDetailPage({ params }: { params: { id: string } }) {
   const [negocio, setNegocio] = useState<Negocio | null>(null);
@@ -34,32 +33,34 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
   const { id: negocioId } = params;
 
 
-  const loadData = useCallback(() => {
+  const loadData = useCallback(async () => {
     if (!negocioId) {
         setLoading(false);
         return;
     }
     setLoading(true);
     try {
-        // Fetch Negocio
-        const savedNegocios = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-        let foundNegocio: Negocio | null = null;
-        if (savedNegocios) {
-            const boardData = JSON.parse(savedNegocios);
-            const allNegocios: Negocio[] = boardData.flatMap((column: any) => column.negocios);
-            foundNegocio = allNegocios.find(n => n.id === negocioId) || null;
-            setNegocio(foundNegocio);
+        // Fetch Negocio from Firestore
+        const negocioRef = doc(db, "negocios", negocioId);
+        const negocioSnap = await getDoc(negocioRef);
+        
+        if (negocioSnap.exists()) {
+            const fetchedNegocio = { id: negocioSnap.id, ...negocioSnap.data() } as Negocio;
+            setNegocio(fetchedNegocio);
+            
+            // Fetch Tasks for the client associated with the business (from localStorage)
+            if (fetchedNegocio.clienteId) {
+                 const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
+                if (savedTasks) {
+                    const allTasks: Task[] = JSON.parse(savedTasks);
+                    const clientTasks = allTasks.filter(t => t.clientId === fetchedNegocio.clienteId);
+                    setTasks(clientTasks);
+                }
+            }
+        } else {
+            setNegocio(null);
         }
 
-        // Fetch Tasks for the client associated with the business
-        if (foundNegocio) {
-            const savedTasks = window.localStorage.getItem(TASKS_STORAGE_KEY);
-            if (savedTasks) {
-                const allTasks: Task[] = JSON.parse(savedTasks);
-                const clientTasks = allTasks.filter(t => t.clientId === foundNegocio.clienteId);
-                setTasks(clientTasks);
-            }
-        }
     } catch (error) {
         console.error("Failed to load business data", error);
         setNegocio(null);
@@ -69,12 +70,13 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
   }, [negocioId]);
 
   // Load data for the modal
-  const loadModalData = () => {
+  const loadModalData = async () => {
      try {
-        const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-        setClients(savedClients ? JSON.parse(savedClients) : []);
-        const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-        setImoveis(savedImoveis ? JSON.parse(savedImoveis) : []);
+        const clientsSnapshot = await getDocs(collection(db, "clients"));
+        setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
+        
+        const imoveisSnapshot = await getDocs(collection(db, "imoveis"));
+        setImoveis(imoveisSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Imovel)));
      } catch(e) {
         console.error("Failed to load clients/imoveis for modal", e)
      }
@@ -94,20 +96,11 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
     }
   }, [isEditModalOpen]);
 
-   const handleSaveNegocio = (savedNegocio: Negocio) => {
+   const handleSaveNegocio = async (savedNegocio: Negocio) => {
         try {
-            const savedData = window.localStorage.getItem(NEGOCIOS_STORAGE_KEY);
-            if (!savedData) return;
-
-            let boardData = JSON.parse(savedData);
-
-            // Find and update the deal across all columns
-            boardData = boardData.map((column: any) => ({
-                ...column,
-                negocios: column.negocios.map((n: Negocio) => n.id === savedNegocio.id ? savedNegocio : n)
-            }));
+            const negocioRef = doc(db, "negocios", savedNegocio.id);
+            await setDoc(negocioRef, savedNegocio, { merge: true });
             
-            window.localStorage.setItem(NEGOCIOS_STORAGE_KEY, JSON.stringify(boardData));
             window.dispatchEvent(new CustomEvent('dataUpdated'));
             setIsEditModalOpen(false);
 
@@ -115,6 +108,17 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
             console.error("Failed to save negocio", error);
         }
     };
+    
+   const handleDocumentsUpdate = async (updatedDocuments: Documento[]) => {
+      if (!negocio) return;
+      try {
+        const negocioRef = doc(db, "negocios", negocio.id);
+        await updateDoc(negocioRef, { documentos: updatedDocuments });
+        setNegocio(prev => prev ? { ...prev, documentos: updatedDocuments } : null);
+      } catch (error) {
+        console.error("Failed to update documents", error);
+      }
+    }
 
 
    const formatPrice = (price: number) => {
@@ -226,7 +230,10 @@ export default function NegocioDetailPage({ params }: { params: { id: string } }
             <CardDescription>Faça o upload e gerencie os documentos relacionados a este negócio.</CardDescription>
         </CardHeader>
         <CardContent>
-            <DocumentManager initialDocuments={negocio.documentos || []} />
+            <DocumentManager 
+                initialDocuments={negocio.documentos || []}
+                onDocumentsChange={handleDocumentsUpdate} 
+            />
         </CardContent>
       </Card>
       

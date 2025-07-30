@@ -1,33 +1,33 @@
 
-
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Negocio, EtapaFunil, Client, Imovel, Entrada } from "@/lib/definitions";
 import { FunilColumn } from './funil-column';
-import { DragDropContext, Droppable, OnDragEndResponder } from '@hello-pangea/dnd';
+import { DragDropContext, OnDragEndResponder } from '@hello-pangea/dnd';
 import { addActivityLog } from '@/lib/activity-log';
 import { NegocioModal } from '../negocios/negocio-modal';
-import { getInitialClients, getInitialImoveis } from '@/lib/initial-data';
 import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { collection, getDocs, doc, writeBatch, query, orderBy } from "firebase/firestore";
+import { db } from '@/lib/firebase';
+import { Skeleton } from '../ui/skeleton';
 
-const LOCAL_STORAGE_KEY = 'funilBoardData';
-const CLIENTS_STORAGE_KEY = 'clientsData';
-const IMOVEIS_STORAGE_KEY = 'imoveisData';
 const ENTRADAS_STORAGE_KEY = 'entradasData';
 
-interface FunilBoardProps {
-  initialData: {
-      etapa: EtapaFunil;
-      negocios: Negocio[];
-  }[];
-}
+const etapas: EtapaFunil[] = [
+  'Contato', 
+  'Atendimento', 
+  'Visita', 
+  'Proposta', 
+  'Reserva', 
+  'Fechado - Ganho', 
+  'Fechado - Perdido'
+];
 
-
-export function FunilBoard({ initialData }: FunilBoardProps) {
-    const [isClient, setIsClient] = useState(false);
-    const [boardData, setBoardData] = useState(initialData);
+export function FunilBoard() {
+    const [loading, setLoading] = useState(true);
+    const [boardData, setBoardData] = useState<{etapa: EtapaFunil; negocios: Negocio[]}[]>([]);
     const [searchQuery, setSearchQuery] = useState('');
     const { toast } = useToast();
 
@@ -37,26 +37,48 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
     
     const [clients, setClients] = useState<Client[]>([]);
     const [imoveis, setImoveis] = useState<Imovel[]>([]);
+    
+    const loadBoardData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const negociosSnapshot = await getDocs(query(collection(db, "negocios"), orderBy("dataCriacao", "desc")));
+            const allNegocios = negociosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Negocio));
+            
+            const groupedByEtapa = etapas.map(etapa => ({
+                etapa,
+                negocios: allNegocios.filter(n => n.etapa === etapa)
+            }));
+            
+            setBoardData(groupedByEtapa);
+
+        } catch (error) {
+            console.error("Failed to load data from Firestore", error);
+            toast({ title: "Erro ao Carregar Funil", description: "Não foi possível carregar os dados do funil.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    }, [toast]);
+    
+    const loadModalDependencies = useCallback(async () => {
+        try {
+            const clientsSnapshot = await getDocs(collection(db, "clients"));
+            setClients(clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Client)));
+
+            const imoveisSnapshot = await getDocs(collection(db, "imoveis"));
+            setImoveis(imoveisSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Imovel)));
+        } catch(e) {
+            console.error("Failed to load clients/imoveis for modal", e)
+        }
+    }, []);
 
 
     useEffect(() => {
-        setIsClient(true);
-        try {
-            const savedData = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (savedData) {
-                setBoardData(JSON.parse(savedData));
-            }
-
-            const savedClients = window.localStorage.getItem(CLIENTS_STORAGE_KEY);
-            setClients(savedClients ? JSON.parse(savedClients) : getInitialClients());
-
-            const savedImoveis = window.localStorage.getItem(IMOVEIS_STORAGE_KEY);
-            setImoveis(savedImoveis ? JSON.parse(savedImoveis) : getInitialImoveis());
-
-        } catch (error) {
-            console.error("Failed to load data from local storage", error);
-        }
-    }, []);
+        loadBoardData();
+        loadModalDependencies();
+        
+        window.addEventListener('dataUpdated', loadBoardData);
+        return () => window.removeEventListener('dataUpdated', loadBoardData);
+    }, [loadBoardData, loadModalDependencies]);
 
     const filteredBoardData = useMemo(() => {
         if (!searchQuery) {
@@ -72,16 +94,6 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         }));
     }, [boardData, searchQuery]);
 
-    const updateBoardData = (newData: typeof boardData) => {
-        setBoardData(newData);
-        try {
-            window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newData));
-            window.dispatchEvent(new CustomEvent('dataUpdated'));
-        } catch (error) {
-            console.error("Failed to save data to local storage", error);
-        }
-    };
-    
     const handleOpenAddModal = (etapa: EtapaFunil) => {
         setEditingNegocio(null);
         setDefaultEtapa(etapa);
@@ -94,90 +106,74 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
         setIsModalOpen(true);
     };
 
-    const handleSaveNegocio = (savedNegocio: Negocio) => {
-        const newBoardData = [...boardData];
+    const handleSaveNegocio = async (savedNegocio: Negocio) => {
+        const batch = writeBatch(db);
         const isEditing = !!editingNegocio;
         const etapaAnterior = editingNegocio?.etapa;
 
-        if (isEditing) {
-            // Find and update the deal across all columns
-            const sourceColumnIndex = newBoardData.findIndex(col => col.etapa === etapaAnterior);
-            if (sourceColumnIndex !== -1) {
-                // Remove from old column first
-                newBoardData[sourceColumnIndex].negocios = newBoardData[sourceColumnIndex].negocios.filter(n => n.id !== savedNegocio.id);
-            }
-        }
-
-        // Add to the new/correct column
-        const destColumnIndex = newBoardData.findIndex(col => col.etapa === savedNegocio.etapa);
-        if (destColumnIndex !== -1) {
-            // To preserve order, we might need to be more sophisticated
-            // For now, just add to the end
-            newBoardData[destColumnIndex].negocios.push(savedNegocio);
-        }
+        const negocioRef = doc(db, "negocios", savedNegocio.id);
+        batch.set(negocioRef, savedNegocio, { merge: true });
         
-        if (savedNegocio.etapa === 'Fechado - Ganho' && etapaAnterior !== 'Fechado - Ganho') {
-            createEntradaFromNegocio(savedNegocio);
-        }
-        
-        updateBoardData(newBoardData);
-        setIsModalOpen(false);
-        setEditingNegocio(null);
-    };
-
-    const handleDeleteNegocio = (negocioId: string, etapa: EtapaFunil) => {
         try {
-            const newBoardData = [...boardData];
-            const columnIndex = newBoardData.findIndex(col => col.etapa === etapa);
-            
-            if (columnIndex === -1) {
-                throw new Error("Column not found for business deletion.");
+             await batch.commit();
+
+            if (savedNegocio.etapa === 'Fechado - Ganho' && etapaAnterior !== 'Fechado - Ganho') {
+                createEntradaFromNegocio(savedNegocio);
             }
-
-            const negocioTitle = newBoardData[columnIndex].negocios.find(n => n.id === negocioId)?.imovelTitulo || 'Negócio';
             
-            newBoardData[columnIndex].negocios = newBoardData[columnIndex].negocios.filter(n => n.id !== negocioId);
-            updateBoardData(newBoardData);
-            
-            toast({
-                title: "Negócio Excluído!",
-                description: `O negócio "${negocioTitle}" foi removido do funil.`,
-            });
-
+            setIsModalOpen(false);
+            setEditingNegocio(null);
+            loadBoardData(); // Reload data to reflect changes
+            window.dispatchEvent(new CustomEvent('dataUpdated')); // Notify other components
         } catch (error) {
-             toast({
-                title: "Erro",
-                description: "Não foi possível excluir o negócio.",
-                variant: "destructive",
-            });
-            console.error(error);
+            console.error("Error saving negocio:", error);
+            toast({ title: "Erro ao Salvar", description: "Não foi possível salvar o negócio.", variant: "destructive" });
         }
     };
 
+    const handleDeleteNegocio = async (negocioId: string) => {
+        try {
+            const batch = writeBatch(db);
+            const negocioRef = doc(db, "negocios", negocioId);
+            batch.delete(negocioRef);
+            await batch.commit();
+            
+            const negocioTitle = boardData.flatMap(c => c.negocios).find(n => n.id === negocioId)?.imovelTitulo || 'Negócio';
+            toast({ title: "Negócio Excluído!", description: `O negócio "${negocioTitle}" foi removido do funil.` });
+            loadBoardData();
+        } catch (error) {
+             toast({ title: "Erro", description: "Não foi possível excluir o negócio.", variant: "destructive" });
+             console.error(error);
+        }
+    };
 
-  const handlePriorityChange = (negocioId: string) => {
-    const newBoardData = boardData.map(column => ({
-        ...column,
-        negocios: column.negocios.map(negocio => 
-            negocio.id === negocioId ? { ...negocio, prioridade: !negocio.prioridade } : negocio
-        )
-    }));
-    updateBoardData(newBoardData);
-  }
+    const handlePriorityChange = async (negocioId: string) => {
+        try {
+            const batch = writeBatch(db);
+            const negocioRef = doc(db, "negocios", negocioId);
+            const negocio = boardData.flatMap(c => c.negocios).find(n => n.id === negocioId);
+            if (negocio) {
+                batch.update(negocioRef, { prioridade: !negocio.prioridade });
+                await batch.commit();
+                loadBoardData();
+            }
+        } catch(error) {
+            console.error("Error updating priority", error)
+        }
+    }
 
-  const createEntradaFromNegocio = (negocio: Negocio) => {
+    const createEntradaFromNegocio = (negocio: Negocio) => {
      try {
         const savedEntradas = window.localStorage.getItem(ENTRADAS_STORAGE_KEY);
         const entradas: Entrada[] = savedEntradas ? JSON.parse(savedEntradas) : [];
 
-        // Check if an entrada for this deal already exists
         if (entradas.some(e => e.id === `ENTRADA-${negocio.id}`)) {
             return;
         }
         
         const comissao = (negocio.valorProposta * (negocio.taxaComissao || 0)) / 100;
 
-        if (comissao <= 0) return; // Don't create an entry for 0 value
+        if (comissao <= 0) return;
 
         const newEntrada: Entrada = {
             id: `ENTRADA-${negocio.id}`,
@@ -197,119 +193,110 @@ export function FunilBoard({ initialData }: FunilBoardProps) {
      } catch(e) {
         console.error("Falha ao criar entrada a partir do negócio", e);
      }
-  }
-
-  const onDragEnd: OnDragEndResponder = (result) => {
-    const { source, destination } = result;
-
-    if (!destination) {
-      return;
     }
 
-    if (source.droppableId === destination.droppableId && source.index === destination.index) {
-      return;
-    }
+    const onDragEnd: OnDragEndResponder = async (result) => {
+        const { source, destination, draggableId } = result;
 
-    // Find the original column and deal from the unfiltered boardData
-    const sourceColumnIndex = boardData.findIndex(col => col.etapa === source.droppableId);
-    const destColumnIndex = boardData.findIndex(col => col.etapa === destination.droppableId);
+        if (!destination) return;
 
-    if (sourceColumnIndex === -1 || destColumnIndex === -1) {
-        console.error("Source or destination column not found");
-        return;
-    }
-    
-    // Get the actual deal being moved from the filtered data
-    const movedNegocioFiltered = filteredBoardData[sourceColumnIndex].negocios[source.index];
-
-    // Find the source column in the original data and remove the deal
-    const newBoardData = [...boardData];
-    const sourceColumnOriginal = newBoardData[sourceColumnIndex];
-    const sourceNegociosOriginal = Array.from(sourceColumnOriginal.negocios);
-    const movedNegocioIndexOriginal = sourceNegociosOriginal.findIndex(n => n.id === movedNegocioFiltered.id);
-    
-    if (movedNegocioIndexOriginal === -1) return;
-
-    const [movedNegocio] = sourceNegociosOriginal.splice(movedNegocioIndexOriginal, 1);
-    
-    const updatedMovedNegocio = { ...movedNegocio, etapa: newBoardData[destColumnIndex].etapa };
-    
-    sourceColumnOriginal.negocios = sourceNegociosOriginal;
-    
-    // Find the destination column and add the deal
-    const destColumnOriginal = newBoardData[destColumnIndex];
-    const destNegociosOriginal = Array.from(destColumnOriginal.negocios);
-
-    if (source.droppableId === destination.droppableId) {
-        destNegociosOriginal.splice(destination.index, 0, movedNegocio);
-    } else {
-        destNegociosOriginal.splice(destination.index, 0, updatedMovedNegocio);
-        addActivityLog({
-            type: 'negocio',
-            description: `Negócio "${updatedMovedNegocio.imovelTitulo}" movido para ${destColumnOriginal.etapa}.`,
-            link: `/negocios/${updatedMovedNegocio.id}`
-        });
-
-        // Automation: create entrada if moved to 'Fechado - Ganho'
-        if (destColumnOriginal.etapa === 'Fechado - Ganho') {
-            createEntradaFromNegocio(updatedMovedNegocio);
+        if (source.droppableId === destination.droppableId && source.index === destination.index) {
+            return;
         }
-    }
-    destColumnOriginal.negocios = destNegociosOriginal;
 
-    updateBoardData(newBoardData);
-  };
+        const movedNegocio = boardData.find(c => c.etapa === source.droppableId)?.negocios.find(n => n.id === draggableId);
+        
+        if (!movedNegocio) return;
+
+        const etapaAnterior = source.droppableId as EtapaFunil;
+        const novaEtapa = destination.droppableId as EtapaFunil;
+        const updatedMovedNegocio = { ...movedNegocio, etapa: novaEtapa };
+
+        // Optimistic UI update
+        const newBoardData = [...boardData];
+        const sourceCol = newBoardData.find(c => c.etapa === etapaAnterior);
+        const destCol = newBoardData.find(c => c.etapa === novaEtapa);
+
+        if (sourceCol && destCol) {
+            sourceCol.negocios = sourceCol.negocios.filter(n => n.id !== draggableId);
+            destCol.negocios.splice(destination.index, 0, updatedMovedNegocio);
+            setBoardData(newBoardData);
+        }
+
+        try {
+            const batch = writeBatch(db);
+            const negocioRef = doc(db, "negocios", draggableId);
+            batch.update(negocioRef, { etapa: novaEtapa });
+            await batch.commit();
+
+            addActivityLog({
+                type: 'negocio',
+                description: `Negócio "${updatedMovedNegocio.imovelTitulo}" movido para ${novaEtapa}.`,
+                link: `/negocios/${updatedMovedNegocio.id}`
+            });
+
+            if (novaEtapa === 'Fechado - Ganho' && etapaAnterior !== 'Fechado - Ganho') {
+                createEntradaFromNegocio(updatedMovedNegocio);
+            }
+            // No need to reload here as UI is updated optimistically
+        } catch (error) {
+            console.error("Failed to update deal on drag-end:", error);
+            toast({ title: "Erro ao Mover", description: "Não foi possível mover o negócio.", variant: "destructive" });
+            // Revert optimistic update on error
+            loadBoardData();
+        }
+    };
   
-  if (!isClient) {
-    return (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-flow-col md:grid-cols-[repeat(7,minmax(300px,1fr))] gap-4 auto-cols-max">
-            {initialData.map(col => (
-                 <div key={col.etapa} className="flex flex-col rounded-lg bg-muted/50 p-4">
-                    <div className="h-6 bg-muted-foreground/20 rounded w-1/2 mx-auto mb-4"></div>
-                    <div className="space-y-2">
-                        <div className="h-24 bg-card rounded"></div>
-                        <div className="h-24 bg-card rounded"></div>
+    if (loading) {
+        return (
+             <div className="grid grid-flow-col auto-cols-[300px] md:auto-cols-[minmax(300px,1fr)] gap-4">
+                {etapas.map(etapa => (
+                     <div key={etapa} className="flex flex-col rounded-lg bg-muted/50 p-4">
+                        <Skeleton className="h-6 w-1/2 mx-auto mb-4" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-24 w-full" />
+                            <Skeleton className="h-24 w-full" />
+                        </div>
                     </div>
-                </div>
-            ))}
-        </div>
-    );
-  }
+                ))}
+            </div>
+        );
+    }
 
-  return (
-    <>
-      <div className="mb-4">
-        <Input 
-          placeholder="Buscar por cliente ou imóvel..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
-      <DragDropContext onDragEnd={onDragEnd}>
-          <div className="grid grid-flow-col auto-cols-[300px] md:auto-cols-[minmax(300px,1fr)] gap-4">
-              {filteredBoardData.map((coluna) => (
-                  <FunilColumn 
-                      key={coluna.etapa} 
-                      etapa={coluna.etapa} 
-                      negocios={coluna.negocios} 
-                      onPriorityChange={handlePriorityChange}
-                      onAddNegocio={handleOpenAddModal}
-                      onEditNegocio={handleOpenEditModal}
-                      onDeleteNegocio={handleDeleteNegocio}
-                  />
-              ))}
-          </div>
-      </DragDropContext>
-      <NegocioModal
-          isOpen={isModalOpen}
-          onOpenChange={setIsModalOpen}
-          onSave={handleSaveNegocio}
-          negocio={editingNegocio}
-          defaultEtapa={defaultEtapa}
-          clients={clients}
-          imoveis={imoveis}
-      />
-    </>
-  );
+    return (
+        <>
+            <div className="mb-4">
+                <Input 
+                placeholder="Buscar por cliente ou imóvel..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="max-w-sm"
+                />
+            </div>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <div className="grid grid-flow-col auto-cols-[300px] md:auto-cols-[minmax(300px,1fr)] gap-4">
+                    {filteredBoardData.map((coluna) => (
+                        <FunilColumn 
+                            key={coluna.etapa} 
+                            etapa={coluna.etapa} 
+                            negocios={coluna.negocios} 
+                            onPriorityChange={handlePriorityChange}
+                            onAddNegocio={handleOpenAddModal}
+                            onEditNegocio={handleOpenEditModal}
+                            onDeleteNegocio={(negocioId) => handleDeleteNegocio(negocioId)}
+                        />
+                    ))}
+                </div>
+            </DragDropContext>
+            <NegocioModal
+                isOpen={isModalOpen}
+                onOpenChange={setIsModalOpen}
+                onSave={handleSaveNegocio}
+                negocio={editingNegocio}
+                defaultEtapa={defaultEtapa}
+                clients={clients}
+                imoveis={imoveis}
+            />
+        </>
+    );
 }

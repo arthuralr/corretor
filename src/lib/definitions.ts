@@ -82,7 +82,7 @@ export type EtapaFunil = 'Contato' | 'Atendimento' | 'Visita' | 'Proposta' | 'Re
 export type Documento = {
   id: string;
   name: string;
-  url: string; // In a real app, this would be a URL to cloud storage
+  url: string; 
   type: 'pdf' | 'image' | 'word' | 'other';
   size: number; // in bytes
 };
@@ -143,7 +143,7 @@ export type ActivityLog = {
     id: string;
     type: 'negocio' | 'cliente' | 'imovel';
     description: string;
-    timestamp: string; // ISO String
+    timestamp: any; // Allow for ServerTimestamp
     link?: string;
 }
 
