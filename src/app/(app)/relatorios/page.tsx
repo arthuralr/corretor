@@ -15,7 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClientSourceReport } from "@/components/relatorios/client-source-report";
 import { FinancialSummaryReport } from "@/components/relatorios/financial-summary-report";
 import { NewLeadsReport } from "@/components/relatorios/new-leads-report";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function RelatoriosPage() {
   const [allNegocios, setAllNegocios] = React.useState<Negocio[]>([]);
@@ -147,4 +147,3 @@ export default function RelatoriosPage() {
     </div>
   );
 }
-
