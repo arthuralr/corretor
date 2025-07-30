@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,7 +70,7 @@ const formSchema = z.object({
 
   description: z.string().optional(),
   
-  imageUrls: z.array(z.object({ value: z.string().url("URL da imagem inválida.") })),
+  imageUrls: z.array(z.object({ value: z.string().url("URL da imagem inválida.") })).optional().default([]),
   mainImageUrl: z.string().optional(),
 
 }).refine(data => data.sellPrice || data.rentPrice, {
@@ -87,7 +86,6 @@ interface ImovelFormProps {
 
 const parseCurrency = (value: string | undefined): number | undefined => {
     if (!value) return undefined;
-    // Remove R$, spaces, and dots. Replace comma with a dot for decimal parsing.
     const numString = String(value)
       .replace(/R\$\s?/, '')
       .replace(/\./g, '')
@@ -95,7 +93,6 @@ const parseCurrency = (value: string | undefined): number | undefined => {
     const num = parseFloat(numString);
     return isNaN(num) ? undefined : num;
 };
-
 
 export function ImovelForm({ initialData }: ImovelFormProps) {
   const router = useRouter();
@@ -106,14 +103,43 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
 
   const form = useForm<ImovelFormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: initialData 
-        ? {
+    defaultValues: {
+        refCode: "",
+        title: "",
+        type: "Apartamento",
+        subType: "",
+        cep: "",
+        state: "",
+        city: "",
+        neighborhood: "",
+        street: "",
+        number: "",
+        status: "Ativo",
+        exclusive: false,
+        sellPrice: "",
+        rentPrice: "",
+        condoPrice: "",
+        area: 0,
+        bedrooms: 0,
+        suites: 0,
+        bathrooms: 0,
+        parkingSpaces: 0,
+        amenities: [],
+        description: "",
+        imageUrls: [],
+        mainImageUrl: "",
+    },
+  });
+
+  useEffect(() => {
+    if (initialData) {
+        form.reset({
             ...initialData,
             sellPrice: initialData.sellPrice?.toString() ?? "",
             rentPrice: initialData.rentPrice?.toString() ?? "",
             condoPrice: initialData.condoPrice?.toString() ?? "",
             imageUrls: initialData.imageUrls?.map(url => ({ value: url })) || [],
-            mainImageUrl: initialData.mainImageUrl || '',
+            mainImageUrl: initialData.mainImageUrl || (initialData.imageUrls?.[0] ?? ''),
             area: initialData.area || 0,
             bedrooms: initialData.bedrooms || 0,
             bathrooms: initialData.bathrooms || 0,
@@ -123,34 +149,9 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             type: initialData.type || 'Apartamento',
             exclusive: initialData.exclusive || false,
             amenities: initialData.amenities || []
-          }
-        : {
-            refCode: "",
-            title: "",
-            type: "Apartamento",
-            subType: "",
-            cep: "",
-            state: "",
-            city: "",
-            neighborhood: "",
-            street: "",
-            number: "",
-            status: "Ativo",
-            exclusive: false,
-            sellPrice: "",
-            rentPrice: "",
-            condoPrice: "",
-            area: 0,
-            bedrooms: 0,
-            suites: 0,
-            bathrooms: 0,
-            parkingSpaces: 0,
-            amenities: [],
-            description: "",
-            imageUrls: [],
-            mainImageUrl: "",
-        },
-  });
+        });
+    }
+  }, [initialData, form]);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -161,7 +162,6 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   const selectedType = form.watch("type");
 
   useEffect(() => {
-    // Reset subtype when type changes
     form.setValue("subType", undefined);
   }, [selectedType, form]);
 
@@ -172,8 +172,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   const uploadImage = async (file: File): Promise<string> => {
     const storageRef = ref(storage, `imoveis/${Date.now()}_${file.name}`);
     const snapshot = await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
-    return downloadURL;
+    return getDownloadURL(snapshot.ref);
   }
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,33 +183,33 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     
     try {
         const uploadPromises = Array.from(files).map(file => uploadImage(file));
-        const urls = await Promise.all(uploadPromises);
+        const newUrls = await Promise.all(uploadPromises);
         
-        const newUrls = urls.map(url => ({ value: url }));
-        append(newUrls);
+        const currentUrls = form.getValues('imageUrls') || [];
+        const updatedUrls = [...currentUrls, ...newUrls.map(url => ({ value: url }))];
+        form.setValue('imageUrls', updatedUrls, { shouldDirty: true });
 
         if (!mainImageUrl && newUrls.length > 0) {
-            form.setValue('mainImageUrl', newUrls[0].value, { shouldDirty: true });
+            form.setValue('mainImageUrl', newUrls[0], { shouldDirty: true });
         }
 
         toast({
             title: "Imagens Adicionadas",
             description: `${files.length} imagem(ns) foram adicionadas à galeria.`
-        })
-
+        });
     } catch (error) {
         console.error("Upload error:", error);
         toast({ title: "Erro no Upload", description: "Não foi possível enviar as imagens.", variant: "destructive" });
     } finally {
         setIsUploading(false);
-        if(event.target) event.target.value = ''; // Reset file input
+        if(event.target) event.target.value = '';
     }
   }
 
   async function onSubmit(values: ImovelFormValues) {
     setIsSaving(true);
     try {
-        const finalImageUrls = values.imageUrls.map(urlObj => urlObj.value);
+        const finalImageUrls = (values.imageUrls || []).map(urlObj => urlObj.value);
         
         const submissionData: Omit<Imovel, 'id' | 'createdAt'> = { 
             ...values,
@@ -327,7 +326,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                     render={({ field }) => (
                         <FormItem>
                         <FormLabel>Subtipo de Imóvel</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} defaultValue={field.value} disabled={!selectedType}>
+                        <Select onValueChange={field.onChange} value={field.value ?? ""} defaultValue={field.value ?? ""} disabled={!selectedType}>
                             <FormControl>
                             <SelectTrigger>
                                 <SelectValue placeholder={!selectedType ? "Selecione um tipo primeiro" : "Selecione o subtipo"} />
@@ -501,7 +500,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                                     max: 999999999,
                                     }
                                 }}
-                                onAccept={(value: any, mask: any) => field.onChange(mask.value)}
+                                onAccept={(_value, mask) => field.onChange(mask.unmaskedValue)}
                                 placeholder="R$ 500.000,00"
                                 value={field.value ?? ""}
                             />
@@ -530,7 +529,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                                     max: 999999999,
                                     }
                                 }}
-                                onAccept={(value: any, mask: any) => field.onChange(mask.value)}
+                                onAccept={(_value, mask) => field.onChange(mask.unmaskedValue)}
                                 placeholder="R$ 2.500,00"
                                 value={field.value ?? ""}
                             />
@@ -559,7 +558,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                                     max: 999999999,
                                     }
                                 }}
-                                onAccept={(value: any, mask: any) => field.onChange(mask.value)}
+                                onAccept={(_value, mask) => field.onChange(mask.unmaskedValue)}
                                 placeholder="R$ 500,00"
                                 value={field.value ?? ""}
                             />
@@ -795,3 +794,5 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     </Form>
   );
 }
+
+    

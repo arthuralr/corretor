@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import * as React from "react";
@@ -11,12 +10,12 @@ import { cn } from "@/lib/utils";
 // This component integrates react-imask with a standard input
 // and handles the `inputRef` prop correctly to avoid React warnings.
 const MaskedInputComponent = IMaskMixin(
-  ({ inputRef, ...props }: { inputRef: React.Ref<HTMLInputElement> }) => (
-    <input {...props} ref={inputRef} />
-  )
+    (props: { inputRef: React.Ref<HTMLInputElement> } & any) => {
+        const { inputRef, ...rest } = props;
+        return <input {...rest} ref={inputRef} />;
+    }
 );
 MaskedInputComponent.displayName = 'MaskedInputComponent';
-
 
 const MaskedInput = React.forwardRef<HTMLInputElement, IMaskInputProps<any>>(
   ({ onAccept, className, ...props }, ref) => {
@@ -36,3 +35,5 @@ const MaskedInput = React.forwardRef<HTMLInputElement, IMaskInputProps<any>>(
 MaskedInput.displayName = "MaskedInput";
 
 export { MaskedInput };
+
+    
