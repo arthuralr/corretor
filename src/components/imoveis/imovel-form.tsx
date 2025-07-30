@@ -74,8 +74,8 @@ const formSchema = z.object({
   imageUrls: z.array(z.object({ value: z.string().url("URL da imagem inválida.") })),
   mainImageUrl: z.string().optional(),
 
-}).refine(data => (data.sellPrice && parseFloat(data.sellPrice.replace(/\./g, '').replace(',', '.')) > 0) || (data.rentPrice && parseFloat(data.rentPrice.replace(/\./g, '').replace(',', '.')) > 0), {
-  message: "É necessário preencher o 'Valor de Venda' ou o 'Valor de Aluguel' com um valor maior que zero.",
+}).refine(data => data.sellPrice || data.rentPrice, {
+  message: "É necessário preencher o 'Valor de Venda' ou o 'Valor de Aluguel'.",
   path: ["sellPrice"],
 });
 
@@ -87,7 +87,7 @@ interface ImovelFormProps {
 
 const parseCurrency = (value: string | undefined): number | undefined => {
     if (!value) return undefined;
-    const num = Number(String(value).replace(/\D/g, '')) / 100;
+    const num = Number(String(value).replace(/[^0-9,]/g, '').replace(',', '.'));
     return isNaN(num) ? undefined : num;
 };
 
@@ -484,9 +484,11 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Venda (R$)</FormLabel>
                         <FormControl>
                            <MaskedInput
-                                mask="R$ #.##0"
+                                mask="R$ #.##0,00"
                                 lazy={false}
                                 thousandsSeparator="."
+                                radix=","
+                                mapToRadix={['.']}
                                 blocks={{
                                     '#': {
                                         mask: Number,
@@ -494,7 +496,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                                     }
                                 }}
                                 onAccept={(value: any) => field.onChange(value)}
-                                placeholder="R$ 500.000"
+                                placeholder="R$ 500.000,00"
                                 value={field.value ?? ""}
                             />
                         </FormControl>
@@ -510,9 +512,11 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor de Aluguel (R$)</FormLabel>
                         <FormControl>
                             <MaskedInput
-                                mask="R$ #.##0"
+                                mask="R$ #.##0,00"
                                 lazy={false}
                                 thousandsSeparator="."
+                                radix=","
+                                mapToRadix={['.']}
                                 blocks={{
                                     '#': {
                                         mask: Number,
@@ -520,7 +524,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                                     }
                                 }}
                                 onAccept={(value: any) => field.onChange(value)}
-                                placeholder="R$ 2.500"
+                                placeholder="R$ 2.500,00"
                                 value={field.value ?? ""}
                             />
                         </FormControl>
@@ -536,9 +540,11 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                         <FormLabel>Valor do Condomínio (R$)</FormLabel>
                         <FormControl>
                              <MaskedInput
-                                mask="R$ #.##0"
+                                mask="R$ #.##0,00"
                                 lazy={false}
                                 thousandsSeparator="."
+                                radix=","
+                                mapToRadix={['.']}
                                 blocks={{
                                     '#': {
                                         mask: Number,
@@ -546,7 +552,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
                                     }
                                 }}
                                 onAccept={(value: any) => field.onChange(value)}
-                                placeholder="R$ 500"
+                                placeholder="R$ 500,00"
                                 value={field.value ?? ""}
                             />
                         </FormControl>
