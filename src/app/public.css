@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -18,6 +19,8 @@
     --public-border: 220 13% 90%; /* border color */
     --public-card: 255 100% 100%;
     --public-card-foreground: 220 13% 25%;
+    --public-footer: 220 13% 12%; /* Dark background for footer */
+    --public-footer-foreground: 220 13% 75%; /* Lighter text for footer */
   }
 
   .dark {
@@ -32,5 +35,15 @@
     --public-border: 220 13% 20%;
     --public-card: 220 13% 12%;
     --public-card-foreground: 220 13% 90%;
+    --public-footer: 220 13% 8%; 
+    --public-footer-foreground: 220 13% 75%;
   }
 }
+
+.bg-public-footer {
+    background-color: hsl(var(--public-footer));
+}
+.text-public-footer-foreground {
+    color: hsl(var(--public-footer-foreground));
+}
+
