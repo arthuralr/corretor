@@ -12,6 +12,7 @@ import { useSiteConfig } from '@/hooks/use-site-config';
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { PropertySearchForm } from '@/components/public/property-search-form';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
 export default function HomePage() {
@@ -38,7 +39,19 @@ export default function HomePage() {
   const mapSrc = `https://www.google.com/maps/embed/v1/place?key=${siteConfig.googleMapsApiKey}&q=${encodeURIComponent(mapAddress)}`;
 
   if (loading) {
-    return <div>Carregando...</div> // Or a proper skeleton loader
+    return (
+        <div>
+            <Skeleton className="h-[85vh] w-full" />
+            <div className="container mx-auto px-4 py-16 md:py-24">
+                 <Skeleton className="h-10 w-1/3 mx-auto mb-12" />
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <Skeleton className="h-96 w-full" />
+                    <Skeleton className="h-96 w-full" />
+                    <Skeleton className="h-96 w-full" />
+                 </div>
+            </div>
+        </div>
+    )
   }
 
   return (
@@ -105,6 +118,7 @@ export default function HomePage() {
             style={{ border: 0 }}
             loading="lazy"
             allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
             src={mapSrc}>
           </iframe>
         </section>
