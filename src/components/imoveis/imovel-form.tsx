@@ -226,7 +226,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             addActivityLog({
                 type: 'imovel',
                 description: `Imóvel "${values.title}" atualizado.`,
-                link: `/imoveis/${initialData.id}`
+                link: `/gestao-imoveis/${initialData.id}`
             });
             toast({
               title: "Imóvel Atualizado!",
@@ -240,7 +240,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             addActivityLog({
                 type: 'imovel',
                 description: `Novo imóvel "${values.title}" adicionado.`,
-                link: `/imoveis/${docRef.id}`
+                link: `/gestao-imoveis/${docRef.id}`
             });
             toast({
               title: "Imóvel Salvo!",
@@ -249,7 +249,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         }
         
         window.dispatchEvent(new CustomEvent('dataUpdated'));
-        router.push("/imoveis");
+        router.push("/gestao-imoveis");
         router.refresh();
 
     } catch (error) {
@@ -794,5 +794,3 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     </Form>
   );
 }
-
-    

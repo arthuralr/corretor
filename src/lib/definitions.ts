@@ -112,7 +112,7 @@ export type ImovelSimplificado = {
   id: string;
   title: string;
   description: string;
-  type: Imovel['type'];
+  type: ImovelType;
   price: number;
   bedrooms: number;
   bathrooms: number;
