@@ -211,7 +211,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
     try {
         const finalImageUrls = (values.imageUrls || []).map(urlObj => urlObj.value);
         
-        const submissionData: Omit<Imovel, 'id' | 'createdAt'> = { 
+        const submissionData: Omit<Imovel, 'id' | 'createdAt'> & { [key: string]: any } = { 
             ...values,
             sellPrice: parseCurrency(values.sellPrice),
             rentPrice: parseCurrency(values.rentPrice),
@@ -219,6 +219,11 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             imageUrls: finalImageUrls, 
             mainImageUrl: values.mainImageUrl || finalImageUrls[0] || '',
         };
+
+        // Remove subType if it's undefined or an empty string
+        if (!submissionData.subType) {
+            delete submissionData.subType;
+        }
 
         if (isEditing && initialData?.id) {
             const imovelRef = doc(db, "imoveis", initialData.id);
