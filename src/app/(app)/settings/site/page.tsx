@@ -29,6 +29,7 @@ const formSchema = z.object({
   logo: z.string().url().optional().or(z.literal('')),
   favicon: z.string().url().optional().or(z.literal('')),
   socialShareImage: z.string().url().optional().or(z.literal('')),
+  aboutPageImage: z.string().url().optional().or(z.literal('')),
   primaryColor: z.string().optional(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
@@ -183,7 +184,7 @@ export default function SiteSettingsPage() {
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <ImageUploadPlaceholder
                 label="Logo da Empresa"
                 currentImage={form.watch('logo')}
@@ -200,6 +201,12 @@ export default function SiteSettingsPage() {
                 label="Imagem de Compartilhamento Social"
                 currentImage={form.watch('socialShareImage')}
                 onImageUpload={(file) => handleGenericImageUpload(file, 'socialShareImage')}
+                isUploading={isUploading}
+              />
+               <ImageUploadPlaceholder
+                label="Imagem da Página Sobre"
+                currentImage={form.watch('aboutPageImage')}
+                onImageUpload={(file) => handleGenericImageUpload(file, 'aboutPageImage')}
                 isUploading={isUploading}
               />
             </div>

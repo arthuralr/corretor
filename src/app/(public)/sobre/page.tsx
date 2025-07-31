@@ -2,6 +2,7 @@
 'use client'
 import { Building } from "lucide-react";
 import { useSiteConfig } from "@/hooks/use-site-config";
+import Image from "next/image";
 
 export default function SobreNosPage() {
   const { siteConfig } = useSiteConfig();
@@ -9,13 +10,26 @@ export default function SobreNosPage() {
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-20">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="flex flex-col items-center text-center mb-12">
             <Building className="w-12 h-12 text-public-primary mb-4" />
             <h1 className="text-4xl md:text-5xl font-bold text-public-heading">Sobre a {siteName}</h1>
             <p className="mt-4 text-lg text-public-muted-foreground">Sua parceira de confiança no mercado imobiliário.</p>
         </div>
-        <div className="prose prose-lg max-w-none text-public-foreground">
+
+        {siteConfig.aboutPageImage && (
+          <div className="mb-12 aspect-video relative rounded-lg overflow-hidden shadow-lg">
+            <Image
+              src={siteConfig.aboutPageImage}
+              alt={`Sobre a ${siteName}`}
+              fill
+              className="object-cover"
+              data-ai-hint="office team"
+            />
+          </div>
+        )}
+
+        <div className="prose prose-lg max-w-none text-public-foreground mx-auto">
             <p>
                 Bem-vindo à {siteName}! Somos mais do que uma imobiliária, somos facilitadores de sonhos. Nossa missão é conectar pessoas aos seus lares ideais, oferecendo um serviço personalizado, transparente e eficiente.
             </p>

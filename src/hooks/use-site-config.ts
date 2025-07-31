@@ -16,6 +16,7 @@ export interface SiteConfig {
   logo?: string;
   favicon?: string;
   socialShareImage?: string;
+  aboutPageImage?: string;
   primaryColor?: string;
   metaTitle?: string;
   metaDescription?: string;
@@ -33,6 +34,7 @@ const defaultConfig: SiteConfig = {
     metaDescription: 'Encontre os melhores imóveis da região.',
     featuredTitle: 'Imóveis em Destaque',
     whatsappPhone: '5511999998888',
+    aboutPageImage: 'https://placehold.co/1200x800.png',
     heroImages: [
         { src: 'https://placehold.co/1920x1080.png', alt: 'Modern Living Room', hint: 'modern living room' },
         { src: 'https://placehold.co/1920x1080.png', alt: 'Luxury Kitchen', hint: 'luxury kitchen' },
