@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
@@ -162,7 +161,6 @@ export const columns = (onUpdate: () => void): ColumnDef<Imovel>[] => [
     cell: ({ row }) => {
       const imovel = row.original;
       const price = imovel.sellPrice || imovel.rentPrice;
-      const status = row.original.status;
       const formattedPrice = formatPrice(price)
       return <div className="text-right font-medium">{imovel.rentPrice ? `${formattedPrice}/mês` : formattedPrice}</div>;
     },
@@ -180,6 +178,10 @@ export const columns = (onUpdate: () => void): ColumnDef<Imovel>[] => [
           : "outline";
       return <Badge variant={variant}>{status}</Badge>;
     },
+  },
+    {
+    accessorKey: "type",
+    header: "Tipo",
   },
   {
     id: "actions",
