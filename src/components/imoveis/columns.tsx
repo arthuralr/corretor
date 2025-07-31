@@ -83,7 +83,7 @@ const ActionsCell = ({ row, onUpdate }: { row: any, onUpdate: () => void }) => {
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Ações</DropdownMenuLabel>
                     <DropdownMenuItem asChild>
-                        <Link href={`/imoveis/${imovel.id}/edit`} className="flex items-center w-full cursor-pointer">
+                        <Link href={`/gestao-imoveis/${imovel.id}/edit`} className="flex items-center w-full cursor-pointer">
                            <Edit className="mr-2 h-4 w-4" /> Editar Imóvel
                         </Link>
                     </DropdownMenuItem>
@@ -141,7 +141,7 @@ export const columns = (onUpdate: () => void): ColumnDef<Imovel>[] => [
      cell: ({ row }) => {
         const title = row.getValue("title") as string;
         const imovel = row.original;
-        return <Link href={`/imoveis/${imovel.id}`} className="truncate max-w-xs hover:underline">{title}</Link>;
+        return <Link href={`/gestao-imoveis/${imovel.id}`} className="truncate max-w-xs hover:underline">{title}</Link>;
     }
   },
   {

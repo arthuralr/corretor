@@ -157,7 +157,7 @@ export function TaskItem({ task, onTaskChange }: TaskItemProps) {
                      {task.imovelId && task.imovelTitle && (
                         <div className="mt-2">
                             <span className="font-semibold">Imóvel:</span>{' '}
-                            <Link href={`/imoveis/${task.imovelId}`} className="hover:underline text-primary">
+                            <Link href={`/gestao-imoveis/${task.imovelId}`} className="hover:underline text-primary">
                                 {task.imovelTitle}
                             </Link>
                         </div>

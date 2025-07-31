@@ -44,7 +44,7 @@ const menuItems = [
   { href: "/financeiro", label: "Financeiro", icon: Landmark },
   { href: "/relatorios", label: "Relatórios", icon: BarChartHorizontal },
   { href: "/clients", label: "Clientes", icon: Users },
-  { href: "/imoveis", label: "Imóveis", icon: Home },
+  { href: "/gestao-imoveis", label: "Imóveis", icon: Home },
   {
     href: "/ai-generator",
     label: "Gerador de Anúncios",

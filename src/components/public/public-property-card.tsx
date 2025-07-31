@@ -14,55 +14,54 @@ interface PublicPropertyCardProps {
 }
 
 const formatPrice = (price: number | undefined) => {
-    if (!price) return 'Consulte';
+    if (price === undefined) return 'Consulte';
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
       currency: "BRL",
-      minimumFractionDigits: 0,
     }).format(price);
 }
 
 export function PublicPropertyCard({ property }: PublicPropertyCardProps) {
   const { siteConfig } = useSiteConfig();
   const imageUrl = (property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls[0] : property.mainImageUrl) || 'https://placehold.co/600x400.png';
-  const price = property.rentPrice ? `${formatPrice(property.rentPrice)}/mês` : formatPrice(property.sellPrice);
+  const price = property.sellPrice || property.rentPrice;
 
   return (
-    <Card className="flex flex-col h-full bg-public-card hover:shadow-xl transition-shadow duration-300 overflow-hidden group">
-       <Link href={`/imoveis/${property.id}`} className="block">
-            <div className="aspect-video bg-public-muted flex items-center justify-center relative overflow-hidden">
-                <Image 
-                    src={imageUrl} 
-                    alt={property.title} 
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    data-ai-hint="house exterior" 
-                />
-                 <Badge variant="secondary" className="absolute top-3 left-3 bg-public-primary text-public-primary-foreground">
-                    {property.type}
-                </Badge>
-            </div>
-      </Link>
-      <CardHeader className="p-4">
-        <Link href={`/imoveis/${property.id}`} className="block">
-            <CardTitle className="text-lg font-bold text-public-heading truncate group-hover:text-public-primary transition-colors">{property.title}</CardTitle>
-        </Link>
-        <CardDescription className="text-sm text-public-muted-foreground flex items-center gap-1.5 pt-1">
-            <MapPin className="w-4 h-4" /> {property.neighborhood}, {property.city}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-4 pt-0 text-sm text-public-foreground space-y-3 flex-grow">
-        <div className="flex items-center justify-around text-center text-xs pt-2 border-t border-public-border">
-            <span className="flex flex-col items-center gap-1.5 p-2"><AreaChart className="w-5 h-5 text-public-muted-foreground" /> {property.area} m²</span>
-            <span className="flex flex-col items-center gap-1.5 p-2"><BedDouble className="w-5 h-5 text-public-muted-foreground" /> {property.bedrooms} quartos</span>
-            <span className="flex flex-col items-center gap-1.5 p-2"><Bath className="w-5 h-5 text-public-muted-foreground" /> {property.bathrooms} banh.</span>
+    <Link href={`/imoveis/${property.id}`} className="block h-full">
+        <Card className="flex flex-col h-full bg-public-card hover:shadow-lg transition-shadow duration-300">
+        <div className="aspect-video bg-public-muted rounded-t-lg flex items-center justify-center relative">
+            <Image 
+                src={imageUrl} 
+                alt={property.title} 
+                fill
+                className="object-cover rounded-t-lg"
+                data-ai-hint="house exterior" 
+            />
         </div>
-      </CardContent>
-       <CardFooter className="p-4 bg-public-muted/50">
-           <Link href={`/imoveis/${property.id}`} className="w-full">
-                <p className="text-xl font-bold text-public-primary w-full">{price}</p>
-           </Link>
-      </CardFooter>
-    </Card>
+        <CardHeader className="p-4">
+            <div className="flex justify-between items-start gap-2">
+                <CardTitle className="text-lg font-bold text-public-heading line-clamp-2">{property.title}</CardTitle>
+                <Badge variant="secondary" className="whitespace-nowrap bg-public-primary/10 text-public-primary border-public-primary/20">{property.type}</Badge>
+            </div>
+             <CardDescription className="text-sm pt-1 text-public-muted-foreground flex items-center gap-2">
+                <MapPin className="w-4 h-4"/>
+                {property.neighborhood}, {property.city}
+            </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 pt-0 text-public-foreground space-y-3 flex-grow">
+            <div className="flex items-center justify-start text-sm pt-2 gap-4 border-t border-public-border pt-4">
+                <span className="flex items-center gap-1.5"><AreaChart className="w-4 h-4 text-public-primary" /> {property.area} m²</span>
+                <span className="flex items-center gap-1.5"><BedDouble className="w-4 h-4 text-public-primary" /> {property.bedrooms}</span>
+                <span className="flex items-center gap-1.5"><Bath className="w-4 h-4 text-public-primary" /> {property.bathrooms}</span>
+            </div>
+        </CardContent>
+        <CardFooter className="p-4 bg-public-muted/50 rounded-b-lg">
+            <p className="text-xl font-bold text-public-primary w-full">
+                {formatPrice(price)}
+                {property.rentPrice && <span className="text-sm font-normal text-public-muted-foreground">/mês</span>}
+            </p>
+        </CardFooter>
+        </Card>
+    </Link>
   );
 }

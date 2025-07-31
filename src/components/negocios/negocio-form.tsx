@@ -69,7 +69,7 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
     if (selectedImovelId) {
         const selectedImovel = imoveis.find(i => i.id === selectedImovelId);
         if (selectedImovel) {
-            form.setValue('valorProposta', selectedImovel.price);
+            form.setValue('valorProposta', selectedImovel.sellPrice || selectedImovel.rentPrice || 0);
         }
     }
   }, [selectedImovelId, imoveis, form]);
@@ -147,7 +147,7 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {imoveis.filter(i => i.status === 'Disponível' || i.id === initialData?.imovelId).map(imovel => (
+                    {imoveis.filter(i => i.status === 'Ativo' || i.id === initialData?.imovelId).map(imovel => (
                         <SelectItem key={imovel.id} value={imovel.id}>{imovel.title} ({imovel.refCode})</SelectItem>
                     ))}
                   </SelectContent>
@@ -233,7 +233,3 @@ export function NegocioForm({ onSave, onCancel, initialData, clients, imoveis }:
     </Form>
   );
 }
-
-    
-
-    

@@ -137,7 +137,7 @@ export default function ImovelDetailPage({ params }: { params: { id: string } })
                 <p className="text-muted-foreground">Ref: {imovel.refCode}</p>
             </div>
         </div>
-        <Link href={`/imoveis/${imovel.id}/edit`}>
+        <Link href={`/gestao-imoveis/${imovel.id}/edit`}>
           <Button>
             <Edit className="mr-2 h-4 w-4" /> Editar Imóvel
           </Button>
