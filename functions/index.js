@@ -41,8 +41,8 @@ exports.uploadImage = onRequest((req, res) => {
     });
 
     busboy.on("file", (fieldname, file, filename) => {
-      const {mimeType} = filename;
-      const filepath = path.join(tmpdir, filename.filename);
+      const mimeType = file.mimeType;
+      const filepath = path.join(tmpdir, filename);
       const writeStream = fs.createWriteStream(filepath);
       file.pipe(writeStream);
 
