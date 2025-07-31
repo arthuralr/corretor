@@ -90,7 +90,8 @@ exports.uploadImage = onRequest((req, res) => {
       }
     });
 
-    busboy.end(req.rawBody);
+    // Use req.pipe(busboy) for robust stream handling
+    req.pipe(busboy);
   });
 });
 
