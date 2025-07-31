@@ -1,4 +1,4 @@
-// --- IMPORTAÇÕES GERAIS ---
+// --- INICIALIZAÇÕES E CÓDIGO COMPLETO ---
 const {onRequest} = require("firebase-functions/v2/https");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
@@ -17,12 +17,8 @@ const path = require("path");
 const os = require("os");
 const fs = require("fs");
 
-// --- INICIALIZAÇÃO DO FIREBASE (APENAS UMA VEZ) ---
 admin.initializeApp();
 
-// =================================================================
-// FUNÇÃO 1: UPLOAD DE IMAGENS
-// =================================================================
 exports.uploadImage = onRequest((req, res) => {
   cors(req, res, () => {
     if (req.method !== "POST") {
@@ -31,17 +27,14 @@ exports.uploadImage = onRequest((req, res) => {
         message: "Only POST requests are accepted.",
       });
     }
-
     const busboy = Busboy({headers: req.headers});
     const tmpdir = os.tmpdir();
     const fileWrites = [];
-
     busboy.on("file", (fieldname, file, fileInfo) => {
       const {filename, mimeType} = fileInfo;
       const filepath = path.join(tmpdir, filename);
       const writeStream = fs.createWriteStream(filepath);
       file.pipe(writeStream);
-
       const promise = new Promise((resolve, reject) => {
         file.on("end", () => {
           writeStream.end();
@@ -53,7 +46,6 @@ exports.uploadImage = onRequest((req, res) => {
       });
       fileWrites.push(promise);
     });
-
     busboy.on("finish", async () => {
       try {
         const [fileData] = await Promise.all(fileWrites);
@@ -61,11 +53,9 @@ exports.uploadImage = onRequest((req, res) => {
           res.status(400).json({success: false, error: "No file uploaded."});
           return;
         }
-
         const {filepath, mimeType} = fileData;
         const originalFilename = path.basename(filepath);
         const uniqueFilename = `${Date.now()}-${originalFilename}`;
-
         const bucket = getStorage().bucket();
         const [uploadedFile] = await bucket.upload(filepath, {
           destination: `imoveis/${uniqueFilename}`,
@@ -73,9 +63,7 @@ exports.uploadImage = onRequest((req, res) => {
             contentType: mimeType,
           },
         });
-
         await uploadedFile.makePublic();
-
         res.status(200).json({
           success: true,
           url: uploadedFile.publicUrl(),
@@ -85,27 +73,19 @@ exports.uploadImage = onRequest((req, res) => {
         res.status(500).json({success: false, error: "Failed to upload image."});
       }
     });
-
-    // Ajuste: Usar req.pipe(busboy) é a forma mais estável de processar o upload
     req.pipe(busboy);
   });
 });
 
-
-// =================================================================
-// FUNÇÃO 2: GERAR XML PARA O CHAVES NA MÃO
-// =================================================================
 exports.gerarXmlChavesNaMao = onSchedule({
   schedule: "every day 03:00",
   timeZone: "America/Sao_Paulo",
   region: "southamerica-east1",
 }, async (event) => {
   logger.info("Iniciando a geração do XML para o Chaves na Mão.");
-
   try {
     const imoveisSnapshot = await admin.firestore().collection("imoveis").get();
     const imoveisParaXml = [];
-
     imoveisSnapshot.forEach((doc) => {
       const imovelData = doc.data();
       const imovelNode = {
@@ -125,7 +105,6 @@ exports.gerarXmlChavesNaMao = onSchedule({
       };
       imoveisParaXml.push(imovelNode);
     });
-
     const objetoFinalJs = {
       _declaration: {_attributes: {version: "1.0", encoding: "UTF-8"}},
       Carga: {
@@ -135,19 +114,15 @@ exports.gerarXmlChavesNaMao = onSchedule({
         },
       },
     };
-
     const xmlString = js2xml(objetoFinalJs, {compact: true, spaces: 4});
-
     const bucket = admin.storage().bucket();
     const file = bucket.file("integracoes/chavesnamao.xml");
-
     await file.save(xmlString, {
       metadata: {
         contentType: "application/xml",
       },
     });
     await file.makePublic();
-
     const publicUrl = file.publicUrl();
     logger.info("XML gerado com sucesso! Link público:", publicUrl);
   } catch (error) {
