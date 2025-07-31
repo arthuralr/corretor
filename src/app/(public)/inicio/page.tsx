@@ -34,6 +34,8 @@ export default function HomePage() {
   }, []);
   
   const heroImages = siteConfig.heroImages || [];
+  const mapAddress = "Av. Gen. Flores da Cunha, 4290 - Vila Bom Principio, Cachoeirinha - RS, 94950-001";
+  const mapSrc = `https://www.google.com/maps/embed/v1/place?key=${siteConfig.googleMapsApiKey}&q=${encodeURIComponent(mapAddress)}`;
 
   if (loading) {
     return <div>Carregando...</div> // Or a proper skeleton loader
@@ -94,6 +96,19 @@ export default function HomePage() {
            )}
         </div>
       </section>
+       {/* Map Section */}
+      {siteConfig.googleMapsApiKey && (
+        <section className="w-full h-[400px]">
+          <iframe
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            loading="lazy"
+            allowFullScreen
+            src={mapSrc}>
+          </iframe>
+        </section>
+      )}
     </div>
   );
 }
