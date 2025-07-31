@@ -220,7 +220,6 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
             mainImageUrl: values.mainImageUrl || finalImageUrls[0] || '',
         };
 
-        // Remove subType if it's undefined or an empty string
         if (!submissionData.subType) {
             delete submissionData.subType;
         }
