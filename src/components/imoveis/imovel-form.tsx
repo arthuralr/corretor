@@ -10,8 +10,7 @@ import type { Imovel } from "@/lib/definitions";
 import React, { useState, useEffect } from "react";
 import { ImovelType, Subtypes, AmenitiesList } from "@/lib/definitions";
 import { collection, addDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { db, storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db } from "@/lib/firebase";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -94,6 +93,9 @@ const parseCurrency = (value: string | undefined): number | undefined => {
     return isNaN(num) ? undefined : num;
 };
 
+// IMPORTANT: Replace this with your actual Cloud Function URL
+const CLOUD_FUNCTION_URL = "https://uploadimage-dtw77n4tja-uc.a.run.app";
+
 export function ImovelForm({ initialData }: ImovelFormProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -170,9 +172,20 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
   };
   
   const uploadImage = async (file: File): Promise<string> => {
-    const storageRef = ref(storage, `imoveis/${Date.now()}_${file.name}`);
-    const snapshot = await uploadBytes(storageRef, file);
-    return getDownloadURL(snapshot.ref);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(CLOUD_FUNCTION_URL, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error('Image upload failed');
+    }
+
+    const result = await response.json();
+    return result.url;
   }
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,7 +212,7 @@ export function ImovelForm({ initialData }: ImovelFormProps) {
         });
     } catch (error) {
         console.error("Upload error:", error);
-        toast({ title: "Erro no Upload", description: "Não foi possível enviar as imagens.", variant: "destructive" });
+        toast({ title: "Erro no Upload", description: "Não foi possível enviar as imagens. Verifique a URL da Cloud Function e as permissões.", variant: "destructive" });
     } finally {
         setIsUploading(false);
         if(event.target) event.target.value = '';
