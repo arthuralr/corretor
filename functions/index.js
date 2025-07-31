@@ -3,6 +3,7 @@ const {onRequest} = require("firebase-functions/v2/https");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
+const {getStorage} = require("firebase-admin/storage");
 const {js2xml} = require("xml-js");
 const cors = require("cors")({
     origin: [
@@ -34,14 +35,9 @@ exports.uploadImage = onRequest((req, res) => {
     const busboy = Busboy({headers: req.headers});
     const tmpdir = os.tmpdir();
     const fileWrites = [];
-    const fields = {};
 
-    busboy.on("field", (fieldname, val) => {
-      fields[fieldname] = val;
-    });
-
-    busboy.on("file", (fieldname, file, filename) => {
-      const mimeType = file.mimeType;
+    busboy.on("file", (fieldname, file, fileInfo) => {
+      const {filename, mimeType} = fileInfo;
       const filepath = path.join(tmpdir, filename);
       const writeStream = fs.createWriteStream(filepath);
       file.pipe(writeStream);
@@ -51,7 +47,7 @@ exports.uploadImage = onRequest((req, res) => {
           writeStream.end();
         });
         writeStream.on("finish", () => {
-          resolve({filepath, fieldname, mimeType});
+          resolve({filepath, mimeType});
         });
         writeStream.on("error", reject);
       });
@@ -70,7 +66,7 @@ exports.uploadImage = onRequest((req, res) => {
         const originalFilename = path.basename(filepath);
         const uniqueFilename = `${Date.now()}-${originalFilename}`;
 
-        const bucket = admin.storage().bucket();
+        const bucket = getStorage().bucket();
         const [uploadedFile] = await bucket.upload(filepath, {
           destination: `imoveis/${uniqueFilename}`,
           metadata: {
@@ -90,7 +86,7 @@ exports.uploadImage = onRequest((req, res) => {
       }
     });
 
-    // Use req.pipe(busboy) for robust stream handling
+    // Ajuste: Usar req.pipe(busboy) é a forma mais estável de processar o upload
     req.pipe(busboy);
   });
 });
