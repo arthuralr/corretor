@@ -47,7 +47,7 @@ export default function ContatoPage() {
                         </div>
                          <div>
                             <h3 className="font-semibold">Endereço</h3>
-                            <p className="text-public-muted-foreground">Rua Fictícia, 123, Sala 45<br/>Centro, São Paulo - SP</p>
+                            <p className="text-public-muted-foreground">Av. Gen. Flores da Cunha, 4290 - Vila Bom Principio<br/>Cachoeirinha - RS, 94950-001</p>
                         </div>
                     </div>
                 </div>
